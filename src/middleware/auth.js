@@ -22,26 +22,12 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-function requirePro(req, res, next) {
-  if (req.user?.plan !== 'pro') {
-    return res.status(403).json({ error: 'Pro plan required', upgrade: true });
-  }
-  next();
-}
-
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, name: user.name, plan: user.plan },
+    { id: user.id, email: user.email, name: user.name },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
 }
 
-// Limits for free plan
-const FREE_LIMITS = {
-  leagues: 1,
-  teams: 10,
-  players: 30,
-};
-
-module.exports = { requireAuth, optionalAuth, requirePro, generateToken, FREE_LIMITS };
+module.exports = { requireAuth, optionalAuth, generateToken };

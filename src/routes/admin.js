@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
-const { esc, levelBadge, statusBadge, levelColor } = require('./public');
+const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 
 router.use(requireAuth);
 
