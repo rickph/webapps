@@ -775,6 +775,17 @@ function adminPage(title, user, content) {
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} | PH Hoops Admin</title>
 <link rel="stylesheet" href="/css/main.css">
+<script>
+  // Global modal helpers — available on ALL admin pages before body renders
+  function openModal(id) {
+    var el = document.getElementById('modal-' + id);
+    if (el) el.classList.remove('hidden');
+  }
+  function closeModal(id) {
+    var el = document.getElementById('modal-' + id);
+    if (el) el.classList.add('hidden');
+  }
+</script>
 </head>
 <body class="dark-bg">
 <nav class="topnav">
