@@ -567,7 +567,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .lsc-panel-pts { font-size:32px; font-weight:900; color:#ff6b35; text-align:right; line-height:1; }
         .lsc-panel-pts-label { font-size:10px; color:#666; font-weight:700; letter-spacing:1px; text-align:right; }
         .lsc-shot-grid { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:8px; align-items:center; margin-bottom:16px; }
-        .lsc-shot-btn { padding:12px 8px; border-radius:8px; border:none; font-weight:800; font-size:14px; cursor:pointer; transition:all .15s; }
+        .lsc-shot-btn { padding:12px 8px; border-radius:8px; border:none; font-weight:800; font-size:14px; cursor:pointer; transition:all .15s; width:100%; }
         .lsc-shot-btn.make { background:#e63946; color:#fff; }
         .lsc-shot-btn.make:hover { background:#c1121f; transform:scale(1.03); }
         .lsc-shot-btn.miss { background:rgba(255,255,255,.08); color:#aaa; border:1px solid rgba(255,255,255,.12); }
@@ -649,22 +649,22 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             </div>
 
             <!-- FIBA SHOT BUTTONS -->
-            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;margin-bottom:10px">RECORDING: <span id="pp-recording"></span></div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:6px">
+            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;margin-bottom:10px;text-align:center">RECORDING: <span id="pp-recording"></span></div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:6px">
               <button class="lsc-shot-btn make" id="btn-2pt">+2 PT</button>
               <button class="lsc-minus" id="btn-2pt-minus">−</button>
               <button class="lsc-shot-btn miss" id="btn-miss2">Miss 2</button>
               <button class="lsc-minus" id="btn-miss2-minus">−</button>
               <button class="lsc-shot-btn make" id="btn-3pt">+3 PT</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:16px">
               <button class="lsc-minus" id="btn-3pt-minus">−</button>
               <div></div>
               <button class="lsc-shot-btn miss" id="btn-miss3">Miss 3</button>
               <button class="lsc-minus" id="btn-miss3-minus">−</button>
               <div></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:16px">
               <button class="lsc-shot-btn make" id="btn-ft">+1 FT</button>
               <button class="lsc-minus" id="btn-ft-minus">−</button>
               <button class="lsc-shot-btn miss" id="btn-missft">Miss FT</button>
@@ -673,7 +673,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             </div>
 
             <!-- FIBA SHOOTING LINE -->
-            <div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px 12px;font-size:12px;color:#888;margin-bottom:12px;font-weight:600;letter-spacing:.5px" id="pp-fg-line">0/0 2PT &nbsp; 0/0 3PT &nbsp; 0/0 FT</div>
+            <div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px 12px;font-size:12px;color:#888;margin-bottom:12px;font-weight:600;letter-spacing:.5px;text-align:center" id="pp-fg-line">0/0 2PT &nbsp; 0/0 3PT &nbsp; 0/0 FT</div>
 
             <!-- FIBA STAT COUNTERS -->
             <div class="lsc-stat-grid">
