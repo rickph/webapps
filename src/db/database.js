@@ -140,6 +140,24 @@ async function initSchema() {
     )
   `);
 
+  await run(`
+    CREATE TABLE IF NOT EXISTS game_stats (
+      id          SERIAL PRIMARY KEY,
+      game_id     INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+      player_id   INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      league_id   INTEGER NOT NULL REFERENCES leagues(id) ON DELETE CASCADE,
+      pts         INTEGER DEFAULT 0,
+      reb         INTEGER DEFAULT 0,
+      ast         INTEGER DEFAULT 0,
+      stl         INTEGER DEFAULT 0,
+      blk         INTEGER DEFAULT 0,
+      fgm         INTEGER DEFAULT 0,
+      fga         INTEGER DEFAULT 0,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(game_id, player_id)
+    )
+  `);
+
   console.log('✅ Schema ready');
 }
 
@@ -254,3 +272,4 @@ async function initDb() {
 }
 
 module.exports = { query, queryOne, run, transaction, initDb, getPool };
+

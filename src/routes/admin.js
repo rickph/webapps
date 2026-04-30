@@ -489,49 +489,158 @@ router.get('/league/:id/score/:gid', async (req, res) => {
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
     const game   = await db.queryOne(`
-      SELECT g.*,ht.name as home_name,at.name as away_name
+      SELECT g.*,ht.name as home_name,at.name as away_name,
+             ht.id as htid, at.id as atid
       FROM games g
       LEFT JOIN teams ht ON g.home_team_id=ht.id
       LEFT JOIN teams at ON g.away_team_id=at.id
       WHERE g.id=$1`, [req.params.gid]);
     if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
 
+    // Get all players from both teams
+    const homePlayers = game.htid ? await db.query(
+      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
+    const awayPlayers = game.atid ? await db.query(
+      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
+
+    // Get existing game stats if any
+    const existingStats = await db.query(
+      'SELECT * FROM game_stats WHERE game_id=$1', [game.id]);
+    const statMap = {};
+    existingStats.forEach(s => { statMap[s.player_id] = s; });
+
+    function playerStatRow(p) {
+      const s = statMap[p.id] || {};
+      return `
+        <tr>
+          <td style="font-weight:600;white-space:nowrap">
+            <span class="pos-badge">${p.pos}</span>
+            #${p.jersey} ${esc(p.name)}
+          </td>
+          <td><input type="number" name="pts_${p.id}" value="${s.pts||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="reb_${p.id}" value="${s.reb||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="ast_${p.id}" value="${s.ast||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="stl_${p.id}" value="${s.stl||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="blk_${p.id}" value="${s.blk||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="fgm_${p.id}" value="${s.fgm||0}" min="0"
+            class="stat-input" /></td>
+          <td><input type="number" name="fga_${p.id}" value="${s.fga||0}" min="0"
+            class="stat-input" /></td>
+        </tr>`;
+    }
+
+    const allPlayerIds = [...homePlayers, ...awayPlayers].map(p => p.id);
+
     res.send(adminPage('Live Score', req.user, `
       <div class="admin-header"><div>
         <a href="/admin/league/${league.id}" class="back-link">← Back</a>
         <h1>🔴 Live Scoring</h1>
-        <p>${esc(game.home_name||'Home')} vs ${esc(game.away_name||'Away')}</p>
+        <p>${esc(game.home_name||'Home')} vs ${esc(game.away_name||'Away')} · ${esc(game.date||'')}</p>
       </div></div>
-      <div class="card card-hot" style="max-width:640px">
-        <form action="/admin/league/${league.id}/score/${game.id}" method="POST">
-          <div class="live-scoreboard" style="margin-bottom:24px">
+
+      <form action="/admin/league/${league.id}/score/${game.id}" method="POST">
+        <input type="hidden" name="player_ids" value="${allPlayerIds.join(',')}" />
+
+        <!-- TEAM SCORES -->
+        <div class="card card-hot" style="margin-bottom:20px">
+          <div class="live-scoreboard">
             <div class="live-team">
               <div class="live-team-name">${esc(game.home_name||'Home')}</div>
-              <input name="home_score" type="number" value="${game.home_score||0}"
-                class="live-score" style="background:none;border:none;color:#00d4aa;width:120px;text-align:center;font-size:64px;font-weight:900;outline:none;" />
+              <input name="home_score" type="number" value="${game.home_score||0}" min="0"
+                class="live-score" style="background:none;border:2px solid rgba(0,212,170,.3);color:#00d4aa;width:130px;text-align:center;font-size:64px;font-weight:900;border-radius:8px;outline:none;padding:4px;" />
             </div>
             <div class="live-center">
               <div style="font-size:11px;color:#666;font-weight:700;letter-spacing:2px;margin-bottom:6px">QTR</div>
-              <input name="quarter" type="number" min="1" max="4" value="1"
+              <input name="quarter" type="number" min="1" max="4" value="${game.quarter||1}"
                 style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#f7c948;width:70px;text-align:center;font-size:36px;font-weight:800;border-radius:6px;outline:none;" />
+              <div style="margin-top:12px">
+                <select name="status" class="input" style="width:130px;text-align:center">
+                  <option value="ongoing" ${game.status==='ongoing'?'selected':''}>● Ongoing</option>
+                  <option value="final"   ${game.status==='final'?'selected':''}>✓ Final</option>
+                </select>
+              </div>
             </div>
             <div class="live-team">
               <div class="live-team-name">${esc(game.away_name||'Away')}</div>
-              <input name="away_score" type="number" value="${game.away_score||0}"
-                class="live-score" style="background:none;border:none;color:#ff6b35;width:120px;text-align:center;font-size:64px;font-weight:900;outline:none;" />
+              <input name="away_score" type="number" value="${game.away_score||0}" min="0"
+                class="live-score" style="background:none;border:2px solid rgba(255,107,53,.3);color:#ff6b35;width:130px;text-align:center;font-size:64px;font-weight:900;border-radius:8px;outline:none;padding:4px;" />
             </div>
           </div>
-          <div class="field-group"><label>Status</label>
-            <select name="status" class="input">
-              <option value="ongoing" ${game.status==='ongoing'?'selected':''}>Ongoing</option>
-              <option value="final"   ${game.status==='final'?'selected':''}>Final</option>
-            </select></div>
-          <div style="display:flex;gap:10px;margin-top:20px;justify-content:center">
-            <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
-            <button type="submit" class="btn-primary">✅ Save Score &amp; Update Standings</button>
+        </div>
+
+        <!-- PLAYER STATS -->
+        ${homePlayers.length > 0 ? `
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-size:16px;font-weight:800;color:#ff6b35;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:#ff6b35;border-radius:2px"></div>
+            ${esc(game.home_name||'Home Team')} — Player Stats
           </div>
-        </form>
-      </div>
+          <div style="overflow-x:auto">
+            <table class="stats-table">
+              <thead><tr>
+                <th>Player</th>
+                <th>PTS</th><th>REB</th><th>AST</th>
+                <th>STL</th><th>BLK</th><th>FGM</th><th>FGA</th>
+              </tr></thead>
+              <tbody>${homePlayers.map(p => playerStatRow(p)).join('')}</tbody>
+            </table>
+          </div>
+        </div>` : ''}
+
+        ${awayPlayers.length > 0 ? `
+        <div class="card" style="margin-bottom:20px">
+          <div style="font-size:16px;font-weight:800;color:#00d4aa;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:#00d4aa;border-radius:2px"></div>
+            ${esc(game.away_name||'Away Team')} — Player Stats
+          </div>
+          <div style="overflow-x:auto">
+            <table class="stats-table">
+              <thead><tr>
+                <th>Player</th>
+                <th>PTS</th><th>REB</th><th>AST</th>
+                <th>STL</th><th>BLK</th><th>FGM</th><th>FGA</th>
+              </tr></thead>
+              <tbody>${awayPlayers.map(p => playerStatRow(p)).join('')}</tbody>
+            </table>
+          </div>
+        </div>` : ''}
+
+        ${(homePlayers.length === 0 && awayPlayers.length === 0) ? `
+        <div class="alert-info" style="margin-bottom:20px">
+          💡 No players added to these teams yet.
+          <a href="/admin/league/${league.id}/add-player" style="color:#ff6b35">Add players →</a>
+        </div>` : ''}
+
+        <div style="display:flex;gap:10px;justify-content:center;padding:8px 0">
+          <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+          <button type="submit" name="save_type" value="save" class="btn-ghost">💾 Save Progress</button>
+          <button type="submit" name="save_type" value="final" class="btn-primary">✅ Save Final &amp; Update Standings</button>
+        </div>
+      </form>
+
+      <style>
+        .stat-input {
+          width: 52px;
+          text-align: center;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 4px;
+          color: #fff;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 4px 2px;
+          outline: none;
+        }
+        .stat-input:focus {
+          border-color: #ff6b35;
+          background: rgba(255,107,53,.08);
+        }
+      </style>
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
@@ -539,11 +648,83 @@ router.get('/league/:id/score/:gid', async (req, res) => {
 router.post('/league/:id/score/:gid', async (req, res) => {
   try {
     if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    const { home_score, away_score, status } = req.body;
+    const { home_score, away_score, status, save_type, player_ids } = req.body;
     const game = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.gid]);
-    await db.run('UPDATE games SET home_score=$1,away_score=$2,status=$3 WHERE id=$4',
-      [home_score||0, away_score||0, status||'ongoing', req.params.gid]);
-    if (status === 'final' && game) {
+
+    // Determine final status
+    const isFinal = save_type === 'final' || status === 'final';
+    const newStatus = isFinal ? 'final' : (status || 'ongoing');
+
+    // Update game score and status
+    await db.run(
+      'UPDATE games SET home_score=$1,away_score=$2,status=$3 WHERE id=$4',
+      [home_score||0, away_score||0, newStatus, req.params.gid]
+    );
+
+    // Save player stats
+    if (player_ids) {
+      const ids = player_ids.split(',').filter(Boolean);
+      for (const pid of ids) {
+        const pts  = parseInt(req.body['pts_'+pid])  || 0;
+        const reb  = parseInt(req.body['reb_'+pid])  || 0;
+        const ast  = parseInt(req.body['ast_'+pid])  || 0;
+        const stl  = parseInt(req.body['stl_'+pid])  || 0;
+        const blk  = parseInt(req.body['blk_'+pid])  || 0;
+        const fgm  = parseInt(req.body['fgm_'+pid])  || 0;
+        const fga  = parseInt(req.body['fga_'+pid])  || 0;
+
+        // Upsert game stats
+        await db.run(`
+          INSERT INTO game_stats (game_id, player_id, league_id, pts, reb, ast, stl, blk, fgm, fga)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          ON CONFLICT (game_id, player_id)
+          DO UPDATE SET pts=$4,reb=$5,ast=$6,stl=$7,blk=$8,fgm=$9,fga=$10
+        `, [req.params.gid, pid, req.params.id, pts, reb, ast, stl, blk, fgm, fga]);
+      }
+    }
+
+    // Always recalculate season averages immediately on every save
+    if (player_ids) {
+      const ids = player_ids.split(',').filter(Boolean);
+      for (const pid of ids) {
+        const aggRow = await db.queryOne(`
+          SELECT
+            COUNT(*)   as gp,
+            AVG(pts)   as pts,
+            AVG(reb)   as reb,
+            AVG(ast)   as ast,
+            AVG(stl)   as stl,
+            AVG(blk)   as blk,
+            CASE WHEN SUM(fga) > 0
+              THEN ROUND((SUM(fgm)::numeric / SUM(fga)) * 100, 1)
+              ELSE 0
+            END as fg
+          FROM game_stats
+          WHERE player_id=$1 AND league_id=$2
+        `, [pid, req.params.id]);
+
+        if (aggRow) {
+          await db.run(`
+            UPDATE players SET
+              gp  = $1, pts = $2, reb = $3, ast = $4,
+              stl = $5, blk = $6, fg  = $7
+            WHERE id = $8
+          `, [
+            aggRow.gp || 0,
+            parseFloat(aggRow.pts || 0).toFixed(1),
+            parseFloat(aggRow.reb || 0).toFixed(1),
+            parseFloat(aggRow.ast || 0).toFixed(1),
+            parseFloat(aggRow.stl || 0).toFixed(1),
+            parseFloat(aggRow.blk || 0).toFixed(1),
+            parseFloat(aggRow.fg  || 0).toFixed(1),
+            pid
+          ]);
+        }
+      }
+    }
+
+    // Update W/L only when game is marked Final
+    if (isFinal && game) {
       const h = Number(home_score), a = Number(away_score);
       if (h > a) {
         if (game.home_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1', [game.home_team_id]);
@@ -553,8 +734,18 @@ router.post('/league/:id/score/:gid', async (req, res) => {
         if (game.home_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [game.home_team_id]);
       }
     }
+
+    // If just saving progress, go back to score page
+    // If final, go back to league page
+    if (isFinal) {
+      res.redirect(`/admin/league/${req.params.id}`);
+    } else {
+      res.redirect(`/admin/league/${req.params.id}/score/${req.params.gid}`);
+    }
+  } catch (err) {
+    console.error('Score save error:', err);
     res.redirect(`/admin/league/${req.params.id}`);
-  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+  }
 });
 
 // ── PDF REPORT ────────────────────────────────────────────────────────────────
