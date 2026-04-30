@@ -11,17 +11,8 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── SECURITY ──────────────────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc:    ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc:  ["'self'", "'unsafe-inline'"],
-      imgSrc:     ["'self'", "data:", "https:"],
-    }
-  }
-}));
+// Disable CSP for now — inline scripts needed for admin panel
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
@@ -46,15 +37,15 @@ app.use(session({
 }));
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
-const authRouter    = require('./routes/auth');
-const publicRouter  = require('./routes/public');
-const adminRouter   = require('./routes/admin');
+const authRouter   = require('./routes/auth');
+const publicRouter = require('./routes/public');
+const adminRouter  = require('./routes/admin');
 
 app.use('/',      authRouter);
 app.use('/',      publicRouter);
 app.use('/admin', adminRouter);
 
-// Upgrade stub — just redirect to admin
+// Upgrade stub
 app.get('/upgrade', (req, res) => res.redirect('/admin'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
