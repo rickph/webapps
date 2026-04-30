@@ -1,11 +1,10 @@
 require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
-const path    = require('path');
-const helmet  = require('helmet');
-const cors    = require('cors');
-const rateLimit = require('express-rate-limit');
-
+const express    = require('express');
+const session    = require('express-session');
+const path       = require('path');
+const helmet     = require('helmet');
+const cors       = require('cors');
+const rateLimit  = require('express-rate-limit');
 const { initDb } = require('./db/database');
 
 const app  = express();
@@ -24,10 +23,12 @@ app.use(helmet({
   }
 }));
 app.use(cors());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
+
+// ── TRUST PROXY (required for Railway) ───────────────────────────────────────
+app.set('trust proxy', 1);
 
 // ── MIDDLEWARE ────────────────────────────────────────────────────────────────
-app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
@@ -45,10 +46,16 @@ app.use(session({
 }));
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
-app.use('/',       require('./routes/auth'));
-app.use('/',       require('./routes/public'));
-app.use('/admin',  require('./routes/admin'));
-app.use('/',       require('./routes/upgrade'));
+const authRouter    = require('./routes/auth');
+const publicRouter  = require('./routes/public');
+const adminRouter   = require('./routes/admin');
+
+app.use('/',      authRouter);
+app.use('/',      publicRouter);
+app.use('/admin', adminRouter);
+
+// Upgrade stub — just redirect to admin
+app.get('/upgrade', (req, res) => res.redirect('/admin'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
