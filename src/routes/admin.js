@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
-const { requireAuth, FREE_LIMITS } = require('../middleware/auth');
-const { esc, levelBadge, statusBadge, levelColor, page } = require('./public');
-const jwt = require('jsonwebtoken');
+const { requireAuth } = require('../middleware/auth');
+const { esc, levelBadge, statusBadge, levelColor } = require('./public');
 
 router.use(requireAuth);
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-const isPro = (req) => req.user.plan === 'pro';
-
 async function ownsLeague(leagueId, userId) {
   const l = await db.queryOne('SELECT user_id FROM leagues WHERE id = $1', [leagueId]);
   return l && Number(l.user_id) === Number(userId);
@@ -24,9 +21,9 @@ router.get('/', async (req, res) => {
   try {
     const leagues = await db.query(`
       SELECT l.*,
-        (SELECT COUNT(*) FROM teams  WHERE league_id=l.id) as team_count,
+        (SELECT COUNT(*) FROM teams   WHERE league_id=l.id) as team_count,
         (SELECT COUNT(*) FROM players WHERE league_id=l.id) as player_count,
-        (SELECT COUNT(*) FROM games  WHERE league_id=l.id AND status='final') as game_count
+        (SELECT COUNT(*) FROM games   WHERE league_id=l.id AND status='final') as game_count
       FROM leagues l WHERE l.user_id=$1 ORDER BY l.created_at DESC`, [req.user.id]);
 
     const [totals] = await db.query(`
@@ -35,8 +32,6 @@ router.get('/', async (req, res) => {
         (SELECT COUNT(*) FROM players WHERE league_id IN (SELECT id FROM leagues WHERE user_id=$1)) as players,
         (SELECT COUNT(*) FROM games   WHERE league_id IN (SELECT id FROM leagues WHERE user_id=$1) AND status='final') as games
     `, [req.user.id]);
-
-    const pro = isPro(req);
 
     const leagueCards = leagues.map(l => `
       <div class="admin-league-card">
@@ -63,7 +58,6 @@ router.get('/', async (req, res) => {
           <p>Manage your basketball leagues</p>
         </div>
         <div class="ah-right">
-          ${pro ? '<span class="pro-badge">⚡ PRO</span>' : '<a href="/upgrade" class="btn-upgrade">⚡ Upgrade to Pro — ₱199/mo</a>'}
           <button onclick="openModal('addLeague')" class="btn-primary">+ New League</button>
         </div>
       </div>
@@ -73,15 +67,14 @@ router.get('/', async (req, res) => {
         <div class="ds"><span style="color:#a78bfa">${totals.players}</span><small>Players</small></div>
         <div class="ds"><span style="color:#f7c948">${totals.games}</span><small>Games Played</small></div>
       </div>
-      ${!pro ? `<div class="free-limit-bar">Free Plan: ${leagues.length}/${FREE_LIMITS.leagues} league used. <a href="/upgrade">Upgrade for unlimited →</a></div>` : ''}
       <div class="league-grid-admin">
         ${leagueCards || '<div class="empty-state"><div class="es-icon">🏆</div><div>No leagues yet. Create your first one!</div></div>'}
       </div>
-      ${addLeagueModal(pro)}
+      ${addLeagueModal()}
       <script>
         async function deleteLeague(id) {
           if (!confirm('Delete this league and ALL its data? This cannot be undone.')) return;
-          const r = await fetch('/admin/api/league/'+id,{method:'DELETE'});
+          const r = await fetch('/admin/api/league/'+id, {method:'DELETE'});
           if (r.ok) location.reload(); else alert('Error deleting league');
         }
       </script>
@@ -107,8 +100,6 @@ router.get('/league/:id', async (req, res) => {
                 WHERE g.league_id=$1 ORDER BY g.id DESC`, [lid]),
     ]);
 
-    const pro   = isPro(req);
-    const lc    = levelColor(league.level);
     const topts = teams.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
 
     res.send(adminPage(esc(league.name), req.user, `
@@ -123,8 +114,8 @@ router.get('/league/:id', async (req, res) => {
         </div>
         <div class="ah-right">
           <a href="/league/${league.id}" class="btn-ghost-sm" target="_blank">🌐 Public View</a>
-          ${pro ? `<a href="/admin/league/${league.id}/pdf" class="btn-ghost-sm">📄 PDF Report</a>` : ''}
-          ${pro ? `<a href="/admin/league/${league.id}/bracket" class="btn-ghost-sm">🏆 Bracket</a>` : ''}
+          <a href="/admin/league/${league.id}/pdf" class="btn-ghost-sm">📄 PDF Report</a>
+          <a href="/admin/league/${league.id}/bracket" class="btn-ghost-sm">🏆 Bracket</a>
         </div>
       </div>
 
@@ -136,7 +127,7 @@ router.get('/league/:id', async (req, res) => {
         <button class="atab" onclick="showATab('livescore',this)">🔴 Live Score</button>
       </div>
 
-      <!-- DASHBOARD -->
+      <!-- DASHBOARD TAB -->
       <div id="atab-dashboard" class="atab-pane">
         <div class="mini-stats">
           ${[{v:teams.length,l:'Teams',c:'#ff6b35'},{v:players.length,l:'Players',c:'#00d4aa'},
@@ -159,7 +150,7 @@ router.get('/league/:id', async (req, res) => {
         </table>
       </div>
 
-      <!-- TEAMS -->
+      <!-- TEAMS TAB -->
       <div id="atab-teams" class="atab-pane hidden">
         <div class="tab-action-bar">
           <h3>Teams (${teams.length})</h3>
@@ -182,35 +173,35 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <!-- PLAYERS -->
+      <!-- PLAYERS TAB -->
       <div id="atab-players" class="atab-pane hidden">
         <div class="tab-action-bar">
           <h3>Players (${players.length})</h3>
           <button onclick="openModal('addPlayer')" class="btn-primary">+ Add Player</button>
         </div>
         <div style="overflow-x:auto">
-        <table class="stats-table">
-          <thead><tr><th>#</th><th>Name</th><th>Team</th><th>POS</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th><th></th></tr></thead>
-          <tbody>
-            ${players.map((p,i)=>`
-              <tr>
-                <td class="rank">${i+1}</td>
-                <td><div style="font-weight:600">${esc(p.name)}</div><div class="sub-text">#${p.jersey}</div></td>
-                <td class="sub-text">${esc(p.team_name||'')}</td>
-                <td><span class="pos-badge">${p.pos}</span></td>
-                <td class="orange">${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
-                <td>${p.stl}</td><td>${p.blk}</td><td class="teal">${p.fg}%</td>
-                <td>
-                  <button onclick='openEditPlayer(${JSON.stringify({id:p.id,team_id:p.team_id,name:p.name,pos:p.pos,jersey:p.jersey,gp:p.gp,pts:p.pts,reb:p.reb,ast:p.ast,stl:p.stl,blk:p.blk,fg:p.fg})})' class="btn-ghost-sm">✏</button>
-                  <button onclick="apiDelete('player',${p.id})" class="btn-danger-sm">🗑</button>
-                </td>
-              </tr>`).join('') || '<tr><td colspan="11" class="empty">No players yet.</td></tr>'}
-          </tbody>
-        </table>
+          <table class="stats-table">
+            <thead><tr><th>#</th><th>Name</th><th>Team</th><th>POS</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th><th></th></tr></thead>
+            <tbody>
+              ${players.map((p,i)=>`
+                <tr>
+                  <td class="rank">${i+1}</td>
+                  <td><div style="font-weight:600">${esc(p.name)}</div><div class="sub-text">#${p.jersey}</div></td>
+                  <td class="sub-text">${esc(p.team_name||'')}</td>
+                  <td><span class="pos-badge">${p.pos}</span></td>
+                  <td class="orange">${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
+                  <td>${p.stl}</td><td>${p.blk}</td><td class="teal">${p.fg}%</td>
+                  <td>
+                    <button onclick='openEditPlayer(${JSON.stringify({id:p.id,team_id:p.team_id,name:p.name,pos:p.pos,jersey:p.jersey,gp:p.gp,pts:p.pts,reb:p.reb,ast:p.ast,stl:p.stl,blk:p.blk,fg:p.fg})})' class="btn-ghost-sm">✏</button>
+                    <button onclick="apiDelete('player',${p.id})" class="btn-danger-sm">🗑</button>
+                  </td>
+                </tr>`).join('') || '<tr><td colspan="11" class="empty">No players yet.</td></tr>'}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- GAMES -->
+      <!-- GAMES TAB -->
       <div id="atab-games" class="atab-pane hidden">
         <div class="tab-action-bar">
           <h3>Games (${games.length})</h3>
@@ -236,7 +227,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <!-- LIVE SCORE -->
+      <!-- LIVE SCORE TAB -->
       <div id="atab-livescore" class="atab-pane hidden">
         <div id="live-select">
           <h3 style="margin-bottom:16px">Select Game to Score</h3>
@@ -292,8 +283,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <!-- MODALS -->
-      <!-- Team modal -->
+      <!-- TEAM MODAL -->
       <div id="modal-addTeam" class="modal-back hidden">
         <div class="modal">
           <div class="modal-head"><h3>Add / Edit Team</h3><button onclick="closeModal('addTeam')" class="modal-close">✕</button></div>
@@ -312,7 +302,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <!-- Player modal -->
+      <!-- PLAYER MODAL -->
       <div id="modal-addPlayer" class="modal-back hidden">
         <div class="modal" style="max-width:600px">
           <div class="modal-head"><h3 id="player-modal-title">Add Player</h3><button onclick="closeModal('addPlayer')" class="modal-close">✕</button></div>
@@ -339,15 +329,15 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <!-- Game modal -->
+      <!-- GAME MODAL -->
       <div id="modal-addGame" class="modal-back hidden">
         <div class="modal">
           <div class="modal-head"><h3>Schedule Game</h3><button onclick="closeModal('addGame')" class="modal-close">✕</button></div>
           <div class="modal-grid">
             <div class="field-group"><label>Home Team</label><select id="g-home" class="input"><option value="">Select</option>${topts}</select></div>
             <div class="field-group"><label>Away Team</label><select id="g-away" class="input"><option value="">Select</option>${topts}</select></div>
-            <div class="field-group"><label>Date</label><input id="g-date" class="input" placeholder="Apr 27, 2025" /></div>
-            <div class="field-group"><label>Venue / Court</label><input id="g-venue" class="input" placeholder="Brgy. Court Name" /></div>
+            <div class="field-group"><label>Date</label><input id="g-date" class="input" placeholder="e.g. May 1, 2025" /></div>
+            <div class="field-group"><label>Venue / Court</label><input id="g-venue" class="input" placeholder="e.g. Brgy. Court Name" /></div>
             <div class="field-group"><label>Status</label>
               <select id="g-status" class="input" onchange="toggleScoreFields()">
                 <option value="upcoming">Upcoming</option>
@@ -368,7 +358,7 @@ router.get('/league/:id', async (req, res) => {
       </div>
 
       <script>
-        // ── Tab switching ──
+        // Tabs
         function showATab(name,btn){
           document.querySelectorAll('.atab-pane').forEach(p=>p.classList.add('hidden'));
           document.querySelectorAll('.atab').forEach(b=>b.classList.remove('active'));
@@ -377,11 +367,11 @@ router.get('/league/:id', async (req, res) => {
         }
         function goLive(id){showATab('livescore',document.querySelectorAll('.atab')[4]);startLive(id);}
 
-        // ── Modal helpers ──
+        // Modals
         function openModal(id){document.getElementById('modal-'+id).classList.remove('hidden');}
         function closeModal(id){document.getElementById('modal-'+id).classList.add('hidden');}
 
-        // ── Color picker ──
+        // Color picker
         function pickColor(c,el){
           document.querySelectorAll('.cp-dot').forEach(d=>d.classList.remove('selected'));
           el.classList.add('selected');
@@ -389,7 +379,7 @@ router.get('/league/:id', async (req, res) => {
         }
         document.querySelector('.cp-dot')?.classList.add('selected');
 
-        // ── Team CRUD ──
+        // Team
         function openEditTeam(id,name,color){
           document.getElementById('team-edit-id').value=id;
           document.getElementById('team-name').value=name;
@@ -400,11 +390,12 @@ router.get('/league/:id', async (req, res) => {
         async function saveTeam(leagueId){
           const id=document.getElementById('team-edit-id').value;
           const body={name:document.getElementById('team-name').value,color:document.getElementById('team-color').value,league_id:leagueId};
-          const r=await fetch(id?'/admin/api/team/'+id:'/admin/api/team',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const url=id?'/admin/api/team/'+id:'/admin/api/team';
+          const r=await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
           if(r.ok)location.reload();else{const e=await r.json();alert(e.error||'Error saving team');}
         }
 
-        // ── Player CRUD ──
+        // Player
         function openEditPlayer(p){
           document.getElementById('player-modal-title').textContent='Edit Player';
           document.getElementById('p-edit-id').value=p.id;
@@ -425,11 +416,12 @@ router.get('/league/:id', async (req, res) => {
             jersey:document.getElementById('p-jersey').value||0,
             ...(Object.fromEntries(['gp','pts','reb','ast','stl','blk','fg'].map(k=>[k,document.getElementById('p-'+k).value||0])))
           };
-          const r=await fetch(id?'/admin/api/player/'+id:'/admin/api/player',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+          const url=id?'/admin/api/player/'+id:'/admin/api/player';
+          const r=await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
           if(r.ok)location.reload();else{const e=await r.json();alert(e.error||'Error saving player');}
         }
 
-        // ── Game CRUD ──
+        // Game
         function toggleScoreFields(){
           document.getElementById('score-fields').style.display=document.getElementById('g-status').value==='final'?'grid':'none';
         }
@@ -448,17 +440,16 @@ router.get('/league/:id', async (req, res) => {
           if(r.ok)location.reload();else alert('Error saving game');
         }
 
-        // ── Delete ──
+        // Delete
         async function apiDelete(type,id){
           if(!confirm('Delete this '+type+'? This cannot be undone.'))return;
           const r=await fetch('/admin/api/'+type+'/'+id,{method:'DELETE'});
           if(r.ok)location.reload();else alert('Error deleting '+type);
         }
 
-        // ── Live score ──
+        // Live score
         const GAMES=${JSON.stringify(games)};
         let liveId=null,liveH=0,liveA=0,liveQ=1;
-
         function startLive(gameId){
           const g=GAMES.find(x=>x.id==gameId);
           if(!g)return;
@@ -496,39 +487,31 @@ router.get('/league/:id', async (req, res) => {
 
 // ── PDF REPORT ────────────────────────────────────────────────────────────────
 router.get('/league/:id/pdf', async (req, res) => {
-  if (!isPro(req)) return res.redirect('/upgrade');
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
     if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-
     const [teams, players] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name FROM players p LEFT JOIN teams t ON p.team_id=t.id WHERE p.league_id=$1 ORDER BY p.pts DESC`, [league.id]),
     ]);
-
     const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 40, size: 'A4' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${league.name.replace(/[^a-z0-9]/gi,'_')}_stats.pdf"`);
     doc.pipe(res);
-
-    // Header block
     doc.rect(0,0,595,80).fill('#0f0f1a');
     doc.fillColor('#ff6b35').fontSize(22).font('Helvetica-Bold').text('PH HOOPS', 40, 18);
     doc.fillColor('#ffffff').fontSize(14).text(league.name, 40, 44);
     doc.fillColor('#888888').fontSize(10).text(`${league.location} · ${league.season} · ${league.level}`, 40, 62);
-
-    // Standings
     let y = 100;
     doc.fillColor('#ff6b35').fontSize(13).font('Helvetica-Bold').text('TEAM STANDINGS', 40, y);
     doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('#ff6b35').lineWidth(1).stroke();
     y += 26;
-    doc.fillColor('#888').fontSize(9).font('Helvetica-Bold')
-      .text('#',40,y).text('TEAM',65,y).text('W',340,y).text('L',380,y).text('WIN%',415,y);
+    doc.fillColor('#888').fontSize(9).font('Helvetica-Bold').text('#',40,y).text('TEAM',65,y).text('W',340,y).text('L',380,y).text('WIN%',415,y);
     y += 14;
     for (const [i,t] of teams.entries()) {
       if (i%2===0) doc.rect(40,y-2,515,17).fill('#0a0a12');
-      const pct = ((t.wins/(t.wins+t.losses||1))*100).toFixed(1);
+      const pct=((t.wins/(t.wins+t.losses||1))*100).toFixed(1);
       doc.fillColor(i<2?'#ff6b35':'#ccc').fontSize(9).font('Helvetica-Bold').text(`${i+1}`,42,y);
       doc.fillColor('#fff').font('Helvetica').text(t.name,65,y,{width:260});
       doc.fillColor('#00d4aa').text(`${t.wins}`,340,y);
@@ -536,8 +519,6 @@ router.get('/league/:id/pdf', async (req, res) => {
       doc.fillColor('#aaa').text(`${pct}%`,415,y);
       y += 17;
     }
-
-    // Player stats
     y += 18;
     if (y > 720) { doc.addPage(); y = 40; }
     doc.fillColor('#ff6b35').fontSize(13).font('Helvetica-Bold').text('PLAYER STATISTICS', 40, y);
@@ -552,14 +533,12 @@ router.get('/league/:id/pdf', async (req, res) => {
       if (i%2===0) doc.rect(40,y-2,515,16).fill('#0a0a12');
       doc.fillColor(i===0?'#ff6b35':'#888').fontSize(8).font('Helvetica-Bold').text(`${i+1}`,42,y);
       doc.fillColor('#fff').font('Helvetica').text(p.name,58,y,{width:130});
-      doc.fillColor('#aaa').text((p.team_name||'').slice(0,20),195,y);
-      doc.text(p.pos,295,y);
+      doc.fillColor('#aaa').text((p.team_name||'').slice(0,20),195,y).text(p.pos,295,y);
       doc.fillColor('#ff6b35').text(`${p.pts}`,330,y);
       doc.fillColor('#fff').text(`${p.reb}`,360,y).text(`${p.ast}`,390,y).text(`${p.stl}`,420,y).text(`${p.blk}`,450,y);
       doc.fillColor('#00d4aa').text(`${p.fg}%`,480,y);
       y += 16;
     }
-
     doc.fillColor('#444').fontSize(8).text(`Generated by PH Hoops · ${new Date().toLocaleDateString('en-PH')}`,40,800);
     doc.end();
   } catch (err) { console.error(err); res.status(500).send('Error generating PDF'); }
@@ -567,12 +546,10 @@ router.get('/league/:id/pdf', async (req, res) => {
 
 // ── BRACKET ───────────────────────────────────────────────────────────────────
 router.get('/league/:id/bracket', async (req, res) => {
-  if (!isPro(req)) return res.redirect('/upgrade');
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
     if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
     const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC', [league.id]);
-
     res.send(adminPage(`Bracket — ${esc(league.name)}`, req.user, `
       <div class="admin-header">
         <div>
@@ -585,7 +562,7 @@ router.get('/league/:id/bracket', async (req, res) => {
         </div>
       </div>
       <div class="bracket-container">
-        <div class="bracket-info">Single-elimination bracket for top ${Math.min(teams.length,8)} teams by standings.</div>
+        <div class="bracket-info">Single-elimination bracket — top ${Math.min(teams.length,8)} teams by standings.</div>
         <div id="bracket"></div>
       </div>
       <script>
@@ -625,8 +602,6 @@ router.get('/league/:id/bracket', async (req, res) => {
 });
 
 // ── REST API ──────────────────────────────────────────────────────────────────
-
-// Teams
 router.post('/api/team', async (req, res) => {
   try {
     const { name, color, league_id } = req.body;
@@ -655,7 +630,6 @@ router.delete('/api/team/:id', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Players
 router.post('/api/player', async (req, res) => {
   try {
     const { league_id, team_id, name, pos, jersey, gp, pts, reb, ast, stl, blk, fg } = req.body;
@@ -691,7 +665,6 @@ router.delete('/api/player/:id', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Games
 router.post('/api/game', async (req, res) => {
   try {
     const { league_id, home_team_id, away_team_id, home_score, away_score, date, venue, status } = req.body;
@@ -709,10 +682,9 @@ router.put('/api/game/:id/score', async (req, res) => {
     const game = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.id]);
     if (!game || !await ownsLeague(game.league_id, req.user.id)) return res.status(403).json({ error: 'Forbidden' });
     const { home_score, away_score, status } = req.body;
-    await db.run('UPDATE games SET home_score=$1,away_score=$2,status=$3 WHERE id=$4',
-      [home_score, away_score, status, req.params.id]);
+    await db.run('UPDATE games SET home_score=$1,away_score=$2,status=$3 WHERE id=$4', [home_score, away_score, status, req.params.id]);
     if (status === 'final') {
-      if (home_score > away_score) {
+      if (Number(home_score) > Number(away_score)) {
         if (game.home_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1', [game.home_team_id]);
         if (game.away_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [game.away_team_id]);
       } else {
@@ -733,14 +705,8 @@ router.delete('/api/game/:id', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
 });
 
-// Leagues
 router.post('/api/league', async (req, res) => {
   try {
-    if (req.user.plan !== 'pro') {
-      const count = (await db.queryOne('SELECT COUNT(*) as c FROM leagues WHERE user_id=$1', [req.user.id])).c;
-      if (Number(count) >= FREE_LIMITS.leagues)
-        return res.status(403).json({ error: `Free plan allows ${FREE_LIMITS.leagues} league. Upgrade to Pro.`, upgrade: true });
-    }
     const { name, level, location, season, status, admin_code } = req.body;
     if (!name?.trim() || !admin_code?.trim()) return res.status(400).json({ error: 'Name and admin code required' });
     await db.run(
@@ -754,14 +720,13 @@ router.post('/api/league', async (req, res) => {
 router.delete('/api/league/:id', async (req, res) => {
   try {
     if (!await ownsLeague(req.params.id, req.user.id)) return res.status(403).json({ error: 'Forbidden' });
-    // Cascade via FK, just delete the league
     await db.run('DELETE FROM leagues WHERE id=$1', [req.params.id]);
     res.json({ ok: true });
   } catch (err) { console.error(err); res.status(500).json({ error: 'Server error' }); }
 });
 
 // ── SHARED HELPERS ────────────────────────────────────────────────────────────
-function addLeagueModal(pro) {
+function addLeagueModal() {
   return `
   <div id="modal-addLeague" class="modal-back hidden">
     <div class="modal">
@@ -775,10 +740,9 @@ function addLeagueModal(pro) {
       <div class="field-group"><label>Status</label>
         <select id="ln-status" class="input"><option value="upcoming">Upcoming</option><option value="ongoing">Ongoing</option></select>
       </div>
-      <div class="field-group"><label>Admin Code <span style="color:#555;font-size:11px">(share with scorers to give them access)</span></label>
+      <div class="field-group"><label>Admin Code <span style="color:#555;font-size:11px">(share with scorers)</span></label>
         <input id="ln-code" class="input" placeholder="e.g. BRGY2025" />
       </div>
-      ${!pro ? '<div class="alert-info">⚡ Free plan: 1 league max. <a href="/upgrade">Upgrade for unlimited →</a></div>' : ''}
       <div class="modal-actions">
         <button onclick="closeModal('addLeague')" class="btn-ghost">Cancel</button>
         <button onclick="saveLeague()" class="btn-primary">Create League</button>
@@ -797,10 +761,9 @@ function addLeagueModal(pro) {
         status:document.getElementById('ln-status').value,
         admin_code:document.getElementById('ln-code').value,
       };
+      if(!body.name||!body.admin_code){alert('League name and admin code are required.');return;}
       const r=await fetch('/admin/api/league',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-      const data=await r.json();
-      if(data.upgrade){alert('Free plan limit reached. Upgrade to Pro for unlimited leagues.');return;}
-      if(r.ok)location.reload();else alert(data.error||'Error creating league');
+      if(r.ok)location.reload();else{const e=await r.json();alert(e.error||'Error creating league');}
     }
   </script>`;
 }
@@ -819,7 +782,6 @@ function adminPage(title, user, content) {
   <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:#888">${esc(user.name)}</span>
-    ${user.plan==='pro'?'<span class="pro-badge">⚡ PRO</span>':'<a href="/upgrade" class="btn-upgrade-sm">Upgrade</a>'}
     <a href="/logout" class="btn-ghost-sm">Logout</a>
   </div>
 </nav>
