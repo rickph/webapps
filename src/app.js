@@ -35,10 +35,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'phhoops-session-secret-change-in-production',
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
-    secure:   process.env.NODE_ENV === 'production',
+    secure: false,
     httpOnly: true,
-    maxAge:   30 * 24 * 60 * 60 * 1000, // 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000,
   }
 }));
 
