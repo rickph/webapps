@@ -112,7 +112,7 @@ function renderLanding(leagues, stats, user) {
           <h2>Active Leagues</h2>
           <div class="level-filters">
             ${['All','Barangay','City/Municipal','Provincial','Regional']
-              .map(f=>`<button class="level-filter" onclick="filterLeagues(this,'${f}')">${f}</button>`).join('')}
+              .map(f=>`<button class="level-filter" data-level="${f}">${f}</button>`).join('')}
           </div>
         </div>
         <div class="league-grid" id="leagueGrid">
@@ -120,16 +120,7 @@ function renderLanding(leagues, stats, user) {
         </div>
       </div>
     </div>
-    <script>
-      document.querySelector('.level-filter').classList.add('active');
-      function filterLeagues(btn, level) {
-        document.querySelectorAll('.level-filter').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.league-card').forEach(c=>{
-          c.style.display = level==='All' || c.innerHTML.includes(level) ? '' : 'none';
-        });
-      }
-    </script>
+    <script src="/js/public.js"></script>
   `);
 }
 
@@ -178,9 +169,9 @@ function renderLeaguePage(league, teams, players, games, user) {
     </div>
 
     <div class="pub-tabs"><div class="tabs-inner">
-      <button class="ptab active" onclick="showTab('standings',this)">🏆 Standings</button>
-      <button class="ptab" onclick="showTab('players',this)">👤 Player Stats</button>
-      <button class="ptab" onclick="showTab('schedule',this)">📅 Schedule</button>
+      <button class="ptab active" data-tab="standings">🏆 Standings</button>
+      <button class="ptab" data-tab="players">👤 Player Stats</button>
+      <button class="ptab" data-tab="schedule">📅 Schedule</button>
     </div></div>
 
     <div class="pub-content">
@@ -239,14 +230,7 @@ function renderLeaguePage(league, teams, players, games, user) {
       </div>
     </div>
 
-    <script>
-      function showTab(name,btn){
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.add('hidden'));
-        document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
-        document.getElementById('tab-'+name).classList.remove('hidden');
-        btn.classList.add('active');
-      }
-    </script>
+    <script src="/js/public.js"></script>
   `);
 }
 

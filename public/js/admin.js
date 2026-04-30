@@ -28,3 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 });
+
+  // ── PRINT BUTTON ────────────────────────────────────────────────────────────
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () {
+      window.print();
+    });
+  }

@@ -652,7 +652,7 @@ router.get('/league/:id/bracket', async (req, res) => {
           <h1>🏆 Playoff Bracket</h1>
           <p>${esc(league.name)}</p>
         </div>
-        <div class="ah-right"><a href="javascript:window.print()" class="btn-ghost-sm">🖨 Print</a></div>
+        <div class="ah-right"><button class="btn-ghost-sm" id="printBtn">🖨 Print</button></div>
       </div>
       <div class="bracket-container">
         <div class="bracket-info">Single-elimination — top ${teams.slice(0,8).length} teams by standings.</div>
