@@ -2,7 +2,6 @@ require('dotenv').config();
 const express    = require('express');
 const session    = require('express-session');
 const path       = require('path');
-const helmet     = require('helmet');
 const cors       = require('cors');
 const rateLimit  = require('express-rate-limit');
 const { initDb } = require('./db/database');
@@ -10,9 +9,24 @@ const { initDb } = require('./db/database');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ── FORCE OVERRIDE CSP BEFORE ANYTHING ELSE ───────────────────────────────────
+// Railway injects its own CSP - we override it on every response
+app.use(function(req, res, next) {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "script-src-elem 'self' 'unsafe-inline'; " +
+    "script-src-attr 'unsafe-inline' 'unsafe-hashes'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data: https:; " +
+    "connect-src 'self';"
+  );
+  next();
+});
+
 // ── SECURITY ──────────────────────────────────────────────────────────────────
-// Disable CSP for now — inline scripts needed for admin panel
-app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
 
@@ -37,15 +51,9 @@ app.use(session({
 }));
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
-const authRouter   = require('./routes/auth');
-const publicRouter = require('./routes/public');
-const adminRouter  = require('./routes/admin');
-
-app.use('/',      authRouter);
-app.use('/',      publicRouter);
-app.use('/admin', adminRouter);
-
-// Upgrade stub
+app.use('/',      require('./routes/auth'));
+app.use('/',      require('./routes/public'));
+app.use('/admin', require('./routes/admin'));
 app.get('/upgrade', (req, res) => res.redirect('/admin'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
@@ -56,8 +64,8 @@ app.use((req, res) => {
 <body class="dark-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
   <div style="font-size:64px">🏀</div>
   <h1 style="font-family:'Russo One',sans-serif">Page Not Found</h1>
-  <p style="color:#666">The page you're looking for doesn't exist.</p>
-  <a href="/" style="color:#ff6b35;font-weight:700">← Go Home</a>
+  <p style="color:#666">The page you are looking for does not exist.</p>
+  <a href="/" style="color:#ff6b35;font-weight:700">Go Home</a>
 </body></html>`);
 });
 
@@ -76,14 +84,12 @@ async function boot() {
 ╔══════════════════════════════════════════╗
 ║  🏀  PH HOOPS League Manager             ║
 ║  http://localhost:${PORT}                   ║
-║                                          ║
 ║  Demo: demo@phhoops.com / demo1234       ║
 ╚══════════════════════════════════════════╝`);
     });
   } catch (err) {
     console.error('Failed to start:', err.message);
-    console.error('\nMake sure DATABASE_URL is set in your .env file.');
-    console.error('See .env.example for the format.\n');
+    console.error('Make sure DATABASE_URL is set in your .env file.');
     process.exit(1);
   }
 }
