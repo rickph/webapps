@@ -140,23 +140,72 @@ async function initSchema() {
     )
   `);
 
+  // FIBA-compliant game_stats table
   await run(`
     CREATE TABLE IF NOT EXISTS game_stats (
       id          SERIAL PRIMARY KEY,
       game_id     INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
       player_id   INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
       league_id   INTEGER NOT NULL REFERENCES leagues(id) ON DELETE CASCADE,
-      pts         INTEGER DEFAULT 0,
-      reb         INTEGER DEFAULT 0,
-      ast         INTEGER DEFAULT 0,
-      stl         INTEGER DEFAULT 0,
-      blk         INTEGER DEFAULT 0,
-      fgm         INTEGER DEFAULT 0,
-      fga         INTEGER DEFAULT 0,
+      -- Scoring (FIBA separates 2PT and 3PT)
+      fg2m        INTEGER DEFAULT 0,  -- 2-point field goals made
+      fg2a        INTEGER DEFAULT 0,  -- 2-point field goal attempts
+      fg3m        INTEGER DEFAULT 0,  -- 3-point field goals made
+      fg3a        INTEGER DEFAULT 0,  -- 3-point field goal attempts
+      ftm         INTEGER DEFAULT 0,  -- free throws made
+      fta         INTEGER DEFAULT 0,  -- free throw attempts
+      -- Rebounds (FIBA separates offensive/defensive)
+      oreb        INTEGER DEFAULT 0,  -- offensive rebounds
+      dreb        INTEGER DEFAULT 0,  -- defensive rebounds
+      -- Other FIBA stats
+      ast         INTEGER DEFAULT 0,  -- assists
+      stl         INTEGER DEFAULT 0,  -- steals
+      blk         INTEGER DEFAULT 0,  -- blocks
+      to_val      INTEGER DEFAULT 0,  -- turnovers
+      foul        INTEGER DEFAULT 0,  -- personal fouls
       created_at  TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(game_id, player_id)
     )
   `);
+
+  // Add quarter column to games table
+  try { await run('ALTER TABLE games ADD COLUMN IF NOT EXISTS quarter INTEGER DEFAULT 1'); } catch(e) {}
+
+  // Players table — add FIBA extended columns
+  await run(`
+    CREATE TABLE IF NOT EXISTS player_season_stats (
+      id          SERIAL PRIMARY KEY,
+      player_id   INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      league_id   INTEGER NOT NULL REFERENCES leagues(id) ON DELETE CASCADE,
+      gp          INTEGER DEFAULT 0,
+      pts         NUMERIC(5,1) DEFAULT 0,
+      fg2m        NUMERIC(5,1) DEFAULT 0,
+      fg2a        NUMERIC(5,1) DEFAULT 0,
+      fg3m        NUMERIC(5,1) DEFAULT 0,
+      fg3a        NUMERIC(5,1) DEFAULT 0,
+      ftm         NUMERIC(5,1) DEFAULT 0,
+      fta         NUMERIC(5,1) DEFAULT 0,
+      oreb        NUMERIC(5,1) DEFAULT 0,
+      dreb        NUMERIC(5,1) DEFAULT 0,
+      reb         NUMERIC(5,1) DEFAULT 0,
+      ast         NUMERIC(5,1) DEFAULT 0,
+      stl         NUMERIC(5,1) DEFAULT 0,
+      blk         NUMERIC(5,1) DEFAULT 0,
+      to_val      NUMERIC(5,1) DEFAULT 0,
+      foul        NUMERIC(5,1) DEFAULT 0,
+      fgp         NUMERIC(5,1) DEFAULT 0,
+      fg2p        NUMERIC(5,1) DEFAULT 0,
+      fg3p        NUMERIC(5,1) DEFAULT 0,
+      ftp         NUMERIC(5,1) DEFAULT 0,
+      eff         NUMERIC(5,1) DEFAULT 0,
+      UNIQUE(player_id, league_id)
+    )
+  `);
+
+  // Migrate old game_stats columns if upgrading
+  for (const col of ['fg2m','fg2a','fg3m','fg3a','oreb','dreb','to_val','foul']) {
+    try { await run('ALTER TABLE game_stats ADD COLUMN IF NOT EXISTS ' + col + ' INTEGER DEFAULT 0'); } catch(e) {}
+  }
 
   console.log('✅ Schema ready');
 }

@@ -35,7 +35,7 @@ router.get('/league/:id', async (req, res) => {
     );
     if (!league) return res.status(404).send(notFound());
 
-    const [teams, players, games] = await Promise.all([
+    const [teams, players, games, seasonStatsRows] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name,t.color as team_color
                 FROM players p LEFT JOIN teams t ON p.team_id=t.id
@@ -45,8 +45,12 @@ router.get('/league/:id', async (req, res) => {
                 LEFT JOIN teams ht ON g.home_team_id=ht.id
                 LEFT JOIN teams at ON g.away_team_id=at.id
                 WHERE g.league_id=$1 ORDER BY g.id DESC`, [league.id]),
+      db.query('SELECT * FROM player_season_stats WHERE league_id=$1', [league.id]),
     ]);
-    res.send(renderLeaguePage(league, teams, players, games, req.user));
+    // Build season stats map by player_id
+    const seasonStats = {};
+    seasonStatsRows.forEach(s => { seasonStats[s.player_id] = s; });
+    res.send(renderLeaguePage(league, teams, players, games, req.user, seasonStats));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
 
@@ -124,7 +128,7 @@ function renderLanding(leagues, stats, user) {
   `);
 }
 
-function renderLeaguePage(league, teams, players, games, user) {
+function renderLeaguePage(league, teams, players, games, user, seasonStats = {}) {
   const sorted = {
     reb: [...players].sort((a,b)=>b.reb-a.reb),
     ast: [...players].sort((a,b)=>b.ast-a.ast),
@@ -192,20 +196,48 @@ function renderLeaguePage(league, teams, players, games, user) {
       </div>
 
       <div id="tab-players" class="tab-pane hidden">
+        <div style="overflow-x:auto">
         <table class="stats-table">
-          <thead><tr><th>#</th><th>Player</th><th>POS</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th></tr></thead>
+          <thead><tr>
+            <th>#</th><th>Player</th><th>POS</th><th>GP</th>
+            <th title="Points Per Game">PTS</th>
+            <th title="Total Rebounds">REB</th>
+            <th title="Assists">AST</th>
+            <th title="Steals">STL</th>
+            <th title="Blocks">BLK</th>
+            <th title="Turnovers">TO</th>
+            <th title="FG%">FG%</th>
+            <th title="3-Point %">3P%</th>
+            <th title="Free Throw %">FT%</th>
+            <th title="FIBA Efficiency Rating">EFF</th>
+          </tr></thead>
           <tbody>
-            ${players.map((p,i)=>`
-              <tr>
-                <td class="rank">${i+1}</td>
-                <td><div style="font-weight:600">${esc(p.name)}</div><div class="sub-text">${esc(p.team_name||'')}</div></td>
-                <td><span class="pos-badge">${p.pos}</span></td>
-                <td class="orange">${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
-                <td>${p.stl}</td><td>${p.blk}</td><td class="teal">${p.fg}%</td>
-              </tr>`).join('') || '<tr><td colspan="9" class="empty">No players yet.</td></tr>'}
+            ${players.map((p,i) => {
+              const ss  = seasonStats[p.id] || {};
+              const fg3p = ss.fg3p != null ? ss.fg3p+'%' : '—';
+              const ftp  = ss.ftp  != null ? ss.ftp+'%'  : '—';
+              const eff  = ss.eff  != null ? ss.eff       : '—';
+              const to   = ss.to_val != null ? ss.to_val  : '—';
+              return '<tr>' +
+                '<td class="rank">' + (i+1) + '</td>' +
+                '<td><div style="font-weight:600">' + esc(p.name) + '</div><div class="sub-text">' + esc(p.team_name||'') + '</div></td>' +
+                '<td><span class="pos-badge">' + p.pos + '</span></td>' +
+                '<td style="color:#888">' + (p.gp||0) + '</td>' +
+                '<td class="orange">' + p.pts + '</td>' +
+                '<td>' + p.reb + '</td>' +
+                '<td>' + p.ast + '</td>' +
+                '<td>' + p.stl + '</td>' +
+                '<td>' + p.blk + '</td>' +
+                '<td style="color:#ff4757">' + to + '</td>' +
+                '<td class="teal">' + p.fg + '%</td>' +
+                '<td style="color:#a78bfa">' + fg3p + '</td>' +
+                '<td style="color:#f7c948">' + ftp + '</td>' +
+                '<td style="color:#ff6b35;font-weight:700">' + eff + '</td>' +
+                '</tr>';
+            }).join('') || '<tr><td colspan="14" class="empty">No players yet.</td></tr>'}
           </tbody>
         </table>
-      </div>
+        </div>      </div>
 
       <div id="tab-schedule" class="tab-pane hidden">
         ${games.map(g=>`

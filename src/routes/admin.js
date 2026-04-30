@@ -490,261 +490,367 @@ router.get('/league/:id/score/:gid', async (req, res) => {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
     const game   = await db.queryOne(`
       SELECT g.*,ht.name as home_name,at.name as away_name,
-             ht.id as htid, at.id as atid
+             ht.id as htid, at.id as atid, ht.color as home_color, at.color as away_color
       FROM games g
       LEFT JOIN teams ht ON g.home_team_id=ht.id
       LEFT JOIN teams at ON g.away_team_id=at.id
       WHERE g.id=$1`, [req.params.gid]);
     if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
 
-    // Get all players from both teams
     const homePlayers = game.htid ? await db.query(
       'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
     const awayPlayers = game.atid ? await db.query(
       'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
 
-    // Get existing game stats if any
-    const existingStats = await db.query(
-      'SELECT * FROM game_stats WHERE game_id=$1', [game.id]);
+    const existingStats = await db.query('SELECT * FROM game_stats WHERE game_id=$1', [game.id]);
     const statMap = {};
     existingStats.forEach(s => { statMap[s.player_id] = s; });
 
-    function playerStatRow(p) {
-      const s = statMap[p.id] || {};
-      return `
-        <tr>
-          <td style="font-weight:600;white-space:nowrap">
-            <span class="pos-badge">${p.pos}</span>
-            #${p.jersey} ${esc(p.name)}
-          </td>
-          <td><input type="number" name="pts_${p.id}" value="${s.pts||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="reb_${p.id}" value="${s.reb||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="ast_${p.id}" value="${s.ast||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="stl_${p.id}" value="${s.stl||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="blk_${p.id}" value="${s.blk||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="fgm_${p.id}" value="${s.fgm||0}" min="0"
-            class="stat-input" /></td>
-          <td><input type="number" name="fga_${p.id}" value="${s.fga||0}" min="0"
-            class="stat-input" /></td>
-        </tr>`;
-    }
+    const allPlayers = [...homePlayers, ...awayPlayers];
+    const allPlayerIds = allPlayers.map(p => p.id).join(',');
 
-    const allPlayerIds = [...homePlayers, ...awayPlayers].map(p => p.id);
+    const homeColor = game.home_color || '#e63946';
+    const awayColor = game.away_color || '#457b9d';
+
+    // Build player list sidebar
+    const playerListHTML = `
+      <div class="lsc-section-label" style="color:${homeColor}">${esc(game.home_name||'Home')}</div>
+      ${homePlayers.map(p => {
+        const s = statMap[p.id] || {};
+        return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos}" data-jersey="${p.jersey||''}" data-team="${esc(game.home_name||'Home')}" data-color="${homeColor}"
+          data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}" data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}" data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
+          <span class="lsc-player-pos">${p.pos}</span>
+          <span class="lsc-player-name">${esc(p.name)}</span>
+          <span class="lsc-player-pts">${s.pts||0}</span>
+        </div>`;
+      }).join('')}
+      <div class="lsc-section-label" style="color:${awayColor};margin-top:12px">${esc(game.away_name||'Away')}</div>
+      ${awayPlayers.map(p => {
+        const s = statMap[p.id] || {};
+        return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos}" data-jersey="${p.jersey||''}" data-team="${esc(game.away_name||'Away')}" data-color="${awayColor}"
+          data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}" data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}" data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
+          <span class="lsc-player-pos">${p.pos}</span>
+          <span class="lsc-player-name">${esc(p.name)}</span>
+          <span class="lsc-player-pts">${s.pts||0}</span>
+        </div>`;
+      }).join('')}
+    `;
 
     res.send(adminPage('Live Score', req.user, `
-      <div class="admin-header"><div>
-        <a href="/admin/league/${league.id}" class="back-link">← Back</a>
-        <h1>🔴 Live Scoring</h1>
-        <p>${esc(game.home_name||'Home')} vs ${esc(game.away_name||'Away')} · ${esc(game.date||'')}</p>
-      </div></div>
+      <style>
+        .lsc-wrap { display:grid; grid-template-columns:280px 1fr; gap:16px; max-width:1100px; }
+        .lsc-scoreboard { background:linear-gradient(135deg,#1a2a6c,#2a4db5); border-radius:14px; padding:24px 28px; margin-bottom:16px; position:relative; }
+        .lsc-live-badge { background:#ff4757; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; letter-spacing:1px; display:inline-flex; align-items:center; gap:5px; margin-bottom:16px; }
+        .lsc-live-dot { width:7px; height:7px; border-radius:50%; background:#fff; animation:pulse 1s infinite; }
+        .lsc-teams { display:flex; align-items:center; justify-content:space-between; }
+        .lsc-team { text-align:center; flex:1; }
+        .lsc-team-logo { width:52px; height:52px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff; margin:0 auto 8px; }
+        .lsc-team-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; }
+        .lsc-score { font-size:72px; font-weight:900; color:#fff; line-height:1; }
+        .lsc-vs { color:rgba(255,255,255,.4); font-size:18px; font-weight:700; flex-shrink:0; padding:0 20px; }
+        .lsc-qtr { position:absolute; top:24px; right:28px; text-align:right; }
+        .lsc-qtr-label { font-size:11px; color:rgba(255,255,255,.5); letter-spacing:1px; font-weight:700; }
+        .lsc-qtr-val { font-size:22px; font-weight:800; color:#f7c948; }
+        .lsc-end-btn { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.25); padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-top:16px; }
+        .lsc-sidebar { background:#0f1a2e; border-radius:12px; padding:16px; overflow-y:auto; max-height:calc(100vh - 180px); }
+        .lsc-section-label { font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; padding:4px 8px; border-radius:4px; background:rgba(255,255,255,.06); }
+        .lsc-player { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; cursor:pointer; border:1px solid transparent; margin-bottom:4px; transition:all .15s; }
+        .lsc-player:hover { background:rgba(255,255,255,.06); }
+        .lsc-player.active { background:rgba(255,107,53,.12); border-color:#ff6b35; }
+        .lsc-player-pos { font-size:10px; font-weight:700; background:rgba(255,255,255,.1); color:#aaa; padding:2px 5px; border-radius:3px; flex-shrink:0; }
+        .lsc-player-name { flex:1; font-size:13px; font-weight:600; color:#ddd; }
+        .lsc-player-pts { font-size:13px; font-weight:800; color:#ff6b35; min-width:24px; text-align:right; }
+        .lsc-panel { background:#0f1a2e; border-radius:12px; padding:20px; }
+        .lsc-panel-header { margin-bottom:16px; }
+        .lsc-panel-name { font-size:20px; font-weight:800; color:#fff; }
+        .lsc-panel-sub { font-size:13px; color:#666; margin-top:2px; }
+        .lsc-panel-pts { font-size:32px; font-weight:900; color:#ff6b35; text-align:right; line-height:1; }
+        .lsc-panel-pts-label { font-size:10px; color:#666; font-weight:700; letter-spacing:1px; text-align:right; }
+        .lsc-shot-grid { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:8px; align-items:center; margin-bottom:16px; }
+        .lsc-shot-btn { padding:12px 8px; border-radius:8px; border:none; font-weight:800; font-size:14px; cursor:pointer; transition:all .15s; }
+        .lsc-shot-btn.make { background:#e63946; color:#fff; }
+        .lsc-shot-btn.make:hover { background:#c1121f; transform:scale(1.03); }
+        .lsc-shot-btn.miss { background:rgba(255,255,255,.08); color:#aaa; border:1px solid rgba(255,255,255,.12); }
+        .lsc-shot-btn.miss:hover { background:rgba(255,255,255,.13); color:#fff; }
+        .lsc-minus { background:none; border:none; color:#ff4444; font-size:18px; font-weight:700; cursor:pointer; padding:0 4px; }
+        .lsc-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px; }
+        .lsc-stat-box { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:12px; }
+        .lsc-stat-label { font-size:10px; font-weight:700; color:#666; letter-spacing:1px; margin-bottom:6px; }
+        .lsc-stat-val { font-size:22px; font-weight:800; color:#fff; text-align:center; margin-bottom:8px; }
+        .lsc-stat-btns { display:flex; justify-content:space-between; }
+        .lsc-stat-btn { background:none; border:none; font-size:18px; font-weight:700; cursor:pointer; padding:0 8px; transition:color .15s; }
+        .lsc-stat-btn.minus { color:#ff4444; }
+        .lsc-stat-btn.plus  { color:#00d4aa; }
+        .lsc-stat-btn:hover { opacity:.7; }
+        .lsc-save-bar { display:flex; gap:10px; margin-top:16px; }
+        .lsc-empty { color:#444; text-align:center; padding:40px; font-size:14px; }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+        @media(max-width:700px){ .lsc-wrap{grid-template-columns:1fr;} .lsc-sidebar{max-height:200px;} }
+      </style>
 
-      <form action="/admin/league/${league.id}/score/${game.id}" method="POST">
-        <input type="hidden" name="player_ids" value="${allPlayerIds.join(',')}" />
+      <a href="/admin/league/${league.id}" class="back-link" style="display:inline-block;margin-bottom:16px">← Back to League</a>
 
-        <!-- TEAM SCORES -->
-        <div class="card card-hot" style="margin-bottom:20px">
-          <div class="live-scoreboard">
-            <div class="live-team">
-              <div class="live-team-name">${esc(game.home_name||'Home')}</div>
-              <input name="home_score" type="number" value="${game.home_score||0}" min="0"
-                class="live-score" style="background:none;border:2px solid rgba(0,212,170,.3);color:#00d4aa;width:130px;text-align:center;font-size:64px;font-weight:900;border-radius:8px;outline:none;padding:4px;" />
-            </div>
-            <div class="live-center">
-              <div style="font-size:11px;color:#666;font-weight:700;letter-spacing:2px;margin-bottom:6px">QTR</div>
-              <input name="quarter" type="number" min="1" max="4" value="${game.quarter||1}"
-                style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#f7c948;width:70px;text-align:center;font-size:36px;font-weight:800;border-radius:6px;outline:none;" />
-              <div style="margin-top:12px">
-                <select name="status" class="input" style="width:130px;text-align:center">
-                  <option value="ongoing" ${game.status==='ongoing'?'selected':''}>● Ongoing</option>
-                  <option value="final"   ${game.status==='final'?'selected':''}>✓ Final</option>
-                </select>
+      <!-- SCOREBOARD -->
+      <div class="lsc-scoreboard">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="lsc-live-badge"><span class="lsc-live-dot"></span> LIVE</span>
+          <span style="color:rgba(255,255,255,.5);font-size:13px">${esc(game.date||'')}</span>
+        </div>
+        <div class="lsc-teams">
+          <div class="lsc-team">
+            <div class="lsc-team-logo" style="background:${homeColor}" id="sb-home-logo">${esc((game.home_name||'H').substring(0,3).toUpperCase())}</div>
+            <div class="lsc-team-name">${esc(game.home_name||'Home')}</div>
+            <div class="lsc-score" id="sb-home-score">${game.home_score||0}</div>
+          </div>
+          <div class="lsc-vs">VS</div>
+          <div class="lsc-team">
+            <div class="lsc-team-logo" style="background:${awayColor}" id="sb-away-logo">${esc((game.away_name||'A').substring(0,3).toUpperCase())}</div>
+            <div class="lsc-team-name">${esc(game.away_name||'Away')}</div>
+            <div class="lsc-score" id="sb-away-score">${game.away_score||0}</div>
+          </div>
+        </div>
+        <div class="lsc-qtr">
+          <div class="lsc-qtr-label">QUARTER</div>
+          <div class="lsc-qtr-val" id="sb-qtr">${game.quarter||1}</div>
+          <div style="display:flex;gap:4px;margin-top:4px">
+            <button class="lsc-end-btn" style="padding:4px 10px;font-size:12px" id="qtrMinus">−</button>
+            <button class="lsc-end-btn" style="padding:4px 10px;font-size:12px" id="qtrPlus">+</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
+          <button class="lsc-end-btn" id="saveProgressBtn">💾 Save Progress</button>
+          <button class="lsc-end-btn" id="endGameBtn" style="background:rgba(255,71,87,.25);border-color:rgba(255,71,87,.4)">⏹ End Game</button>
+        </div>
+      </div>
+
+      <!-- MAIN LAYOUT -->
+      <div class="lsc-wrap">
+        <!-- PLAYER LIST -->
+        <div class="lsc-sidebar">
+          <div style="font-size:11px;color:#555;font-weight:700;letter-spacing:2px;margin-bottom:12px">SELECT PLAYER</div>
+          ${allPlayers.length > 0 ? playerListHTML : '<div class="lsc-empty">No players added yet.<br><a href="/admin/league/${league.id}/add-player" style="color:#ff6b35">Add players first →</a></div>'}
+        </div>
+
+        <!-- STAT PANEL -->
+        <div class="lsc-panel" id="statPanel">
+          <div class="lsc-empty" id="noPlayerMsg">
+            👆 Select a player from the left to record stats
+          </div>
+          <div id="playerPanel" style="display:none">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+              <div class="lsc-panel-header">
+                <div class="lsc-panel-name" id="pp-name">—</div>
+                <div class="lsc-panel-sub" id="pp-sub">—</div>
+              </div>
+              <div>
+                <div class="lsc-panel-pts" id="pp-pts">0</div>
+                <div class="lsc-panel-pts-label">POINTS</div>
               </div>
             </div>
-            <div class="live-team">
-              <div class="live-team-name">${esc(game.away_name||'Away')}</div>
-              <input name="away_score" type="number" value="${game.away_score||0}" min="0"
-                class="live-score" style="background:none;border:2px solid rgba(255,107,53,.3);color:#ff6b35;width:130px;text-align:center;font-size:64px;font-weight:900;border-radius:8px;outline:none;padding:4px;" />
+
+            <!-- FIBA SHOT BUTTONS -->
+            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;margin-bottom:10px">RECORDING: <span id="pp-recording"></span></div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:6px">
+              <button class="lsc-shot-btn make" id="btn-2pt">+2 PT</button>
+              <button class="lsc-minus" id="btn-2pt-minus">−</button>
+              <button class="lsc-shot-btn miss" id="btn-miss2">Miss 2</button>
+              <button class="lsc-minus" id="btn-miss2-minus">−</button>
+              <button class="lsc-shot-btn make" id="btn-3pt">+3 PT</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:16px">
+              <button class="lsc-minus" id="btn-3pt-minus">−</button>
+              <div></div>
+              <button class="lsc-shot-btn miss" id="btn-miss3">Miss 3</button>
+              <button class="lsc-minus" id="btn-miss3-minus">−</button>
+              <div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;margin-bottom:16px">
+              <button class="lsc-shot-btn make" id="btn-ft">+1 FT</button>
+              <button class="lsc-minus" id="btn-ft-minus">−</button>
+              <button class="lsc-shot-btn miss" id="btn-missft">Miss FT</button>
+              <button class="lsc-minus" id="btn-missft-minus">−</button>
+              <div></div>
+            </div>
+
+            <!-- FIBA SHOOTING LINE -->
+            <div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px 12px;font-size:12px;color:#888;margin-bottom:12px;font-weight:600;letter-spacing:.5px" id="pp-fg-line">0/0 2PT &nbsp; 0/0 3PT &nbsp; 0/0 FT</div>
+
+            <!-- FIBA STAT COUNTERS -->
+            <div class="lsc-stat-grid">
+              ${[
+                {k:'oreb',label:'OREB',desc:'Off. Reb'},
+                {k:'dreb',label:'DREB',desc:'Def. Reb'},
+                {k:'ast', label:'AST', desc:'Assists'},
+                {k:'stl', label:'STL', desc:'Steals'},
+                {k:'blk', label:'BLK', desc:'Blocks'},
+                {k:'to',  label:'TO',  desc:'Turnovers'},
+                {k:'foul',label:'FOUL',desc:'Pers. Fouls'},
+              ].map(s => `
+              <div class="lsc-stat-box">
+                <div class="lsc-stat-label">${s.label}</div>
+                <div class="lsc-stat-val" id="pp-${s.k}">0</div>
+                <div class="lsc-stat-btns">
+                  <button class="lsc-stat-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
+                  <button class="lsc-stat-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
+                </div>
+              </div>`).join('')}
+            </div>
+
+            <!-- FIBA EFF + PERCENTAGES -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+              <div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:#ff6b35;font-weight:700;letter-spacing:1px">EFF</div>
+                <div style="font-size:22px;font-weight:800;color:#ff6b35" id="pp-eff">0</div>
+              </div>
+              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">FG%</div>
+                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-fgp">—</div>
+              </div>
+              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">3P%</div>
+                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-fg3p">—</div>
+              </div>
+              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">FT%</div>
+                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-ftp">—</div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- PLAYER STATS -->
-        ${homePlayers.length > 0 ? `
-        <div class="card" style="margin-bottom:16px">
-          <div style="font-size:16px;font-weight:800;color:#ff6b35;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-            <div style="width:4px;height:20px;background:#ff6b35;border-radius:2px"></div>
-            ${esc(game.home_name||'Home Team')} — Player Stats
-          </div>
-          <div style="overflow-x:auto">
-            <table class="stats-table">
-              <thead><tr>
-                <th>Player</th>
-                <th>PTS</th><th>REB</th><th>AST</th>
-                <th>STL</th><th>BLK</th><th>FGM</th><th>FGA</th>
-              </tr></thead>
-              <tbody>${homePlayers.map(p => playerStatRow(p)).join('')}</tbody>
-            </table>
-          </div>
-        </div>` : ''}
-
-        ${awayPlayers.length > 0 ? `
-        <div class="card" style="margin-bottom:20px">
-          <div style="font-size:16px;font-weight:800;color:#00d4aa;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-            <div style="width:4px;height:20px;background:#00d4aa;border-radius:2px"></div>
-            ${esc(game.away_name||'Away Team')} — Player Stats
-          </div>
-          <div style="overflow-x:auto">
-            <table class="stats-table">
-              <thead><tr>
-                <th>Player</th>
-                <th>PTS</th><th>REB</th><th>AST</th>
-                <th>STL</th><th>BLK</th><th>FGM</th><th>FGA</th>
-              </tr></thead>
-              <tbody>${awayPlayers.map(p => playerStatRow(p)).join('')}</tbody>
-            </table>
-          </div>
-        </div>` : ''}
-
-        ${(homePlayers.length === 0 && awayPlayers.length === 0) ? `
-        <div class="alert-info" style="margin-bottom:20px">
-          💡 No players added to these teams yet.
-          <a href="/admin/league/${league.id}/add-player" style="color:#ff6b35">Add players →</a>
-        </div>` : ''}
-
-        <div style="display:flex;gap:10px;justify-content:center;padding:8px 0">
-          <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
-          <button type="submit" name="save_type" value="save" class="btn-ghost">💾 Save Progress</button>
-          <button type="submit" name="save_type" value="final" class="btn-primary">✅ Save Final &amp; Update Standings</button>
-        </div>
+      <!-- HIDDEN FORM for submission -->
+      <form id="scoreForm" action="/admin/league/${league.id}/score/${game.id}" method="POST" style="display:none">
+        <input type="hidden" name="player_ids"  id="f-player-ids"  value="${allPlayerIds}" />
+        <input type="hidden" name="home_score"  id="f-home-score"  value="${game.home_score||0}" />
+        <input type="hidden" name="away_score"  id="f-away-score"  value="${game.away_score||0}" />
+        <input type="hidden" name="quarter"     id="f-quarter"     value="${game.quarter||1}" />
+        <input type="hidden" name="status"      id="f-status"      value="${game.status||'ongoing'}" />
+        <input type="hidden" name="save_type"   id="f-save-type"   value="save" />
+        <!-- Player stat hidden fields populated by JS -->
+        <div id="f-player-fields"></div>
       </form>
 
-      <style>
-        .stat-input {
-          width: 52px;
-          text-align: center;
-          background: rgba(255,255,255,.06);
-          border: 1px solid rgba(255,255,255,.1);
-          border-radius: 4px;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 700;
-          padding: 4px 2px;
-          outline: none;
-        }
-        .stat-input:focus {
-          border-color: #ff6b35;
-          background: rgba(255,107,53,.08);
-        }
-      </style>
+      <script src="/js/livescore.js"></script>
+      <script>
+        // Pass server data to JS
+        window.LSC_DATA = {
+          homeTeam: "${esc(game.home_name||'Home')}",
+          awayTeam: "${esc(game.away_name||'Away')}",
+          stats: ${JSON.stringify(statMap)}
+        };
+      </script>
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
+
 
 router.post('/league/:id/score/:gid', async (req, res) => {
   try {
     if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
     const { home_score, away_score, status, save_type, player_ids } = req.body;
     const game = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.gid]);
+    const { computeGameStats, computeSeasonAverages } = require('../fiba-stats');
 
-    // Determine final status
-    const isFinal = save_type === 'final' || status === 'final';
+    const isFinal  = save_type === 'final' || status === 'final';
     const newStatus = isFinal ? 'final' : (status || 'ongoing');
 
-    // Update game score and status
+    // Update game score
     await db.run(
-      'UPDATE games SET home_score=$1,away_score=$2,status=$3 WHERE id=$4',
-      [home_score||0, away_score||0, newStatus, req.params.gid]
+      'UPDATE games SET home_score=$1,away_score=$2,status=$3,quarter=$4 WHERE id=$5',
+      [home_score||0, away_score||0, newStatus, req.body.quarter||1, req.params.gid]
     );
 
-    // Save player stats
+    // Save FIBA player stats per game
     if (player_ids) {
-      const ids = player_ids.split(',').filter(Boolean);
-      for (const pid of ids) {
-        const pts  = parseInt(req.body['pts_'+pid])  || 0;
-        const reb  = parseInt(req.body['reb_'+pid])  || 0;
-        const ast  = parseInt(req.body['ast_'+pid])  || 0;
-        const stl  = parseInt(req.body['stl_'+pid])  || 0;
-        const blk  = parseInt(req.body['blk_'+pid])  || 0;
-        const fgm  = parseInt(req.body['fgm_'+pid])  || 0;
-        const fga  = parseInt(req.body['fga_'+pid])  || 0;
+      const ids2 = player_ids.split(',').filter(Boolean);
+      for (const pid of ids2) {
+        const g = {
+          fg2m:  parseInt(req.body['fg2m_'+pid])  || 0,
+          fg2a:  parseInt(req.body['fg2a_'+pid])  || 0,
+          fg3m:  parseInt(req.body['fg3m_'+pid])  || 0,
+          fg3a:  parseInt(req.body['fg3a_'+pid])  || 0,
+          ftm:   parseInt(req.body['ftm_'+pid])   || 0,
+          fta:   parseInt(req.body['fta_'+pid])   || 0,
+          oreb:  parseInt(req.body['oreb_'+pid])  || 0,
+          dreb:  parseInt(req.body['dreb_'+pid])  || 0,
+          ast:   parseInt(req.body['ast_'+pid])   || 0,
+          stl:   parseInt(req.body['stl_'+pid])   || 0,
+          blk:   parseInt(req.body['blk_'+pid])   || 0,
+          to_val:parseInt(req.body['to_'+pid])    || 0,
+          foul:  parseInt(req.body['foul_'+pid])  || 0,
+        };
 
-        // Upsert game stats
+        // Upsert game stats (FIBA columns)
         await db.run(`
-          INSERT INTO game_stats (game_id, player_id, league_id, pts, reb, ast, stl, blk, fgm, fga)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-          ON CONFLICT (game_id, player_id)
-          DO UPDATE SET pts=$4,reb=$5,ast=$6,stl=$7,blk=$8,fgm=$9,fga=$10
-        `, [req.params.gid, pid, req.params.id, pts, reb, ast, stl, blk, fgm, fga]);
+          INSERT INTO game_stats
+            (game_id,player_id,league_id,fg2m,fg2a,fg3m,fg3a,ftm,fta,oreb,dreb,ast,stl,blk,to_val,foul)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          ON CONFLICT (game_id,player_id)
+          DO UPDATE SET
+            fg2m=$4,fg2a=$5,fg3m=$6,fg3a=$7,ftm=$8,fta=$9,
+            oreb=$10,dreb=$11,ast=$12,stl=$13,blk=$14,to_val=$15,foul=$16
+        `, [req.params.gid, pid, req.params.id,
+            g.fg2m,g.fg2a,g.fg3m,g.fg3a,g.ftm,g.fta,
+            g.oreb,g.dreb,g.ast,g.stl,g.blk,g.to_val,g.foul]);
+      }
+
+      // Always recalculate FIBA season averages immediately
+      for (const pid of ids2) {
+        const allGames = await db.query(
+          'SELECT * FROM game_stats WHERE player_id=$1 AND league_id=$2',
+          [pid, req.params.id]
+        );
+        if (!allGames.length) continue;
+        const season = computeSeasonAverages(allGames);
+        const av = season.averages;
+        const tot = season.totals;
+
+        // Upsert player season stats
+        await db.run(`
+          INSERT INTO player_season_stats
+            (player_id,league_id,gp,pts,fg2m,fg2a,fg3m,fg3a,ftm,fta,
+             oreb,dreb,reb,ast,stl,blk,to_val,foul,fgp,fg2p,fg3p,ftp,eff)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+          ON CONFLICT (player_id,league_id)
+          DO UPDATE SET
+            gp=$3,pts=$4,fg2m=$5,fg2a=$6,fg3m=$7,fg3a=$8,ftm=$9,fta=$10,
+            oreb=$11,dreb=$12,reb=$13,ast=$14,stl=$15,blk=$16,to_val=$17,
+            foul=$18,fgp=$19,fg2p=$20,fg3p=$21,ftp=$22,eff=$23
+        `, [pid, req.params.id, season.gp,
+            av.pts, av.fg2m, av.fg2a, av.fg3m, av.fg3a, av.ftm, av.fta,
+            av.oreb, av.dreb, av.reb, av.ast, av.stl, av.blk, av.to,
+            av.foul, av.fgp, av.fg2p, av.fg3p, av.ftp, av.eff]);
+
+        // Also update the main players table for backward compatibility
+        await db.run(`
+          UPDATE players SET
+            gp=$1, pts=$2, reb=$3, ast=$4, stl=$5, blk=$6, fg=$7
+          WHERE id=$8
+        `, [season.gp, av.pts, av.reb, av.ast, av.stl, av.blk, av.fgp, pid]);
       }
     }
 
-    // Always recalculate season averages immediately on every save
-    if (player_ids) {
-      const ids = player_ids.split(',').filter(Boolean);
-      for (const pid of ids) {
-        const aggRow = await db.queryOne(`
-          SELECT
-            COUNT(*)   as gp,
-            AVG(pts)   as pts,
-            AVG(reb)   as reb,
-            AVG(ast)   as ast,
-            AVG(stl)   as stl,
-            AVG(blk)   as blk,
-            CASE WHEN SUM(fga) > 0
-              THEN ROUND((SUM(fgm)::numeric / SUM(fga)) * 100, 1)
-              ELSE 0
-            END as fg
-          FROM game_stats
-          WHERE player_id=$1 AND league_id=$2
-        `, [pid, req.params.id]);
-
-        if (aggRow) {
-          await db.run(`
-            UPDATE players SET
-              gp  = $1, pts = $2, reb = $3, ast = $4,
-              stl = $5, blk = $6, fg  = $7
-            WHERE id = $8
-          `, [
-            aggRow.gp || 0,
-            parseFloat(aggRow.pts || 0).toFixed(1),
-            parseFloat(aggRow.reb || 0).toFixed(1),
-            parseFloat(aggRow.ast || 0).toFixed(1),
-            parseFloat(aggRow.stl || 0).toFixed(1),
-            parseFloat(aggRow.blk || 0).toFixed(1),
-            parseFloat(aggRow.fg  || 0).toFixed(1),
-            pid
-          ]);
-        }
-      }
-    }
-
-    // Update W/L only when game is marked Final
+    // Update W/L when final
     if (isFinal && game) {
       const h = Number(home_score), a = Number(away_score);
       if (h > a) {
-        if (game.home_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1', [game.home_team_id]);
-        if (game.away_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [game.away_team_id]);
+        if (game.home_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1',[game.home_team_id]);
+        if (game.away_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1',[game.away_team_id]);
       } else if (a > h) {
-        if (game.away_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1', [game.away_team_id]);
-        if (game.home_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [game.home_team_id]);
+        if (game.away_team_id) await db.run('UPDATE teams SET wins=wins+1 WHERE id=$1',[game.away_team_id]);
+        if (game.home_team_id) await db.run('UPDATE teams SET losses=losses+1 WHERE id=$1',[game.home_team_id]);
       }
     }
 
-    // If just saving progress, go back to score page
-    // If final, go back to league page
     if (isFinal) {
-      res.redirect(`/admin/league/${req.params.id}`);
+      res.redirect('/admin/league/' + req.params.id);
     } else {
-      res.redirect(`/admin/league/${req.params.id}/score/${req.params.gid}`);
+      res.redirect('/admin/league/' + req.params.id + '/score/' + req.params.gid);
     }
   } catch (err) {
     console.error('Score save error:', err);
-    res.redirect(`/admin/league/${req.params.id}`);
+    res.redirect('/admin/league/' + req.params.id);
   }
 });
 
