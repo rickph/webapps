@@ -35,11 +35,21 @@ router.get('/league/:id', async (req, res) => {
     );
     if (!league) return res.status(404).send(notFound());
 
+    // Server-side sort params
+    const sortCol = req.query.sort || 'pts';
+    const sortDir = req.query.dir  || 'desc';
+    const tab     = req.query.tab  || 'standings';
+
+    // Whitelist allowed sort columns to prevent SQL injection
+    const allowed = ['pts','reb','ast','stl','blk','gp','fg','name'];
+    const col = allowed.includes(sortCol) ? sortCol : 'pts';
+    const dir = sortDir === 'asc' ? 'ASC' : 'DESC';
+
     const [teams, players, games, seasonStatsRows] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name,t.color as team_color
                 FROM players p LEFT JOIN teams t ON p.team_id=t.id
-                WHERE p.league_id=$1 ORDER BY p.pts DESC`, [league.id]),
+                WHERE p.league_id=$1 ORDER BY p.${col} ${dir}`, [league.id]),
       db.query(`SELECT g.*,ht.name as home_name,at.name as away_name
                 FROM games g
                 LEFT JOIN teams ht ON g.home_team_id=ht.id
@@ -47,10 +57,9 @@ router.get('/league/:id', async (req, res) => {
                 WHERE g.league_id=$1 ORDER BY g.id DESC`, [league.id]),
       db.query('SELECT * FROM player_season_stats WHERE league_id=$1', [league.id]),
     ]);
-    // Build season stats map by player_id
     const seasonStats = {};
     seasonStatsRows.forEach(s => { seasonStats[s.player_id] = s; });
-    res.send(renderLeaguePage(league, teams, players, games, req.user, seasonStats));
+    res.send(renderLeaguePage(league, teams, players, games, req.user, seasonStats, { col, dir: sortDir, tab }));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
 
@@ -128,7 +137,7 @@ function renderLanding(leagues, stats, user) {
   `);
 }
 
-function renderLeaguePage(league, teams, players, games, user, seasonStats = {}) {
+function renderLeaguePage(league, teams, players, games, user, seasonStats = {}, sort = { col: "pts", dir: "desc", tab: "standings" }) {
   const sorted = {
     reb: [...players].sort((a,b)=>b.reb-a.reb),
     ast: [...players].sort((a,b)=>b.ast-a.ast),
@@ -196,48 +205,66 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {})
       </div>
 
       <div id="tab-players" class="tab-pane hidden">
+        <div style="font-size:11px;color:#555;margin-bottom:8px;font-weight:600">
+          💡 Click any column header to sort
+        </div>
         <div style="overflow-x:auto">
-        <table class="stats-table">
+        <table class="stats-table" id="playerStatsTable">
           <thead><tr>
-            <th>#</th><th>Player</th><th>POS</th><th>GP</th>
-            <th title="Points Per Game">PTS</th>
-            <th title="Total Rebounds">REB</th>
-            <th title="Assists">AST</th>
-            <th title="Steals">STL</th>
-            <th title="Blocks">BLK</th>
-            <th title="Turnovers">TO</th>
-            <th title="FG%">FG%</th>
+            <th>#</th>
+            <th>Player</th>
+            <th>POS</th>
+            ${sortTh('gp',  'GP',  'Games Played',     sort, league)}
+            ${sortTh('pts', 'PTS', 'Points Per Game',   sort, league)}
+            ${sortTh('reb', 'REB', 'Rebounds Per Game', sort, league)}
+            ${sortTh('ast', 'AST', 'Assists Per Game',  sort, league)}
+            ${sortTh('stl', 'STL', 'Steals Per Game',   sort, league)}
+            ${sortTh('blk', 'BLK', 'Blocks Per Game',   sort, league)}
+            <th title="Turnovers Per Game">TO</th>
+            ${sortTh('fg',  'FG%', 'Field Goal % (FIBA: FGM/FGA)', sort, league)}
             <th title="3-Point %">3P%</th>
             <th title="Free Throw %">FT%</th>
-            <th title="FIBA Efficiency Rating">EFF</th>
+            <th title="FIBA EFF = PTS+REB+AST+STL+BLK-(FGA-FGM)-(FTA-FTM)-TO">EFF</th>
           </tr></thead>
-          <tbody>
+          <tbody id="playerTableBody">
             ${players.map((p,i) => {
-              const ss  = seasonStats[p.id] || {};
-              const fg3p = ss.fg3p != null ? ss.fg3p+'%' : '—';
-              const ftp  = ss.ftp  != null ? ss.ftp+'%'  : '—';
-              const eff  = ss.eff  != null ? ss.eff       : '—';
-              const to   = ss.to_val != null ? ss.to_val  : '—';
+              const ss   = seasonStats[p.id] || {};
+              const fg3p = ss.fg3p != null ? ss.fg3p : '—';
+              const ftp  = ss.ftp  != null ? ss.ftp  : '—';
+              const eff  = ss.eff  != null ? ss.eff  : '—';
+              const to   = ss.to_val != null ? ss.to_val : '—';
+              const fgp  = p.fg != null ? p.fg : '—';
               return '<tr>' +
-                '<td class="rank">' + (i+1) + '</td>' +
+                '<td class="rank" data-val="' + (i+1) + '">' + (i+1) + '</td>' +
                 '<td><div style="font-weight:600">' + esc(p.name) + '</div><div class="sub-text">' + esc(p.team_name||'') + '</div></td>' +
                 '<td><span class="pos-badge">' + p.pos + '</span></td>' +
-                '<td style="color:#888">' + (p.gp||0) + '</td>' +
-                '<td class="orange">' + p.pts + '</td>' +
-                '<td>' + p.reb + '</td>' +
-                '<td>' + p.ast + '</td>' +
-                '<td>' + p.stl + '</td>' +
-                '<td>' + p.blk + '</td>' +
-                '<td style="color:#ff4757">' + to + '</td>' +
-                '<td class="teal">' + p.fg + '%</td>' +
-                '<td style="color:#a78bfa">' + fg3p + '</td>' +
-                '<td style="color:#f7c948">' + ftp + '</td>' +
-                '<td style="color:#ff6b35;font-weight:700">' + eff + '</td>' +
+                '<td style="color:#888" data-val="' + (p.gp||0) + '">' + (p.gp||0) + '</td>' +
+                '<td class="orange" data-val="' + (p.pts||0) + '">' + p.pts + '</td>' +
+                '<td data-val="' + (p.reb||0) + '">' + p.reb + '</td>' +
+                '<td data-val="' + (p.ast||0) + '">' + p.ast + '</td>' +
+                '<td data-val="' + (p.stl||0) + '">' + p.stl + '</td>' +
+                '<td data-val="' + (p.blk||0) + '">' + p.blk + '</td>' +
+                '<td style="color:#ff4757" data-val="' + (to === '—' ? -1 : to) + '">' + to + '</td>' +
+                '<td class="teal" data-val="' + (fgp === '—' ? -1 : fgp) + '">' + (fgp === '—' ? '—' : fgp + '%') + '</td>' +
+                '<td style="color:#a78bfa" data-val="' + (fg3p === '—' ? -1 : fg3p) + '">' + (fg3p === '—' ? '—' : fg3p + '%') + '</td>' +
+                '<td style="color:#f7c948" data-val="' + (ftp === '—' ? -1 : ftp) + '">' + (ftp === '—' ? '—' : ftp + '%') + '</td>' +
+                '<td style="color:#ff6b35;font-weight:700" data-val="' + (eff === '—' ? -999 : eff) + '">' + eff + '</td>' +
                 '</tr>';
             }).join('') || '<tr><td colspan="14" class="empty">No players yet.</td></tr>'}
           </tbody>
         </table>
-        </div>      </div>
+        </div>
+        <style>
+          .sort-col { cursor:pointer; user-select:none; white-space:nowrap; }
+          .sort-col:hover { color:#fff; background:rgba(255,107,53,.1); }
+          .sort-col.sort-asc  { color:#ff6b35; }
+          .sort-col.sort-desc { color:#ff6b35; }
+          .sort-col.sort-asc  .sort-icon::after { content:'↑'; color:#ff6b35; }
+          .sort-col.sort-desc .sort-icon::after { content:'↓'; color:#ff6b35; }
+          .sort-icon { font-size:11px; opacity:.5; margin-left:2px; }
+          .sort-col:hover .sort-icon { opacity:1; }
+        </style>
+      </div>
 
       <div id="tab-schedule" class="tab-pane hidden">
         ${games.map(g=>`
@@ -276,3 +303,17 @@ function notFound() {
 }
 
 module.exports = router;
+
+// ── SORT HELPER ───────────────────────────────────────────────────────────────
+function sortTh(col, label, title, sort, league) {
+  const isActive = sort.col === col;
+  const nextDir  = isActive && sort.dir === 'desc' ? 'asc' : 'desc';
+  const icon     = isActive ? (sort.dir === 'desc' ? ' ↓' : ' ↑') : ' ↕';
+  const style    = isActive ? 'color:#ff6b35;cursor:pointer;white-space:nowrap;user-select:none' : 'cursor:pointer;white-space:nowrap;user-select:none';
+  return `<th title="${title}" style="${style}">
+    <a href="/league/${league.id}?tab=players&sort=${col}&dir=${nextDir}"
+       style="color:inherit;text-decoration:none;display:block">
+      ${label}<span style="font-size:11px;margin-left:2px;opacity:.7">${icon}</span>
+    </a>
+  </th>`;
+}
