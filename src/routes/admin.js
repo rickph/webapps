@@ -7,7 +7,7 @@ const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 router.use(requireAuth);
 
 const LEVEL_OPTIONS = ['Barangay','City/Municipal','Provincial','Regional'];
-const TEAM_COLORS   = ['#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261','#264653','#e76f51','#6a4c93','#1982c4','#8ac926'];
+const TEAM_COLORS   = ['#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261','#264653','#e76f51','#6a4c93','#1982c4','#8ac926','#ffffff'];
 const POSITIONS     = ['PG','SG','SF','PF','C'];
 
 async function ownsLeague(leagueId, userId) {
