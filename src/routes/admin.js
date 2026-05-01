@@ -395,11 +395,11 @@ router.get('/league/:id/add-player', async (req, res) => {
 router.post('/league/:id/add-player', async (req, res) => {
   try {
     if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    const { team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg } = req.body;
+    const { team_id, name, pos, jersey } = req.body;
     if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-player`);
     await db.run(
-      'INSERT INTO players (league_id,team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
-      [req.params.id,team_id,name.trim(),pos,jersey||0,gp||0,pts||0,reb||0,ast||0,stl||0,blk||0,fg||0]
+      'INSERT INTO players (league_id,team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg) VALUES ($1,$2,$3,$4,$5,0,0,0,0,0,0,0)',
+      [req.params.id, team_id, name.trim(), pos||'', jersey||0]
     );
     res.redirect(`/admin/league/${req.params.id}`);
   } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
@@ -978,46 +978,41 @@ function playerForm(league, teams, player) {
   return `
     <div class="admin-header"><div>
       <a href="/admin/league/${league.id}" class="back-link">← Back</a>
-      <h1>${player ? 'Edit' : 'Add'} Player</h1>
+      <h1>${player ? 'Edit Player' : 'Add Player'}</h1>
+      <p style="color:#666;font-size:13px;margin-top:4px">
+        ${player ? 'Update player information below.' : 'Add player to the roster. Stats will be calculated automatically from game entries.'}
+      </p>
     </div></div>
-    <div class="card" style="max-width:600px">
+    <div class="card" style="max-width:480px">
       <form action="/admin/league/${league.id}/${player?`edit-player/${player.id}`:'add-player'}" method="POST">
+        <div class="field-group"><label>Full Name</label>
+          <input name="name" class="input" placeholder="e.g. Juan dela Cruz" value="${v('name')}" required /></div>
         <div class="modal-grid">
-          <div class="field-group"><label>Full Name</label>
-            <input name="name" class="input" placeholder="Player name" value="${v('name')}" required /></div>
           <div class="field-group"><label>Jersey #</label>
-            <input name="jersey" type="number" class="input" placeholder="0" value="${v('jersey','0')}" /></div>
-          <div class="field-group"><label>Team</label>
-            <select name="team_id" class="input">
-              <option value="">Select team</option>
-              ${teams.map(t=>`<option value="${t.id}" ${player?.team_id==t.id?'selected':''}>${esc(t.name)}</option>`).join('')}
-            </select></div>
+            <input name="jersey" type="number" class="input" placeholder="0" value="${v('jersey','')}" /></div>
           <div class="field-group"><label>Position</label>
             <select name="pos" class="input">
-              <option value="">Select</option>
+              <option value="">Select position</option>
               ${POSITIONS.map(p=>`<option ${v('pos')===p?'selected':''}>${p}</option>`).join('')}
             </select></div>
-          <div class="field-group"><label>Games Played</label>
-            <input name="gp"  type="number" class="input" placeholder="0" value="${v('gp','0')}" /></div>
-          <div class="field-group"><label>Points/Game</label>
-            <input name="pts" type="number" step="0.1" class="input" placeholder="0.0" value="${v('pts','0')}" /></div>
-          <div class="field-group"><label>Rebounds/Game</label>
-            <input name="reb" type="number" step="0.1" class="input" placeholder="0.0" value="${v('reb','0')}" /></div>
-          <div class="field-group"><label>Assists/Game</label>
-            <input name="ast" type="number" step="0.1" class="input" placeholder="0.0" value="${v('ast','0')}" /></div>
-          <div class="field-group"><label>Steals/Game</label>
-            <input name="stl" type="number" step="0.1" class="input" placeholder="0.0" value="${v('stl','0')}" /></div>
-          <div class="field-group"><label>Blocks/Game</label>
-            <input name="blk" type="number" step="0.1" class="input" placeholder="0.0" value="${v('blk','0')}" /></div>
-          <div class="field-group"><label>FG%</label>
-            <input name="fg"  type="number" step="0.1" class="input" placeholder="0.0" value="${v('fg','0')}" /></div>
         </div>
-        <div style="display:flex;gap:10px;margin-top:20px">
+        <div class="field-group"><label>Team</label>
+          <select name="team_id" class="input">
+            <option value="">Select team</option>
+            ${teams.map(t=>`<option value="${t.id}" ${player?.team_id==t.id?'selected':''}>${esc(t.name)}</option>`).join('')}
+          </select></div>
+        <div style="display:flex;gap:10px;margin-top:24px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">${player?'Save Changes':'Add Player'} →</button>
         </div>
       </form>
-    </div>`;
+    </div>
+    ${!player ? `
+    <div style="max-width:480px;margin-top:16px;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:#555;line-height:1.8">
+      💡 <b style="color:#888">Stats are auto-calculated</b> from game entries.<br>
+      Use <b style="color:#888">📋 Post-Game Stats</b> in the Games tab to enter box scores after each game.<br>
+      Use <b style="color:#888">🔴 Live Score</b> to record stats in real time during a game.
+    </div>` : ''}`;
 }
 
 function adminPage(title, user, content) {
