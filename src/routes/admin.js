@@ -45,8 +45,9 @@ router.get('/', async (req, res) => {
         </div>
         <div class="alc-actions">
           <a href="/admin/league/${l.id}" class="btn-primary-sm">Manage →</a>
-          <a href="/league/${l.id}" class="btn-ghost-sm" target="_blank">Public View</a>
-          <a href="/admin/league/${l.id}/delete" class="btn-danger-sm" data-confirm="Delete this league and ALL its data?">Delete</a>
+          <a href="/admin/league/${l.id}/edit" class="btn-ghost-sm">✏ Edit</a>
+          <a href="/league/${l.id}" class="btn-ghost-sm" target="_blank">🌐 View</a>
+          <a href="/admin/league/${l.id}/delete" class="btn-danger-sm" data-confirm="Delete this league and ALL its data?">🗑</a>
         </div>
       </div>`).join('');
 
@@ -272,7 +273,9 @@ router.get('/league/:id', async (req, res) => {
               </div>
               <div class="row-actions">
                 ${statusBadge(g.status)}
-                ${g.status!=='final'?`<a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Score</a>`:''}
+                <a href="/admin/league/${league.id}/edit-game/${g.id}" class="btn-ghost-sm">✏ Edit</a>
+                <a href="/admin/league/${league.id}/game-stats/${g.id}" class="btn-ghost-sm" title="Enter/Edit Player Stats">📋 Stats</a>
+                ${g.status!=='final'?`<a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Live</a>`:''}
                 <a href="/admin/league/${league.id}/delete-game/${g.id}" class="btn-danger-sm" data-confirm="Delete this game?">🗑</a>
               </div>
             </div>`).join('') || '<div class="empty-state">No games scheduled.</div>'}
@@ -1042,3 +1045,360 @@ function adminPage(title, user, content) {
 }
 
 module.exports = router;
+
+// ── EDIT LEAGUE ───────────────────────────────────────────────────────────────
+router.get('/league/:id/edit', async (req, res) => {
+  try {
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const err = req.query.error;
+    res.send(adminPage('Edit League', req.user, `
+      <div class="admin-header"><div>
+        <a href="/admin" class="back-link">← Back to Dashboard</a>
+        <h1>Edit League</h1>
+      </div></div>
+      ${err ? `<div class="alert-error" style="max-width:540px;margin-bottom:16px">⚠ League name and admin code are required.</div>` : ''}
+      <div class="card" style="max-width:540px">
+        <form action="/admin/league/${league.id}/edit" method="POST">
+          <div class="field-group"><label>League Name</label>
+            <input name="name" class="input" value="${esc(league.name)}" required /></div>
+          <div class="field-group"><label>Level</label>
+            <select name="level" class="input">
+              ${LEVEL_OPTIONS.map(l => `<option value="${l}" ${l === league.level ? 'selected' : ''}>${l}</option>`).join('')}
+            </select></div>
+          <div class="field-group"><label>Location</label>
+            <input name="location" class="input" value="${esc(league.location)}" /></div>
+          <div class="field-group"><label>Season / Tournament Name</label>
+            <input name="season" class="input" value="${esc(league.season)}" /></div>
+          <div class="field-group"><label>Status</label>
+            <select name="status" class="input">
+              <option value="upcoming"  ${league.status === 'upcoming'  ? 'selected' : ''}>Upcoming</option>
+              <option value="ongoing"   ${league.status === 'ongoing'   ? 'selected' : ''}>Ongoing</option>
+              <option value="completed" ${league.status === 'completed' ? 'selected' : ''}>Completed</option>
+            </select></div>
+          <div class="field-group"><label>Admin Code</label>
+            <input name="admin_code" class="input" value="${esc(league.admin_code)}" required /></div>
+          <div class="field-group"><label>Visibility</label>
+            <select name="is_public" class="input">
+              <option value="1" ${league.is_public ? 'selected' : ''}>Public — anyone can view</option>
+              <option value="0" ${!league.is_public ? 'selected' : ''}>Private — hidden from public</option>
+            </select></div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/admin" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">Save Changes →</button>
+          </div>
+        </form>
+      </div>
+    `));
+  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+});
+
+router.post('/league/:id/edit', async (req, res) => {
+  try {
+    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const { name, level, location, season, status, admin_code, is_public } = req.body;
+    if (!name?.trim() || !admin_code?.trim()) {
+      return res.redirect(`/admin/league/${req.params.id}/edit?error=missing`);
+    }
+    await db.run(
+      'UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7 WHERE id=$8',
+      [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1', req.params.id]
+    );
+    res.redirect('/admin');
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── EDIT GAME ─────────────────────────────────────────────────────────────────
+router.get('/league/:id/edit-game/:gid', async (req, res) => {
+  try {
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    const game   = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.gid]);
+    if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
+    const topts = `<option value="">Select team</option>` +
+      teams.map(t => `<option value="${t.id}" ${game.home_team_id == t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+    const topts2 = `<option value="">Select team</option>` +
+      teams.map(t => `<option value="${t.id}" ${game.away_team_id == t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
+
+    res.send(adminPage('Edit Game', req.user, `
+      <div class="admin-header"><div>
+        <a href="/admin/league/${league.id}" class="back-link">← Back</a>
+        <h1>Edit Game</h1>
+      </div></div>
+      <div class="card" style="max-width:540px">
+        <form action="/admin/league/${league.id}/edit-game/${game.id}" method="POST">
+          <div class="field-group"><label>Home Team</label>
+            <select name="home_team_id" class="input">${topts}</select></div>
+          <div class="field-group"><label>Away Team</label>
+            <select name="away_team_id" class="input">${topts2}</select></div>
+          <div class="field-group"><label>Date</label>
+            <input name="date" class="input" value="${esc(game.date||'')}" placeholder="e.g. May 1, 2025" /></div>
+          <div class="field-group"><label>Venue / Court</label>
+            <input name="venue" class="input" value="${esc(game.venue||'')}" placeholder="e.g. Brgy. Court Name" /></div>
+          <div class="field-group"><label>Status</label>
+            <select name="status" class="input">
+              <option value="upcoming" ${game.status==='upcoming'?'selected':''}>Upcoming</option>
+              <option value="ongoing"  ${game.status==='ongoing' ?'selected':''}>Ongoing</option>
+              <option value="final"    ${game.status==='final'   ?'selected':''}>Final</option>
+            </select></div>
+          <div class="field-group"><label>Home Score</label>
+            <input name="home_score" type="number" class="input" value="${game.home_score||0}" /></div>
+          <div class="field-group"><label>Away Score</label>
+            <input name="away_score" type="number" class="input" value="${game.away_score||0}" /></div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">Save Changes →</button>
+          </div>
+        </form>
+      </div>
+    `));
+  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+});
+
+router.post('/league/:id/edit-game/:gid', async (req, res) => {
+  try {
+    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const { home_team_id, away_team_id, date, venue, status, home_score, away_score } = req.body;
+    await db.run(
+      'UPDATE games SET home_team_id=$1,away_team_id=$2,date=$3,venue=$4,status=$5,home_score=$6,away_score=$7 WHERE id=$8',
+      [home_team_id||null, away_team_id||null, date||'TBD', venue||'TBD', status||'upcoming', home_score||0, away_score||0, req.params.gid]
+    );
+    res.redirect(`/admin/league/${req.params.id}`);
+  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+});
+
+// ── POST-GAME STATS ENTRY ─────────────────────────────────────────────────────
+router.get('/league/:id/game-stats/:gid', async (req, res) => {
+  try {
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    const game   = await db.queryOne(`
+      SELECT g.*,ht.name as home_name,at.name as away_name,
+             ht.id as htid, at.id as atid, ht.color as home_color, at.color as away_color
+      FROM games g
+      LEFT JOIN teams ht ON g.home_team_id=ht.id
+      LEFT JOIN teams at ON g.away_team_id=at.id
+      WHERE g.id=$1`, [req.params.gid]);
+    if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+
+    const homePlayers = game.htid ? await db.query(
+      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
+    const awayPlayers = game.atid ? await db.query(
+      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
+
+    // Get existing game stats
+    const existingStats = await db.query('SELECT * FROM game_stats WHERE game_id=$1', [game.id]);
+    const statMap = {};
+    existingStats.forEach(s => { statMap[s.player_id] = s; });
+
+    const allPlayers = [...homePlayers, ...awayPlayers];
+    const allPlayerIds = allPlayers.map(p => p.id).join(',');
+    const homeColor = game.home_color || '#e63946';
+    const awayColor = game.away_color || '#457b9d';
+
+    function statRow(p) {
+      const s = statMap[p.id] || {};
+      const val = (k, def=0) => s[k] != null ? s[k] : def;
+      return `
+        <tr style="border-bottom:1px solid rgba(255,255,255,.06)">
+          <td style="padding:10px 12px;white-space:nowrap">
+            <span class="pos-badge">${p.pos}</span>
+            <span style="font-weight:600;margin-left:6px">#${p.jersey} ${esc(p.name)}</span>
+          </td>
+          ${['fg2m','fg2a','fg3m','fg3a','ftm','fta','oreb','dreb','ast','stl','blk','to_val','foul'].map(k => `
+          <td style="padding:6px 4px;text-align:center">
+            <input type="number" name="${k}_${p.id}" value="${val(k)}" min="0"
+              style="width:52px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#fff;font-size:13px;font-weight:700;padding:5px 2px;outline:none" />
+          </td>`).join('')}
+        </tr>`;
+    }
+
+    const hasStats = existingStats.length > 0;
+
+    res.send(adminPage(`Game Stats — ${esc(game.home_name||'Home')} vs ${esc(game.away_name||'Away')}`, req.user, `
+      <div class="admin-header">
+        <div>
+          <a href="/admin/league/${league.id}" class="back-link">← Back to League</a>
+          <h1>📋 ${hasStats ? 'Edit' : 'Enter'} Post-Game Stats</h1>
+          <p style="color:#666;font-size:13px;margin-top:4px">
+            ${esc(game.home_name||'Home')} vs ${esc(game.away_name||'Away')} &nbsp;·&nbsp;
+            ${esc(game.date||'TBD')} &nbsp;·&nbsp; ${esc(game.venue||'')}
+          </p>
+        </div>
+      </div>
+
+      <!-- SCORELINE -->
+      <div style="background:linear-gradient(135deg,#1a2a6c,#2a4db5);border-radius:12px;padding:20px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:32px">
+        <div style="text-align:center">
+          <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">${esc(game.home_name||'Home')}</div>
+          <div style="font-size:48px;font-weight:900;color:#00d4aa">${game.home_score||0}</div>
+        </div>
+        <div style="color:rgba(255,255,255,.3);font-size:20px;font-weight:700">FINAL</div>
+        <div style="text-align:center">
+          <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">${esc(game.away_name||'Away')}</div>
+          <div style="font-size:48px;font-weight:900;color:#ff6b35">${game.away_score||0}</div>
+        </div>
+      </div>
+
+      ${hasStats ? '<div class="alert-info" style="margin-bottom:16px">📋 Stats already recorded for this game. Update them below and save.</div>' : ''}
+
+      ${allPlayers.length === 0 ? `
+        <div class="empty-state">
+          <div class="es-icon">👤</div>
+          <div>No players added to these teams yet.</div>
+          <a href="/admin/league/${league.id}/add-player" class="btn-primary" style="margin-top:12px">Add Players →</a>
+        </div>` : `
+
+      <form action="/admin/league/${league.id}/game-stats/${game.id}" method="POST">
+        <input type="hidden" name="player_ids" value="${allPlayerIds}" />
+
+        <!-- HOME TEAM -->
+        ${homePlayers.length > 0 ? `
+        <div class="card" style="margin-bottom:20px;overflow-x:auto">
+          <div style="font-size:15px;font-weight:800;color:${homeColor};margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:${homeColor};border-radius:2px"></div>
+            ${esc(game.home_name||'Home Team')}
+            <span style="font-size:11px;color:#555;font-weight:600;margin-left:4px">— Player Stats</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;min-width:700px">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,107,53,.25)">
+                <th style="padding:8px 12px;text-align:left;font-size:10px;color:#ff6b35;letter-spacing:1px;font-weight:700">PLAYER</th>
+                ${['2PM','2PA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','FOUL'].map(h=>`
+                <th style="padding:8px 4px;text-align:center;font-size:10px;color:#ff6b35;letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>${homePlayers.map(p => statRow(p)).join('')}</tbody>
+          </table>
+        </div>` : ''}
+
+        <!-- AWAY TEAM -->
+        ${awayPlayers.length > 0 ? `
+        <div class="card" style="margin-bottom:20px;overflow-x:auto">
+          <div style="font-size:15px;font-weight:800;color:${awayColor};margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:${awayColor};border-radius:2px"></div>
+            ${esc(game.away_name||'Away Team')}
+            <span style="font-size:11px;color:#555;font-weight:600;margin-left:4px">— Player Stats</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;min-width:700px">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(0,212,170,.25)">
+                <th style="padding:8px 12px;text-align:left;font-size:10px;color:#00d4aa;letter-spacing:1px;font-weight:700">PLAYER</th>
+                ${['2PM','2PA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','FOUL'].map(h=>`
+                <th style="padding:8px 4px;text-align:center;font-size:10px;color:#00d4aa;letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>${awayPlayers.map(p => statRow(p)).join('')}</tbody>
+          </table>
+        </div>` : ''}
+
+        <!-- FIBA LEGEND -->
+        <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:11px;color:#555;line-height:2">
+          <b style="color:#888">FIBA STAT GUIDE:</b>
+          2PM/2PA = 2-point made/attempted &nbsp;·&nbsp;
+          3PM/3PA = 3-point made/attempted &nbsp;·&nbsp;
+          FTM/FTA = Free throw made/attempted &nbsp;·&nbsp;
+          OREB = Offensive rebound &nbsp;·&nbsp;
+          DREB = Defensive rebound &nbsp;·&nbsp;
+          AST = Assists &nbsp;·&nbsp;
+          STL = Steals &nbsp;·&nbsp;
+          BLK = Blocks &nbsp;·&nbsp;
+          TO = Turnovers &nbsp;·&nbsp;
+          FOUL = Personal fouls
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center">
+          <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+          <button type="submit" class="btn-primary">
+            ✅ Save Stats &amp; Update Season Averages
+          </button>
+        </div>
+      </form>`}
+    `));
+  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+});
+
+router.post('/league/:id/game-stats/:gid', async (req, res) => {
+  try {
+    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const { player_ids } = req.body;
+    const { computeSeasonAverages } = require('../fiba-stats');
+
+    if (player_ids) {
+      const ids = player_ids.split(',').filter(Boolean);
+
+      for (const pid of ids) {
+        const g = {
+          fg2m:  parseInt(req.body['fg2m_'+pid])  || 0,
+          fg2a:  parseInt(req.body['fg2a_'+pid])  || 0,
+          fg3m:  parseInt(req.body['fg3m_'+pid])  || 0,
+          fg3a:  parseInt(req.body['fg3a_'+pid])  || 0,
+          ftm:   parseInt(req.body['ftm_'+pid])   || 0,
+          fta:   parseInt(req.body['fta_'+pid])   || 0,
+          oreb:  parseInt(req.body['oreb_'+pid])  || 0,
+          dreb:  parseInt(req.body['dreb_'+pid])  || 0,
+          ast:   parseInt(req.body['ast_'+pid])   || 0,
+          stl:   parseInt(req.body['stl_'+pid])   || 0,
+          blk:   parseInt(req.body['blk_'+pid])   || 0,
+          to_val:parseInt(req.body['to_val_'+pid])|| 0,
+          foul:  parseInt(req.body['foul_'+pid])  || 0,
+        };
+
+        // Skip players with all zero stats
+        const hasStats = Object.values(g).some(v => v > 0);
+        if (!hasStats) continue;
+
+        // Upsert game stats
+        await db.run(`
+          INSERT INTO game_stats
+            (game_id,player_id,league_id,fg2m,fg2a,fg3m,fg3a,ftm,fta,oreb,dreb,ast,stl,blk,to_val,foul)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          ON CONFLICT (game_id,player_id)
+          DO UPDATE SET
+            fg2m=$4,fg2a=$5,fg3m=$6,fg3a=$7,ftm=$8,fta=$9,
+            oreb=$10,dreb=$11,ast=$12,stl=$13,blk=$14,to_val=$15,foul=$16
+        `, [req.params.gid, pid, req.params.id,
+            g.fg2m,g.fg2a,g.fg3m,g.fg3a,g.ftm,g.fta,
+            g.oreb,g.dreb,g.ast,g.stl,g.blk,g.to_val,g.foul]);
+      }
+
+      // Recalculate FIBA season averages for all players
+      for (const pid of ids) {
+        const allGames = await db.query(
+          'SELECT * FROM game_stats WHERE player_id=$1 AND league_id=$2',
+          [pid, req.params.id]
+        );
+        if (!allGames.length) continue;
+
+        const season = computeSeasonAverages(allGames);
+        const av = season.averages;
+
+        // Upsert season stats
+        await db.run(`
+          INSERT INTO player_season_stats
+            (player_id,league_id,gp,pts,fg2m,fg2a,fg3m,fg3a,ftm,fta,
+             oreb,dreb,reb,ast,stl,blk,to_val,foul,fgp,fg2p,fg3p,ftp,eff)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+          ON CONFLICT (player_id,league_id)
+          DO UPDATE SET
+            gp=$3,pts=$4,fg2m=$5,fg2a=$6,fg3m=$7,fg3a=$8,ftm=$9,fta=$10,
+            oreb=$11,dreb=$12,reb=$13,ast=$14,stl=$15,blk=$16,to_val=$17,
+            foul=$18,fgp=$19,fg2p=$20,fg3p=$21,ftp=$22,eff=$23
+        `, [pid, req.params.id, season.gp,
+            av.pts, av.fg2m, av.fg2a, av.fg3m, av.fg3a, av.ftm, av.fta,
+            av.oreb, av.dreb, av.reb, av.ast, av.stl, av.blk, av.to,
+            av.foul, av.fgp, av.fg2p, av.fg3p, av.ftp, av.eff]);
+
+        // Update main players table for public view
+        await db.run(`
+          UPDATE players SET gp=$1,pts=$2,reb=$3,ast=$4,stl=$5,blk=$6,fg=$7
+          WHERE id=$8
+        `, [season.gp, av.pts, av.reb, av.ast, av.stl, av.blk, av.fgp, pid]);
+      }
+    }
+
+    res.redirect(`/admin/league/${req.params.id}?tab=games&saved=1`);
+  } catch (err) {
+    console.error('Post-game stats error:', err);
+    res.redirect(`/admin/league/${req.params.id}`);
+  }
+});
