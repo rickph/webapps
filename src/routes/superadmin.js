@@ -482,6 +482,15 @@ function superPage(title, user, content, req = {}) {
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#e63329">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PH HOOPS">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | PH Hoops Super Admin</title>
 <link rel="stylesheet" href="/css/main.css">
@@ -490,7 +499,7 @@ function superPage(title, user, content, req = {}) {
 <nav class="topnav" style="border-bottom-color:var(--gold)">
   <div class="nav-brand">
     <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-      <div class="nav-brand-logo" style="background:var(--gold)">⚡</div>
+      <img src="/icons/icon-192.png" alt="PH Hoops" style="width:36px;height:36px;border-radius:8px;object-fit:cover">
       <div class="nav-brand-text">
         <div class="brand-text">PH HOOPS</div>
         <div class="brand-sub" style="color:var(--gold)">Super Admin</div>
@@ -509,6 +518,11 @@ function superPage(title, user, content, req = {}) {
   ⚡ SUPER ADMIN MODE — You have full access to all data
 </div>
 <div class="admin-wrap">${content}</div>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
 </body>
 </html>`;
 }

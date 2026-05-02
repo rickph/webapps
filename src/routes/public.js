@@ -146,7 +146,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
   return page(`${esc(league.name)} | PH Hoops`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><div class="nav-brand-logo">🏀</div><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png" alt="PH Hoops" style="width:36px;height:36px;border-radius:8px;object-fit:cover"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
       <div class="nav-actions">
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>

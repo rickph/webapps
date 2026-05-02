@@ -1058,7 +1058,7 @@ function adminPage(title, user, content) {
 </head>
 <body class="dark-bg">
 <nav class="topnav">
-  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><div class="nav-brand-logo">🏀</div><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
+  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png" alt="PH Hoops" style="width:36px;height:36px;border-radius:8px;object-fit:cover"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
   <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:#888">${esc(user.name)}</span>
@@ -1067,6 +1067,11 @@ function adminPage(title, user, content) {
 </nav>
 <div class="admin-wrap">${content}</div>
 <script src="/js/admin.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
 </body>
 </html>`;
 }
