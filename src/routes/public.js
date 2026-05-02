@@ -112,6 +112,9 @@ function renderLanding(leagues, stats, user) {
         <div class="hero-btns">
           <a href="/register" class="btn-hero-primary">Start Free →</a>
           <a href="#leagues" class="btn-hero-ghost">View Leagues</a>
+          <a href="/install" class="btn-hero-ghost" style="border-color:rgba(245,200,66,.4);color:var(--gold)">
+            📲 Install App
+          </a>
         </div>
         <div class="hero-stats">
           ${[['Leagues',stats.leagues,'#ff6b35'],['Teams',stats.teams,'#00d4aa'],['Players',stats.players,'#a78bfa'],['Games',stats.games,'#f7c948']]
@@ -339,3 +342,121 @@ function sortTh(col, label, title, sort, league) {
     </a>
   </th>`;
 }
+
+// ── INSTALL PAGE ──────────────────────────────────────────────────────────────
+router.get('/install', (req, res) => {
+  const { page } = require('../helpers');
+  res.send(page('Install App | PH Hoops', `
+    <nav class="topnav">
+      <div class="nav-brand">
+        <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
+          <img src="/icons/icon-192.png" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+          <div class="nav-brand-text">
+            <div class="brand-text">PH HOOPS</div>
+            <div class="brand-sub">League Manager</div>
+          </div>
+        </a>
+      </div>
+      <div class="nav-actions">
+        <a href="/" class="btn-ghost-sm">← Back</a>
+      </div>
+    </nav>
+
+    <div style="max-width:640px;margin:0 auto;padding:40px 20px 60px">
+
+      <!-- HEADER -->
+      <div style="text-align:center;margin-bottom:40px">
+        <img src="/icons/icon-192.png" alt="PH Hoops"
+             style="width:96px;height:96px;border-radius:22px;object-fit:cover;
+                    box-shadow:0 8px 32px rgba(230,51,41,.4);
+                    border:2px solid rgba(245,200,66,.3);margin-bottom:20px">
+        <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px">
+          Install PH Hoops
+        </h1>
+        <p style="color:rgba(240,244,255,.55);font-size:15px">
+          Add the app to your home screen for quick access — no App Store needed!
+        </p>
+      </div>
+
+      <!-- ANDROID -->
+      <div style="background:#0f1628;border:1px solid rgba(240,244,255,.09);border-left:4px solid #3ddc84;border-radius:12px;padding:24px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:44px;height:44px;border-radius:10px;background:rgba(61,220,132,.12);border:1px solid rgba(61,220,132,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🤖</div>
+          <div>
+            <div style="font-weight:800;font-size:16px">Android</div>
+            <div style="font-size:12px;color:rgba(240,244,255,.45)">Chrome browser</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          ${[
+            ['1', 'Open PH Hoops in <b>Chrome</b> on your Android phone'],
+            ['2', 'Tap the <b>⋮ menu</b> (three dots) at the top right corner'],
+            ['3', 'Tap <b>"Add to Home Screen"</b> from the menu'],
+            ['4', 'Tap <b>"Add"</b> on the confirmation popup'],
+            ['5', '🎉 The <b>PH Hoops icon</b> appears on your home screen!'],
+          ].map(([num, text]) => `
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(61,220,132,.15);border:1px solid rgba(61,220,132,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#3ddc84;flex-shrink:0;margin-top:1px">${num}</div>
+            <div style="font-size:14px;color:rgba(240,244,255,.8);line-height:1.6">${text}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- IPHONE -->
+      <div style="background:#0f1628;border:1px solid rgba(240,244,255,.09);border-left:4px solid #007aff;border-radius:12px;padding:24px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:44px;height:44px;border-radius:10px;background:rgba(0,122,255,.12);border:1px solid rgba(0,122,255,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍎</div>
+          <div>
+            <div style="font-weight:800;font-size:16px">iPhone / iPad</div>
+            <div style="font-size:12px;color:rgba(240,244,255,.45)">Safari browser</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          ${[
+            ['1', 'Open PH Hoops in <b>Safari</b> on your iPhone or iPad'],
+            ['2', 'Tap the <b>Share button</b> (□ with an arrow pointing up) at the bottom of the screen'],
+            ['3', 'Scroll down and tap <b>"Add to Home Screen"</b>'],
+            ['4', 'Tap <b>"Add"</b> in the top right corner'],
+            ['5', '🎉 The <b>PH Hoops icon</b> appears on your home screen!'],
+          ].map(([num, text]) => `
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,122,255,.15);border:1px solid rgba(0,122,255,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#007aff;flex-shrink:0;margin-top:1px">${num}</div>
+            <div style="font-size:14px;color:rgba(240,244,255,.8);line-height:1.6">${text}</div>
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:16px;padding:10px 14px;background:rgba(0,122,255,.08);border-radius:8px;font-size:12px;color:rgba(240,244,255,.5)">
+          ⚠️ Must use <b style="color:rgba(240,244,255,.8)">Safari</b> — Chrome on iPhone does not support Add to Home Screen for PWAs.
+        </div>
+      </div>
+
+      <!-- PC -->
+      <div style="background:#0f1628;border:1px solid rgba(240,244,255,.09);border-left:4px solid #f5c842;border-radius:12px;padding:24px;margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:44px;height:44px;border-radius:10px;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💻</div>
+          <div>
+            <div style="font-weight:800;font-size:16px">Desktop / Laptop</div>
+            <div style="font-size:12px;color:rgba(240,244,255,.45)">Chrome or Edge browser</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          ${[
+            ['1', 'Open PH Hoops in <b>Chrome</b> or <b>Edge</b> on your computer'],
+            ['2', 'Look for the <b>install icon</b> (⊕) in the address bar on the right side'],
+            ['3', 'Click it and select <b>"Install"</b>'],
+            ['4', '🎉 PH Hoops opens like a <b>desktop app</b> with no browser chrome!'],
+          ].map(([num, text]) => `
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#f5c842;flex-shrink:0;margin-top:1px">${num}</div>
+            <div style="font-size:14px;color:rgba(240,244,255,.8);line-height:1.6">${text}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- BACK BUTTON -->
+      <div style="text-align:center">
+        <a href="/" class="btn-hero-primary">← Back to Home</a>
+      </div>
+
+    </div>
+  `));
+});
