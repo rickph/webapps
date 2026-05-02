@@ -128,6 +128,12 @@ router.get('/new-league', (req, res) => {
           </select></div>
         <div class="field-group"><label>Admin Code <span style="color:#555;font-size:11px">(share with scorers)</span></label>
           <input name="admin_code" class="input" placeholder="e.g. BRGY2025" required /></div>
+        <div style="height:1px;background:rgba(240,244,255,.08);margin:8px 0 16px"></div>
+        <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:12px">SOCIAL MEDIA (optional)</div>
+        <div class="field-group"><label>Facebook Page / Group URL</label>
+          <input name="facebook_url" class="input" placeholder="https://facebook.com/yourleague" /></div>
+        <div class="field-group"><label>Instagram Profile URL</label>
+          <input name="instagram_url" class="input" placeholder="https://instagram.com/yourleague" /></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a href="/admin" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">Create League →</button>
@@ -141,9 +147,11 @@ router.post('/new-league', async (req, res) => {
   try {
     const { name, level, location, season, status, admin_code } = req.body;
     if (!name?.trim() || !admin_code?.trim()) return res.redirect('/admin/new-league?error=missing');
+    const { facebook_url: fb_url, instagram_url: ig_url } = req.body;
     await db.run(
-      'INSERT INTO leagues (user_id,name,level,location,season,status,admin_code,is_public) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
-      [req.user.id, name.trim(), level||'Barangay', location||'', season||'', status||'upcoming', admin_code.trim(), true]
+      'INSERT INTO leagues (user_id,name,level,location,season,status,admin_code,is_public,facebook_url,instagram_url) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+      [req.user.id, name.trim(), level||'Barangay', location||'', season||'', status||'upcoming', admin_code.trim(), true,
+       fb_url?.trim()||null, ig_url?.trim()||null]
     );
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin/new-league?error=server'); }
@@ -1102,6 +1110,12 @@ router.get('/league/:id/edit', async (req, res) => {
               <option value="1" ${league.is_public ? 'selected' : ''}>Public — anyone can view</option>
               <option value="0" ${!league.is_public ? 'selected' : ''}>Private — hidden from public</option>
             </select></div>
+          <div style="height:1px;background:rgba(240,244,255,.08);margin:8px 0 16px"></div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:12px">SOCIAL MEDIA (optional)</div>
+          <div class="field-group"><label>Facebook Page / Group URL</label>
+            <input name="facebook_url" class="input" placeholder="https://facebook.com/yourleague" value="${esc(league.facebook_url||'')}" /></div>
+          <div class="field-group"><label>Instagram Profile URL</label>
+            <input name="instagram_url" class="input" placeholder="https://instagram.com/yourleague" value="${esc(league.instagram_url||'')}" /></div>
           <div style="display:flex;gap:10px;margin-top:20px">
             <a href="/admin" class="btn-ghost">Cancel</a>
             <button type="submit" class="btn-primary">Save Changes →</button>
@@ -1119,9 +1133,11 @@ router.post('/league/:id/edit', async (req, res) => {
     if (!name?.trim() || !admin_code?.trim()) {
       return res.redirect(`/admin/league/${req.params.id}/edit?error=missing`);
     }
+    const { facebook_url, instagram_url } = req.body;
     await db.run(
-      'UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7 WHERE id=$8',
-      [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1', req.params.id]
+      'UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7,facebook_url=$8,instagram_url=$9 WHERE id=$10',
+      [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1',
+       facebook_url?.trim()||null, instagram_url?.trim()||null, req.params.id]
     );
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin'); }

@@ -173,6 +173,8 @@ async function initSchema() {
   try { await run('ALTER TABLE games ADD COLUMN IF NOT EXISTS quarter INTEGER DEFAULT 1'); } catch(e) {}
   // Add role column to users table (migration for existing DBs)
   try { await run("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'commissioner'"); } catch(e) {}
+  try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS facebook_url TEXT DEFAULT NULL'); } catch(e) {}
+  try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 
   // Players table — add FIBA extended columns
   await run(`
