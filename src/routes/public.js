@@ -97,7 +97,7 @@ function renderLanding(leagues, stats, user) {
 
   return page('PH Hoops — Philippines Basketball Stats', `
     <nav class="topnav">
-      <div class="nav-brand">🏀 <span class="brand-text">PH HOOPS</span></div>
+      <div class="nav-brand"><div class="nav-brand-logo">🏀</div><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></div>
       <div class="nav-actions">
         ${user
           ? `<a href="/admin" class="btn-nav">Admin Panel</a>`
@@ -146,7 +146,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
   return page(`${esc(league.name)} | PH Hoops`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none">🏀 <span class="brand-text">PH HOOPS</span></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><div class="nav-brand-logo">🏀</div><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
       <div class="nav-actions">
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>

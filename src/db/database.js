@@ -78,6 +78,7 @@ async function initSchema() {
       password    TEXT NOT NULL,
       name        TEXT NOT NULL,
       plan        TEXT NOT NULL DEFAULT 'free',
+      role        TEXT NOT NULL DEFAULT 'commissioner',
       created_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `);
@@ -170,6 +171,8 @@ async function initSchema() {
 
   // Add quarter column to games table
   try { await run('ALTER TABLE games ADD COLUMN IF NOT EXISTS quarter INTEGER DEFAULT 1'); } catch(e) {}
+  // Add role column to users table (migration for existing DBs)
+  try { await run("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'commissioner'"); } catch(e) {}
 
   // Players table — add FIBA extended columns
   await run(`
@@ -214,16 +217,27 @@ async function initSchema() {
 
 async function seedData() {
   const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@phhoops.com']);
+  const bcrypt = require('bcryptjs');
+
+  // Always ensure super admin exists
+  const superExists = await queryOne('SELECT id FROM users WHERE email = $1', ['superadmin@phhoops.com']);
+  if (!superExists) {
+    await run(
+      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5)`,
+      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']
+    );
+    console.log('✅ Super admin account created');
+  }
+
   if (existing) return;
 
-  const bcrypt = require('bcryptjs');
   const hash = bcrypt.hashSync('demo1234', 10);
 
   await transaction(async (client) => {
-    // User
+    // Demo commissioner
     const { rows: [user] } = await client.query(
-      `INSERT INTO users (email, password, name, plan) VALUES ($1,$2,$3,$4) RETURNING id`,
-      ['demo@phhoops.com', hash, 'Demo Commissioner', 'pro']
+      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      ['demo@phhoops.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
     );
 
     // League 1 — Barangay
