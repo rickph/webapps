@@ -173,7 +173,12 @@ async function initSchema() {
   try { await run('ALTER TABLE games ADD COLUMN IF NOT EXISTS quarter INTEGER DEFAULT 1'); } catch(e) {}
   // Add role column to users table (migration for existing DBs)
   try { await run("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'commissioner'"); } catch(e) {}
+  // Fix existing superadmin account role if it was created before role column existed
+  try {
+    await run("UPDATE users SET role='superadmin', plan='pro' WHERE email='superadmin@phhoops.com' AND role='commissioner'");
+  } catch(e) {}
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS facebook_url TEXT DEFAULT NULL'); } catch(e) {}
+
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 
   // Players table — add FIBA extended columns
@@ -226,7 +231,7 @@ async function seedData() {
   if (!superExists) {
     await run(
       `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5)`,
-      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']
+      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']  // verified by default (role = superadmin)
     );
     console.log('✅ Super admin account created');
   }
@@ -337,4 +342,3 @@ async function initDb() {
 }
 
 module.exports = { query, queryOne, run, transaction, initDb, getPool };
-
