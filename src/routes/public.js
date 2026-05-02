@@ -106,10 +106,6 @@ function renderLanding(leagues, stats, user) {
     </nav>
     <div class="hero">
       <div class="hero-inner">
-        <img src="/icons/icon-192.png?v=2" alt="PH Hoops"
-             style="width:90px;height:90px;border-radius:20px;object-fit:cover;
-                    margin-bottom:20px;box-shadow:0 8px 32px rgba(230,51,41,.45);
-                    border:2px solid rgba(245,200,66,.35)">
         <div class="hero-eyebrow">🇵🇭 Philippine Basketball</div>
         <h1 class="hero-title">Stats &amp; League<br><span class="accent">Management</span></h1>
         <p class="hero-sub">From sitio courts to provincial arenas — manage your league, track every stat, share results publicly.</p>
