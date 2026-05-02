@@ -383,6 +383,3 @@ select.input option { background: #1a2540; color: var(--text); }
   .stats-table th { background: #1240ab; color: #fff; }
   .stats-table td { color: #000; border-color: #ddd; }
 }
-
-/* ─── ALERT SUCCESS ──────────────────────────────────────────────────────────── */
-.alert-success { background: var(--teal-dim); border: 1px solid rgba(0,212,170,.3); color: var(--teal); padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 16px; }

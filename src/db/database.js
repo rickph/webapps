@@ -78,13 +78,8 @@ async function initSchema() {
       password    TEXT NOT NULL,
       name        TEXT NOT NULL,
       plan        TEXT NOT NULL DEFAULT 'free',
-      role               TEXT NOT NULL DEFAULT 'commissioner',
-      email_verified     BOOLEAN NOT NULL DEFAULT FALSE,
-      must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
-      verification_token TEXT DEFAULT NULL,
-      reset_token        TEXT DEFAULT NULL,
-      reset_token_expiry TIMESTAMPTZ DEFAULT NULL,
-      created_at         TIMESTAMPTZ DEFAULT NOW()
+      role        TEXT NOT NULL DEFAULT 'commissioner',
+      created_at  TIMESTAMPTZ DEFAULT NOW()
     )
   `);
 
@@ -179,11 +174,6 @@ async function initSchema() {
   // Add role column to users table (migration for existing DBs)
   try { await run("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'commissioner'"); } catch(e) {}
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS facebook_url TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE'); } catch(e) {}
-  try { await run('ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT TRUE'); } catch(e) {}
-  try { await run('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMPTZ DEFAULT NULL'); } catch(e) {}
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 
   // Players table — add FIBA extended columns
@@ -235,8 +225,8 @@ async function seedData() {
   const superExists = await queryOne('SELECT id FROM users WHERE email = $1', ['superadmin@phhoops.com']);
   if (!superExists) {
     await run(
-      `INSERT INTO users (email,password,name,plan,role,email_verified,must_change_password) VALUES ($1,$2,$3,$4,$5,TRUE,FALSE)`,
-      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']  // verified by default (role = superadmin)
+      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5)`,
+      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']
     );
     console.log('✅ Super admin account created');
   }
@@ -248,7 +238,7 @@ async function seedData() {
   await transaction(async (client) => {
     // Demo commissioner
     const { rows: [user] } = await client.query(
-      `INSERT INTO users (email,password,name,plan,role,email_verified,must_change_password) VALUES ($1,$2,$3,$4,$5,TRUE,FALSE) RETURNING id`,
+      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
       ['demo@phhoops.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
     );
 
