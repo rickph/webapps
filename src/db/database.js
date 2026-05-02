@@ -342,3 +342,4 @@ async function initDb() {
 }
 
 module.exports = { query, queryOne, run, transaction, initDb, getPool };
+

@@ -11,6 +11,11 @@ router.use(requireSuperAdmin);
 // ── SUPER ADMIN DASHBOARD ─────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
   try {
+    // Ensure role column exists before querying
+    try { await db.run("ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'commissioner'"); } catch(e) {}
+    // Ensure superadmin role is set correctly
+    try { await db.run("UPDATE users SET role='superadmin', plan='pro' WHERE email='superadmin@phhoops.com'"); } catch(e) {}
+
     const [totals] = await db.query(`
       SELECT
         (SELECT COUNT(*) FROM users WHERE role != 'superadmin') as commissioners,
@@ -21,11 +26,12 @@ router.get('/', async (req, res) => {
     `);
 
     const recentUsers = await db.query(`
-      SELECT u.*, COUNT(l.id) as league_count
+      SELECT u.id, u.email, u.name, u.plan, u.role, u.created_at,
+             COUNT(l.id) as league_count
       FROM users u
       LEFT JOIN leagues l ON l.user_id = u.id
       WHERE u.role != 'superadmin'
-      GROUP BY u.id
+      GROUP BY u.id, u.email, u.name, u.plan, u.role, u.created_at
       ORDER BY u.created_at DESC
       LIMIT 10
     `);
@@ -118,21 +124,21 @@ router.get('/', async (req, res) => {
           </div>`).join('') || '<div class="empty-state">No leagues yet.</div>'}
       </div>
     `));
-  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+  } catch (err) { console.error('Superadmin dashboard error:', err.message, err.stack); res.status(500).send('Server error: ' + err.message); }
 });
 
 // ── ALL COMMISSIONERS ─────────────────────────────────────────────────────────
 router.get('/commissioners', async (req, res) => {
   try {
     const users = await db.query(`
-      SELECT u.*,
+      SELECT u.id, u.email, u.name, u.plan, u.role, u.created_at,
         COUNT(l.id) as league_count,
         (SELECT COUNT(*) FROM teams WHERE league_id IN (SELECT id FROM leagues WHERE user_id=u.id)) as team_count,
         (SELECT COUNT(*) FROM players WHERE league_id IN (SELECT id FROM leagues WHERE user_id=u.id)) as player_count
       FROM users u
       LEFT JOIN leagues l ON l.user_id = u.id
       WHERE u.role != 'superadmin'
-      GROUP BY u.id
+      GROUP BY u.id, u.email, u.name, u.plan, u.role, u.created_at
       ORDER BY u.created_at DESC
     `);
 
@@ -471,7 +477,7 @@ router.get('/leagues', async (req, res) => {
 });
 
 // ── SHARED HELPERS ────────────────────────────────────────────────────────────
-function superPage(title, user, content) {
+function superPage(title, user, content, req = {}) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -495,7 +501,7 @@ function superPage(title, user, content) {
   <div class="nav-actions">
     <span style="font-size:13px;color:var(--muted)">${esc(user.name)}</span>
     <span class="pro-badge" style="background:var(--gold-dim);color:var(--gold)">⚡ SUPER ADMIN</span>
-    ${req.session?.superAdminToken ? `<a href="/superadmin/return" class="btn-ghost-sm">← Return to Super Admin</a>` : ''}
+    <a href="/superadmin/return" class="btn-ghost-sm" id="returnBtn" style="display:none">← Return</a>
     <a href="/logout" class="btn-ghost-sm">Logout</a>
   </div>
 </nav>

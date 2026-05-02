@@ -1,9 +1,9 @@
-const express = require('express');
-const bcrypt  = require('bcryptjs');
-const router  = express.Router();
-const db      = require('../db/database');
+const express  = require('express');
+const bcrypt   = require('bcryptjs');
+const router   = express.Router();
+const db       = require('../db/database');
 const { generateToken } = require('../middleware/auth');
-const { esc, page }     = require('../helpers');
+const { esc, page } = require('../helpers');
 
 // ── GET /login ────────────────────────────────────────────────────────────────
 router.get('/login', (req, res) => {
@@ -13,7 +13,7 @@ router.get('/login', (req, res) => {
     <p class="auth-sub">Manage your basketball league</p>
     <form action="/login" method="POST">
       <div class="field-group"><label>Email</label>
-        <input name="email" type="email" class="input" placeholder="you@email.com" required /></div>
+        <input name="email" type="text" class="input" placeholder="your@email.com" autofocus required /></div>
       <div class="field-group"><label>Password</label>
         <input name="password" type="password" class="input" placeholder="••••••••" required /></div>
       <button type="submit" class="btn-primary full">Login →</button>
@@ -27,8 +27,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email = '', password = '' } = req.body;
     const user = await db.queryOne(
-      'SELECT * FROM users WHERE email = $1',
-      [email.toLowerCase().trim()]
+      'SELECT * FROM users WHERE email=$1', [email.toLowerCase().trim()]
     );
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.send(page('Login | PH Hoops', authCard(`
@@ -37,7 +36,7 @@ router.post('/login', async (req, res) => {
         <div class="alert-error">❌ Invalid email or password.</div>
         <form action="/login" method="POST">
           <div class="field-group"><label>Email</label>
-            <input name="email" type="email" class="input" value="${esc(email)}" required /></div>
+            <input name="email" type="text" class="input" value="${esc(email)}" autofocus required /></div>
           <div class="field-group"><label>Password</label>
             <input name="password" type="password" class="input" required /></div>
           <button type="submit" class="btn-primary full">Login →</button>
@@ -45,7 +44,9 @@ router.post('/login', async (req, res) => {
         <div class="auth-alt">No account? <a href="/register">Register here</a></div>
       `)));
     }
+    // Always use DB role (not cached token) for redirect
     req.session.token = generateToken(user);
+    if (user.role === 'superadmin') return res.redirect('/superadmin');
     res.redirect('/admin');
   } catch (err) {
     console.error('Login error:', err);
@@ -69,7 +70,7 @@ router.get('/register', (req, res) => {
       <div class="field-group"><label>Full Name</label>
         <input name="name" class="input" placeholder="Commissioner Name" required /></div>
       <div class="field-group"><label>Email</label>
-        <input name="email" type="email" class="input" placeholder="you@email.com" required /></div>
+        <input name="email" type="email" class="input" placeholder="your@email.com" required /></div>
       <div class="field-group"><label>Password</label>
         <input name="password" type="password" class="input" placeholder="Min 6 characters" required /></div>
       <button type="submit" class="btn-primary full">Create Account →</button>
@@ -82,18 +83,13 @@ router.get('/register', (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { name = '', email = '', password = '' } = req.body;
-    if (!name.trim() || !email.trim() || password.length < 6) {
+    if (!name.trim() || !email.trim() || password.length < 6)
       return res.redirect('/register?error=invalid');
-    }
-    const existing = await db.queryOne(
-      'SELECT id FROM users WHERE email = $1',
-      [email.toLowerCase().trim()]
-    );
+    const existing = await db.queryOne('SELECT id FROM users WHERE email=$1', [email.toLowerCase().trim()]);
     if (existing) return res.redirect('/register?error=exists');
-
     const hash = bcrypt.hashSync(password, 10);
     const user = await db.queryOne(
-      'INSERT INTO users (email,password,name) VALUES ($1,$2,$3) RETURNING *',
+      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,'free','commissioner') RETURNING *`,
       [email.toLowerCase().trim(), hash, name.trim()]
     );
     req.session.token = generateToken(user);
@@ -110,7 +106,6 @@ router.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 function authCard(inner) {
   return `<div class="auth-wrap"><div class="auth-card">${inner}</div></div>`;
 }

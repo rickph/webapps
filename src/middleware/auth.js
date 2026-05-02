@@ -14,9 +14,20 @@ function requireAuth(req, res, next) {
   }
 }
 
-function requireSuperAdmin(req, res, next) {
-  if (req.user?.role !== 'superadmin') return res.redirect('/admin');
-  next();
+async function requireSuperAdmin(req, res, next) {
+  // Check role from DB directly — don't trust old JWT tokens
+  // that may have been issued before the role column existed
+  try {
+    const db = require('../db/database');
+    const user = await db.queryOne(
+      'SELECT role FROM users WHERE id=$1', [req.user.id]
+    );
+    if (!user || user.role !== 'superadmin') return res.redirect('/admin');
+    next();
+  } catch(err) {
+    console.error('requireSuperAdmin error:', err);
+    res.redirect('/admin');
+  }
 }
 
 function optionalAuth(req, res, next) {
@@ -29,7 +40,7 @@ function optionalAuth(req, res, next) {
 
 function generateToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, name: user.name, plan: user.plan, role: user.role || 'commissioner' },
+    { id: user.id, email: user.email, name: user.name, plan: user.plan || 'free', role: user.role || 'commissioner' },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
