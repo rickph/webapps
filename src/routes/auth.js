@@ -13,7 +13,7 @@ router.get('/login', (req, res) => {
     <p class="auth-sub">Manage your basketball league</p>
     <form action="/login" method="POST">
       <div class="field-group"><label>Email</label>
-        <input name="email" type="email" class="input" placeholder="you@email.com" required /></div>
+        <input name="email" type="text" class="input" placeholder="your@email.com" autofocus required /></div>
       <div class="field-group"><label>Password</label>
         <input name="password" type="password" class="input" placeholder="••••••••" required /></div>
       <button type="submit" class="btn-primary full">Login →</button>
@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
         <div class="alert-error">❌ Invalid email or password.</div>
         <form action="/login" method="POST">
           <div class="field-group"><label>Email</label>
-            <input name="email" type="email" class="input" value="${esc(email)}" required /></div>
+            <input name="email" type="text" class="input" value="${esc(email)}" autofocus required /></div>
           <div class="field-group"><label>Password</label>
             <input name="password" type="password" class="input" required /></div>
           <button type="submit" class="btn-primary full">Login →</button>
@@ -46,6 +46,8 @@ router.post('/login', async (req, res) => {
       `)));
     }
     req.session.token = generateToken(user);
+    // Redirect super admin to their panel
+    if (user.role === 'superadmin') return res.redirect('/superadmin');
     res.redirect('/admin');
   } catch (err) {
     console.error('Login error:', err);
@@ -69,7 +71,7 @@ router.get('/register', (req, res) => {
       <div class="field-group"><label>Full Name</label>
         <input name="name" class="input" placeholder="Commissioner Name" required /></div>
       <div class="field-group"><label>Email</label>
-        <input name="email" type="email" class="input" placeholder="you@email.com" required /></div>
+        <input name="email" type="email" class="input" placeholder="your@email.com" required /></div>
       <div class="field-group"><label>Password</label>
         <input name="password" type="password" class="input" placeholder="Min 6 characters" required /></div>
       <button type="submit" class="btn-primary full">Create Account →</button>
@@ -93,7 +95,7 @@ router.post('/register', async (req, res) => {
 
     const hash = bcrypt.hashSync(password, 10);
     const user = await db.queryOne(
-      'INSERT INTO users (email,password,name) VALUES ($1,$2,$3) RETURNING *',
+      `INSERT INTO users (email,password,name,role) VALUES ($1,$2,$3,'commissioner') RETURNING *`,
       [email.toLowerCase().trim(), hash, name.trim()]
     );
     req.session.token = generateToken(user);
