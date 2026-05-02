@@ -97,7 +97,7 @@ function renderLanding(leagues, stats, user) {
 
   return page('PH Hoops — Philippines Basketball Stats', `
     <nav class="topnav">
-      <div class="nav-brand"><div class="nav-brand-logo">🏀</div><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
       <div class="nav-actions">
         ${user
           ? `<a href="/admin" class="btn-nav">Admin Panel</a>`
@@ -106,6 +106,10 @@ function renderLanding(leagues, stats, user) {
     </nav>
     <div class="hero">
       <div class="hero-inner">
+        <img src="/icons/icon-192.png?v=2" alt="PH Hoops"
+             style="width:90px;height:90px;border-radius:20px;object-fit:cover;
+                    margin-bottom:20px;box-shadow:0 8px 32px rgba(230,51,41,.45);
+                    border:2px solid rgba(245,200,66,.35)">
         <div class="hero-eyebrow">🇵🇭 Philippine Basketball</div>
         <h1 class="hero-title">Stats &amp; League<br><span class="accent">Management</span></h1>
         <p class="hero-sub">From sitio courts to provincial arenas — manage your league, track every stat, share results publicly.</p>
@@ -149,7 +153,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
   return page(`${esc(league.name)} | PH Hoops`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
       <div class="nav-actions">
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>
@@ -350,7 +354,7 @@ router.get('/install', (req, res) => {
     <nav class="topnav">
       <div class="nav-brand">
         <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-          <img src="/icons/icon-192.png" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+          <img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
           <div class="nav-brand-text">
             <div class="brand-text">PH HOOPS</div>
             <div class="brand-sub">League Manager</div>
@@ -366,7 +370,7 @@ router.get('/install', (req, res) => {
 
       <!-- HEADER -->
       <div style="text-align:center;margin-bottom:40px">
-        <img src="/icons/icon-192.png" alt="PH Hoops"
+        <img src="/icons/icon-192.png?v=2" alt="PH Hoops"
              style="width:96px;height:96px;border-radius:22px;object-fit:cover;
                     box-shadow:0 8px 32px rgba(230,51,41,.4);
                     border:2px solid rgba(245,200,66,.3);margin-bottom:20px">
