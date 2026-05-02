@@ -499,7 +499,7 @@ function superPage(title, user, content, req = {}) {
 <nav class="topnav" style="border-bottom-color:var(--gold)">
   <div class="nav-brand">
     <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-      <img src="/icons/icon-192.png" alt="PH Hoops" style="width:36px;height:36px;border-radius:8px;object-fit:cover">
+      <img src="/icons/icon-192.png" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
       <div class="nav-brand-text">
         <div class="brand-text">PH HOOPS</div>
         <div class="brand-sub" style="color:var(--gold)">Super Admin</div>
