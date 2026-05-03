@@ -486,22 +486,22 @@ function superPage(title, user, content, req = {}) {
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PH HOOPS">
+<meta name="apple-mobile-web-app-title" content="Hoopstats Pilipinas">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png?v=2">
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
-<title>${title} | PH Hoops Super Admin</title>
+<title>${title} | Hoopstats Pilipinas Super Admin</title>
 <link rel="stylesheet" href="/css/main.css">
 </head>
 <body class="dark-bg">
 <nav class="topnav" style="border-bottom-color:var(--gold)">
   <div class="nav-brand">
     <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-      <img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+      
       <div class="nav-brand-text">
-        <div class="brand-text">PH HOOPS</div>
+        <div class="brand-text">Hoopstats Pilipinas</div>
         <div class="brand-sub" style="color:var(--gold)">Super Admin</div>
       </div>
     </a>

@@ -7,8 +7,8 @@ const { esc, page } = require('../helpers');
 
 // ── GET /login ────────────────────────────────────────────────────────────────
 router.get('/login', (req, res) => {
-  res.send(page('Login | PH Hoops', authCard(`
-    <div class="auth-logo"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">PH HOOPS</div></div>
+  res.send(page('Login | Hoopstats Pilipinas', authCard(`
+    <div class="auth-logo"><img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">Hoopstats Pilipinas</div></div>
     <h2>Commissioner Login</h2>
     <p class="auth-sub">Manage your basketball league</p>
     <form action="/login" method="POST">
@@ -30,8 +30,8 @@ router.post('/login', async (req, res) => {
       'SELECT * FROM users WHERE email=$1', [email.toLowerCase().trim()]
     );
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.send(page('Login | PH Hoops', authCard(`
-        <div class="auth-logo"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">PH HOOPS</div></div>
+      return res.send(page('Login | Hoopstats Pilipinas', authCard(`
+        <div class="auth-logo"><img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">Hoopstats Pilipinas</div></div>
         <h2>Commissioner Login</h2>
         <div class="alert-error">❌ Invalid email or password.</div>
         <form action="/login" method="POST">
@@ -61,8 +61,8 @@ router.get('/register', (req, res) => {
     invalid: '⚠ Please fill all fields (password must be at least 6 characters).',
   };
   const errMsg = errMap[req.query.error] || '';
-  res.send(page('Register | PH Hoops', authCard(`
-    <div class="auth-logo"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">PH HOOPS</div></div>
+  res.send(page('Register | Hoopstats Pilipinas', authCard(`
+    <div class="auth-logo"><img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:72px;height:72px;border-radius:16px;object-fit:cover;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><div style="font-family:'Russo One',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)">Hoopstats Pilipinas</div></div>
     <h2>Create Account</h2>
     <p class="auth-sub">Start managing your league for free</p>
     ${errMsg ? `<div class="alert-error">${errMsg}</div>` : ''}

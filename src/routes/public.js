@@ -95,17 +95,22 @@ function renderLanding(leagues, stats, user) {
     </a>`;
   }).join('');
 
-  return page('PH Hoops — Philippines Basketball Stats', `
+  return page('Hoopstats Pilipinas — Philippines Basketball Stats', `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="Hoopstats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">Hoopstats Pilipinas</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
         ${user
           ? `<a href="/admin" class="btn-nav">Admin Panel</a>`
           : `<a href="/login" class="btn-nav">Login</a><a href="/register" class="btn-primary-sm">Register Free</a>`}
       </div>
     </nav>
-    <div class="hero">
-      <div class="hero-inner">
+    <div class="hero" style="position:relative">
+      <!-- Watermark logo -->
+      <img src="/icons/logo-watermark.png?v=3" alt=""
+           style="position:absolute;right:-40px;top:50%;transform:translateY(-50%);
+                  width:420px;height:420px;object-fit:contain;
+                  opacity:0.07;pointer-events:none;z-index:0">
+      <div class="hero-inner" style="position:relative;z-index:1">
         <div class="hero-eyebrow">🇵🇭 Philippine Basketball</div>
         <h1 class="hero-title">Stats &amp; League<br><span class="accent">Management</span></h1>
         <p class="hero-sub">From sitio courts to provincial arenas — manage your league, track every stat, share results publicly.</p>
@@ -147,9 +152,9 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     stl: [...players].sort((a,b)=>b.stl-a.stl),
   };
 
-  return page(`${esc(league.name)} | PH Hoops`, `
+  return page(`${esc(league.name)} | Hoopstats Pilipinas`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">PH HOOPS</div><div class="brand-sub">League Manager</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="Hoopstats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">Hoopstats Pilipinas</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>
@@ -346,14 +351,14 @@ function sortTh(col, label, title, sort, league) {
 // ── INSTALL PAGE ──────────────────────────────────────────────────────────────
 router.get('/install', (req, res) => {
   const { page } = require('../helpers');
-  res.send(page('Install App | PH Hoops', `
+  res.send(page('Install App | Hoopstats Pilipinas', `
     <nav class="topnav">
       <div class="nav-brand">
         <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-          <img src="/icons/icon-192.png?v=2" alt="PH Hoops" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+          <img src="/icons/icon-192.png?v=2" alt="Hoopstats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
           <div class="nav-brand-text">
-            <div class="brand-text">PH HOOPS</div>
-            <div class="brand-sub">League Manager</div>
+            <div class="brand-text">Hoopstats Pilipinas</div>
+            <div class="brand-sub">Pilipinas</div>
           </div>
         </a>
       </div>
@@ -366,12 +371,12 @@ router.get('/install', (req, res) => {
 
       <!-- HEADER -->
       <div style="text-align:center;margin-bottom:40px">
-        <img src="/icons/icon-192.png?v=2" alt="PH Hoops"
+        <img src="/icons/icon-192.png?v=2" alt="Hoopstats Pilipinas"
              style="width:96px;height:96px;border-radius:22px;object-fit:cover;
                     box-shadow:0 8px 32px rgba(230,51,41,.4);
                     border:2px solid rgba(245,200,66,.3);margin-bottom:20px">
         <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px">
-          Install PH Hoops
+          Install Hoopstats Pilipinas
         </h1>
         <p style="color:rgba(240,244,255,.55);font-size:15px">
           Add the app to your home screen for quick access — no App Store needed!
@@ -389,11 +394,11 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open PH Hoops in <b>Chrome</b> on your Android phone'],
+            ['1', 'Open Hoopstats Pilipinas in <b>Chrome</b> on your Android phone'],
             ['2', 'Tap the <b>⋮ menu</b> (three dots) at the top right corner'],
             ['3', 'Tap <b>"Add to Home Screen"</b> from the menu'],
             ['4', 'Tap <b>"Add"</b> on the confirmation popup'],
-            ['5', '🎉 The <b>PH Hoops icon</b> appears on your home screen!'],
+            ['5', '🎉 The <b>Hoopstats Pilipinas icon</b> appears on your home screen!'],
           ].map(([num, text]) => `
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(61,220,132,.15);border:1px solid rgba(61,220,132,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#3ddc84;flex-shrink:0;margin-top:1px">${num}</div>
@@ -413,11 +418,11 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open PH Hoops in <b>Safari</b> on your iPhone or iPad'],
+            ['1', 'Open Hoopstats Pilipinas in <b>Safari</b> on your iPhone or iPad'],
             ['2', 'Tap the <b>Share button</b> (□ with an arrow pointing up) at the bottom of the screen'],
             ['3', 'Scroll down and tap <b>"Add to Home Screen"</b>'],
             ['4', 'Tap <b>"Add"</b> in the top right corner'],
-            ['5', '🎉 The <b>PH Hoops icon</b> appears on your home screen!'],
+            ['5', '🎉 The <b>Hoopstats Pilipinas icon</b> appears on your home screen!'],
           ].map(([num, text]) => `
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(0,122,255,.15);border:1px solid rgba(0,122,255,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#007aff;flex-shrink:0;margin-top:1px">${num}</div>
@@ -440,10 +445,10 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open PH Hoops in <b>Chrome</b> or <b>Edge</b> on your computer'],
+            ['1', 'Open Hoopstats Pilipinas in <b>Chrome</b> or <b>Edge</b> on your computer'],
             ['2', 'Look for the <b>install icon</b> (⊕) in the address bar on the right side'],
             ['3', 'Click it and select <b>"Install"</b>'],
-            ['4', '🎉 PH Hoops opens like a <b>desktop app</b> with no browser chrome!'],
+            ['4', '🎉 Hoopstats Pilipinas opens like a <b>desktop app</b> with no browser chrome!'],
           ].map(([num, text]) => `
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#f5c842;flex-shrink:0;margin-top:1px">${num}</div>

@@ -223,7 +223,7 @@ async function initSchema() {
 // ─── SEED DATA ────────────────────────────────────────────────────────────────
 
 async function seedData() {
-  const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@phhoops.com']);
+  const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@hoopstatspilipinas.com']);
   const bcrypt = require('bcryptjs');
 
   // Always ensure super admin exists
@@ -244,7 +244,7 @@ async function seedData() {
     // Demo commissioner
     const { rows: [user] } = await client.query(
       `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-      ['demo@phhoops.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
+      ['demo@hoopstatspilipinas.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
     );
 
     // League 1 — Barangay
