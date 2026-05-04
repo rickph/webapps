@@ -498,14 +498,14 @@ function superPage(title, user, content, req = {}) {
 <body class="dark-bg">
 <nav class="topnav" style="border-bottom-color:var(--gold)">
   <div class="nav-brand">
-    <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-      
-      <div class="nav-brand-text">
-        <div class="brand-text">Hoopstats Pilipinas</div>
-        <div class="brand-sub" style="color:var(--gold)">Super Admin</div>
-      </div>
-    </a>
-  </div>
+      <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
+        <img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:48px;height:48px;border-radius:12px;object-fit:contain;display:block;flex-shrink:0">
+        <div class="nav-brand-text">
+          <div class="brand-text">HOOPSTATS</div>
+          <div class="brand-sub" style="color:var(--gold)">Super Admin</div>
+        </div>
+      </a>
+    </div>
   <div class="nav-center" style="font-size:11px;color:var(--gold);letter-spacing:2px;font-weight:700;opacity:.7">SYSTEM PANEL</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:var(--muted)">${esc(user.name)}</span>

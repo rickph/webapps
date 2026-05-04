@@ -1058,7 +1058,15 @@ function adminPage(title, user, content) {
 </head>
 <body class="dark-bg">
 <nav class="topnav">
-  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">Hoopstats Pilipinas</div><div class="brand-sub">Pilipinas</div></div></a></div>
+  <div class="nav-brand">
+      <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
+        <img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas" style="width:48px;height:48px;border-radius:12px;object-fit:contain;display:block;flex-shrink:0">
+        <div class="nav-brand-text">
+        <div class="brand-text">HOOPSTATS</div>
+        <div class="brand-sub">Pilipinas</div>
+      </div>
+      </a>
+    </div>
   <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:#888">${esc(user.name)}</span>
