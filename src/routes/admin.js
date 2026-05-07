@@ -1056,6 +1056,34 @@ function adminPage(title, user, content) {
 </html>`;
 }
 
+// ── RECALC STANDINGS ──────────────────────────────────────────────────────────
+async function recalcStandings(leagueId, dbRef) {
+  // Step 1: Reset all teams to 0-0
+  await dbRef.run(
+    'UPDATE teams SET wins=0, losses=0 WHERE league_id=$1',
+    [leagueId]
+  );
+  // Step 2: Get all FINAL games
+  const finalGames = await dbRef.query(
+    `SELECT * FROM games WHERE league_id=$1 AND status='final'`,
+    [leagueId]
+  );
+  // Step 3: Tally W/L from actual scores
+  for (const g of finalGames) {
+    const h = Number(g.home_score);
+    const a = Number(g.away_score);
+    if (h === a) continue;
+    if (h > a) {
+      if (g.home_team_id) await dbRef.run('UPDATE teams SET wins=wins+1   WHERE id=$1', [g.home_team_id]);
+      if (g.away_team_id) await dbRef.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [g.away_team_id]);
+    } else {
+      if (g.away_team_id) await dbRef.run('UPDATE teams SET wins=wins+1   WHERE id=$1', [g.away_team_id]);
+      if (g.home_team_id) await dbRef.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [g.home_team_id]);
+    }
+  }
+  console.log(`✅ Standings recalculated for league ${leagueId} — ${finalGames.length} final games processed`);
+}
+
 module.exports = router;
 
 // ── EDIT LEAGUE ───────────────────────────────────────────────────────────────
