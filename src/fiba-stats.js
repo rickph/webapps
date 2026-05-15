@@ -1,5 +1,5 @@
 /**
- * PH HOOPS — FIBA Statistics Engine (2024)
+ * HoopStats Pilipinas — FIBA Statistics Engine (2024)
  * Based on FIBA Statisticians' Manual 2024 v1.0
  * Reference: assets.fiba.basketball/documents-corporate-fiba-statisticians-manual-2024.pdf
  */

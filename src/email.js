@@ -1,5 +1,5 @@
 /**
- * PH Hoops Email Service
+ * HoopStats Pilipinas Email Service
  * Uses Gmail via Nodemailer
  *
  * Setup Gmail:
@@ -41,15 +41,15 @@ async function sendVerificationEmail(user, token) {
   const link = `${APP_URL}/verify-email?token=${token}`;
 
   await transporter.sendMail({
-    from: `"PH Hoops League Manager" <${FROM}>`,
+    from: `"HoopStats Pilipinas" <${FROM}>`,
     to: user.email,
-    subject: '✅ Verify your PH Hoops account',
+    subject: '✅ Verify your HoopStats account',
     html: `
       <!DOCTYPE html>
       <html>
       <body style="font-family:Arial,sans-serif;background:#0a0e1a;color:#f0f4ff;padding:32px;margin:0">
         <div style="max-width:480px;margin:0 auto;background:#0f1628;border-radius:12px;border-top:3px solid #e63329;padding:32px">
-          <div style="font-size:22px;font-weight:900;color:#f0f4ff;letter-spacing:2px;margin-bottom:4px">🏀 PH HOOPS</div>
+          <div style="font-size:22px;font-weight:900;color:#f0f4ff;letter-spacing:2px;margin-bottom:4px">🏀 HOOPSTATS</div>
           <div style="font-size:10px;color:#e63329;letter-spacing:3px;font-weight:700;margin-bottom:24px">LEAGUE MANAGER</div>
           <h2 style="color:#f5c842;font-size:20px;margin-bottom:8px">Welcome, ${user.name}!</h2>
           <p style="color:rgba(240,244,255,.7);font-size:14px;line-height:1.7;margin-bottom:24px">
@@ -83,15 +83,15 @@ async function sendPasswordResetEmail(user, token) {
   }
 
   await transporter.sendMail({
-    from: `"PH Hoops League Manager" <${FROM}>`,
+    from: `"HoopStats Pilipinas" <${FROM}>`,
     to: user.email,
-    subject: '🔑 Reset your PH Hoops password',
+    subject: '🔑 Reset your HoopStats password',
     html: `
       <!DOCTYPE html>
       <html>
       <body style="font-family:Arial,sans-serif;background:#0a0e1a;color:#f0f4ff;padding:32px;margin:0">
         <div style="max-width:480px;margin:0 auto;background:#0f1628;border-radius:12px;border-top:3px solid #e63329;padding:32px">
-          <div style="font-size:22px;font-weight:900;color:#f0f4ff;letter-spacing:2px;margin-bottom:4px">🏀 PH HOOPS</div>
+          <div style="font-size:22px;font-weight:900;color:#f0f4ff;letter-spacing:2px;margin-bottom:4px">🏀 HOOPSTATS</div>
           <div style="font-size:10px;color:#e63329;letter-spacing:3px;font-weight:700;margin-bottom:24px">LEAGUE MANAGER</div>
           <h2 style="color:#f5c842;font-size:20px;margin-bottom:8px">Password Reset</h2>
           <p style="color:rgba(240,244,255,.7);font-size:14px;line-height:1.7;margin-bottom:24px">
