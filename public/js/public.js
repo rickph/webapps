@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ── PUBLIC TABS (league page) ───────────────────────────────────────────────
+  // ── PUBLIC TABS ─────────────────────────────────────────────────────────────
   var ptabs = document.querySelectorAll('.ptab');
 
   function showTab(name) {
@@ -39,53 +39,89 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // Auto-open tab from URL ?tab=players
   var urlParams = new URLSearchParams(window.location.search);
   var activeTab = urlParams.get('tab');
   if (activeTab) showTab(activeTab);
 
   // ── TEAM ROSTER TOGGLE ──────────────────────────────────────────────────────
-  // Use event delegation on the TABLE BODY so it works even when tab is hidden
-  var standingsTable = document.getElementById('standingsTable');
-  if (standingsTable) {
-    standingsTable.addEventListener('click', function (e) {
-      // Find the clicked standing row (not a roster row)
-      var row = e.target.closest('.team-standing-row');
-      if (!row) return;
+  function toggleRoster(teamId) {
+    var roster = document.getElementById('roster-' + teamId);
+    if (!roster) return;
 
-      var teamId = row.getAttribute('data-team');
-      var roster = document.getElementById('roster-' + teamId);
-      if (!roster) return;
+    var isOpen = roster.classList.contains('open');
 
-      var isOpen = !roster.classList.contains('hidden');
+    // Close all
+    document.querySelectorAll('.team-roster-row').forEach(function (r) {
+      r.classList.remove('open');
+    });
+    document.querySelectorAll('.team-standing-row').forEach(function (r) {
+      r.classList.remove('roster-open');
+      var arrow = r.querySelector('.roster-arrow');
+      if (arrow) arrow.classList.remove('open');
+    });
 
-      // Close ALL open rosters
-      document.querySelectorAll('.team-roster-row').forEach(function (r) {
-        r.classList.add('hidden');
-      });
-      // Reset all arrow indicators
-      document.querySelectorAll('.team-standing-row').forEach(function (r) {
-        r.classList.remove('roster-open');
-        var arrow = r.querySelector('.roster-arrow');
-        if (arrow) arrow.textContent = '▾';
-      });
-
-      // If it was closed — open it
-      if (!isOpen) {
-        roster.classList.remove('hidden');
+    // Open if was closed
+    if (!isOpen) {
+      roster.classList.add('open');
+      var row = document.querySelector('.team-standing-row[data-team="' + teamId + '"]');
+      if (row) {
         row.classList.add('roster-open');
         var arrow = row.querySelector('.roster-arrow');
-        if (arrow) arrow.textContent = '▴';
+        if (arrow) arrow.classList.add('open');
       }
+    }
+  }
+
+  function initRosterClicks() {
+    document.querySelectorAll('.team-standing-row').forEach(function (row) {
+      // Remove old listener by cloning
+      var newRow = row.cloneNode(true);
+      row.parentNode.replaceChild(newRow, row);
+
+      newRow.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var teamId = newRow.getAttribute('data-team');
+        if (teamId) toggleRoster(teamId);
+      });
+
+      // Also attach to every child td individually for desktop compatibility
+      newRow.querySelectorAll('td').forEach(function (td) {
+        td.style.pointerEvents = 'auto';
+        td.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var teamId = newRow.getAttribute('data-team');
+          if (teamId) toggleRoster(teamId);
+        });
+      });
     });
   }
+
+  // Init immediately
+  initRosterClicks();
+
+  // Re-init when standings tab is clicked (in case DOM wasn't ready)
+  ptabs.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var tabName = btn.getAttribute('data-tab');
+      if (tabName === 'standings') {
+        setTimeout(initRosterClicks, 50);
+      }
+      if (tabName === 'players') {
+        initSort();
+      }
+    });
+  });
 
   // ── SORTABLE PLAYER STATS TABLE ─────────────────────────────────────────────
   var sortState = { col: 4, dir: -1 };
 
   function initSort() {
     var table = document.getElementById('playerStatsTable');
-    if (!table) return;
+    if (!table || table._sortInit) return;
+    table._sortInit = true;
+
     table.querySelectorAll('.sort-col').forEach(function (th) {
       th.addEventListener('click', function () {
         sortTable(parseInt(th.getAttribute('data-col')));
@@ -101,12 +137,8 @@ document.addEventListener('DOMContentLoaded', function () {
     var rows = Array.from(tbody.querySelectorAll('tr'));
     if (!rows.length) return;
 
-    if (sortState.col === colIndex) {
-      sortState.dir *= -1;
-    } else {
-      sortState.col = colIndex;
-      sortState.dir = -1;
-    }
+    if (sortState.col === colIndex) { sortState.dir *= -1; }
+    else { sortState.col = colIndex; sortState.dir = -1; }
 
     rows.sort(function (a, b) {
       var aCell = a.querySelectorAll('td')[colIndex];
@@ -119,8 +151,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     rows.forEach(function (row, i) {
-      var firstTd = row.querySelectorAll('td')[0];
-      if (firstTd) firstTd.textContent = i + 1;
+      var td = row.querySelectorAll('td')[0];
+      if (td) td.textContent = i + 1;
       tbody.appendChild(row);
     });
 
@@ -138,16 +170,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Init sort when Players tab opened
-  ptabs.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      if (btn.getAttribute('data-tab') === 'players' && !window._sortInitialized) {
-        initSort();
-        window._sortInitialized = true;
-      }
-    });
-  });
-
-  initSort(); // also try on load
+  initSort();
 
 }); // end DOMContentLoaded
