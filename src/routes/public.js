@@ -245,7 +245,8 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                 <td class="red">${t.losses}</td>
                 <td style="color:var(--gold);font-weight:700">${winPct}%</td>
                 <td style="text-align:center;color:var(--muted);font-size:12px">
-                  ${teamPlayers.length} players ▾
+                  <span class="roster-arrow" style="margin-left:4px">▾</span>
+                  <span style="font-size:12px">${teamPlayers.length} player${teamPlayers.length !== 1 ? 's' : ''}</span>
                 </td>
               </tr>
               <tr class="team-roster-row hidden" id="roster-${t.id}">
@@ -308,6 +309,12 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">
           💡 Click any team row to view their roster and stats
         </div>
+        <style>
+          .team-standing-row:hover { background: rgba(255,255,255,.04); }
+          .team-standing-row.roster-open { background: rgba(255,255,255,.05); }
+          .team-standing-row { cursor: pointer; }
+          .roster-arrow { font-size: 11px; color: var(--muted); }
+        </style>
       </div>
 
       <div id="tab-players" class="tab-pane hidden">
