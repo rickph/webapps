@@ -214,83 +214,22 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-content">
       <div id="tab-standings" class="tab-pane">
-        <div class="srow-header">
-          <span>#</span><span>TEAM</span><span style="text-align:center">GP</span>
-          <span style="text-align:center">W</span><span style="text-align:center">L</span>
-          <span style="text-align:center">WIN%</span><span style="text-align:right">ROSTER</span>
-        </div>
-        <div class="standings-list">
-        ${teams.map((t,i) => {
-          const teamPlayers = players.filter(p => p.team_id == t.id);
-          const gp = t.wins + t.losses;
-          const winPct = gp > 0 ? ((t.wins/gp)*100).toFixed(1) : '0.0';
-          const chkId = 'rc-' + t.id;
-          return `
-          <div class="srow-wrap">
-            <input type="checkbox" id="${chkId}" class="srow-chk">
-            <label for="${chkId}" class="srow-label">
-              <span class="srow-rank ${i<2?'rank-top':''}">${i+1}</span>
-              <span class="srow-name">
-                <span class="srow-dot" style="background:${t.color}"></span>
-                ${esc(t.name)}
-              </span>
-              <span class="srow-num" style="color:var(--muted)">${gp}</span>
-              <span class="srow-num green">${t.wins}</span>
-              <span class="srow-num red">${t.losses}</span>
-              <span class="srow-num" style="color:var(--gold);font-weight:700">${winPct}%</span>
-              <span class="srow-num srow-players">${teamPlayers.length} players <span class="srow-arrow">▾</span></span>
-            </label>
-            <div class="srow-panel">
-              ${teamPlayers.length > 0 ? `
-              <div class="srow-panel-inner">
-                <div class="srow-panel-title" style="color:${t.color}">${esc(t.name)} — ROSTER</div>
-                <div style="overflow-x:auto">
-                <table style="width:100%;border-collapse:collapse;min-width:480px">
-                  <thead><tr class="srow-thead">
-                    <th style="text-align:center">#</th>
-                    <th style="text-align:left">PLAYER</th>
-                    <th style="text-align:center">POS</th>
-                    <th style="text-align:center">GP</th>
-                    <th style="text-align:center;color:#e63329">PTS</th>
-                    <th style="text-align:center">REB</th>
-                    <th style="text-align:center">AST</th>
-                    <th style="text-align:center">STL</th>
-                    <th style="text-align:center">BLK</th>
-                    <th style="text-align:center;color:var(--teal)">FG%</th>
-                    <th style="text-align:center;color:#f5c842">EFF</th>
-                  </tr></thead>
-                  <tbody>
-                    ${teamPlayers.sort((a,b)=>(b.pts||0)-(a.pts||0)).map(p => {
-                      const ss  = seasonStats[p.id] || {};
-                      const eff = ss.eff != null ? ss.eff : '—';
-                      return `<tr class="srow-prow">
-                        <td style="text-align:center;color:var(--muted);font-weight:700">#${p.jersey||'—'}</td>
-                        <td style="font-weight:600">${esc(p.name)}</td>
-                        <td style="text-align:center"><span class="pos-badge">${p.pos||'—'}</span></td>
-                        <td style="text-align:center;color:var(--muted)">${p.gp||0}</td>
-                        <td style="text-align:center;color:#e63329;font-weight:800">${p.pts||0}</td>
-                        <td style="text-align:center">${p.reb||0}</td>
-                        <td style="text-align:center">${p.ast||0}</td>
-                        <td style="text-align:center">${p.stl||0}</td>
-                        <td style="text-align:center">${p.blk||0}</td>
-                        <td style="text-align:center;color:var(--teal);font-weight:700">${p.fg||0}%</td>
-                        <td style="text-align:center;color:#f5c842;font-weight:700">${eff}</td>
-                      </tr>`;
-                    }).join('')}
-                  </tbody>
-                </table>
-                </div>
-              </div>` : `<div class="srow-empty">No players added yet.</div>`}
-            </div>
-          </div>`;
-        }).join('') || '<div class="empty-state">No teams yet.</div>'}
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">
-          💡 Click any team row to view their roster and stats
-        </div>
+        <table class="stats-table">
+          <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th></tr></thead>
+          <tbody>
+            ${teams.map((t,i)=>`
+              <tr>
+                <td class="rank ${i<2?'rank-top':''}">${i+1}</td>
+                <td><div class="team-name-cell"><div class="team-dot" style="background:${t.color}"></div>${esc(t.name)}</div></td>
+                <td class="green">${t.wins}</td>
+                <td class="red">${t.losses}</td>
+                <td style="color:var(--gold);font-weight:700">${((t.wins/(t.wins+t.losses||1))*100).toFixed(1)}%</td>
+              </tr>`).join('') || '<tr><td colspan="5" class="empty">No teams yet.</td></tr>'}
+          </tbody>
+        </table>
       </div>
 
-      <div id="tab-players" class="tab-pane hidden">
+            <div id="tab-players" class="tab-pane hidden">
         <div style="font-size:11px;color:#555;margin-bottom:8px;font-weight:600">
           💡 Click any column header to sort
         </div>
