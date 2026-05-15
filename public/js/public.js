@@ -43,77 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var activeTab = urlParams.get('tab');
   if (activeTab) showTab(activeTab);
 
-  // ── TEAM ROSTER TOGGLE ──────────────────────────────────────────────────────
-  function toggleRoster(teamId) {
-    var roster = document.getElementById('roster-' + teamId);
-    if (!roster) return;
-
-    var isOpen = roster.classList.contains('open');
-
-    // Close all
-    document.querySelectorAll('.team-roster-row').forEach(function (r) {
-      r.classList.remove('open');
-    });
-    document.querySelectorAll('.team-standing-row').forEach(function (r) {
-      r.classList.remove('roster-open');
-      var arrow = r.querySelector('.roster-arrow');
-      if (arrow) arrow.classList.remove('open');
-    });
-
-    // Open if was closed
-    if (!isOpen) {
-      roster.classList.add('open');
-      var row = document.querySelector('.team-standing-row[data-team="' + teamId + '"]');
-      if (row) {
-        row.classList.add('roster-open');
-        var arrow = row.querySelector('.roster-arrow');
-        if (arrow) arrow.classList.add('open');
-      }
-    }
-  }
-
-  function initRosterClicks() {
-    document.querySelectorAll('.team-standing-row').forEach(function (row) {
-      // Remove old listener by cloning
-      var newRow = row.cloneNode(true);
-      row.parentNode.replaceChild(newRow, row);
-
-      newRow.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var teamId = newRow.getAttribute('data-team');
-        if (teamId) toggleRoster(teamId);
-      });
-
-      // Also attach to every child td individually for desktop compatibility
-      newRow.querySelectorAll('td').forEach(function (td) {
-        td.style.pointerEvents = 'auto';
-        td.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var teamId = newRow.getAttribute('data-team');
-          if (teamId) toggleRoster(teamId);
-        });
-      });
-    });
-  }
-
-  // Init immediately
-  initRosterClicks();
-
-  // Re-init when standings tab is clicked (in case DOM wasn't ready)
-  ptabs.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var tabName = btn.getAttribute('data-tab');
-      if (tabName === 'standings') {
-        setTimeout(initRosterClicks, 50);
-      }
-      if (tabName === 'players') {
-        initSort();
-      }
-    });
-  });
-
   // ── SORTABLE PLAYER STATS TABLE ─────────────────────────────────────────────
   var sortState = { col: 4, dir: -1 };
 
@@ -121,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var table = document.getElementById('playerStatsTable');
     if (!table || table._sortInit) return;
     table._sortInit = true;
-
     table.querySelectorAll('.sort-col').forEach(function (th) {
       th.addEventListener('click', function () {
         sortTable(parseInt(th.getAttribute('data-col')));
@@ -169,6 +97,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   }
+
+  ptabs.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.getAttribute('data-tab') === 'players') initSort();
+    });
+  });
 
   initSort();
 
