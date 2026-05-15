@@ -386,3 +386,75 @@ select.input option { background: #1a2540; color: var(--text); }
 
 /* ─── ALERT SUCCESS ──────────────────────────────────────────────────────────── */
 .alert-success { background: var(--teal-dim); border: 1px solid rgba(0,212,170,.3); color: var(--teal); padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 16px; }
+
+/* ─── TEAM ROSTER IN STANDINGS ───────────────────────────────────────────────── */
+.team-standing-row { cursor: pointer; transition: background .15s; }
+.team-standing-row:hover { background: rgba(255,255,255,.05) !important; }
+.team-standing-row.roster-open { background: rgba(255,255,255,.06) !important; }
+.roster-arrow { font-size: 11px; color: var(--muted); margin-left: 6px; display: inline-block; transition: transform .2s; }
+.roster-arrow.open { transform: rotate(180deg); }
+.team-roster-row { display: none; }
+.team-roster-row.open { display: table-row; }
+.roster-player-row { border-bottom: 1px solid rgba(255,255,255,.04); }
+.roster-player-row:hover td { background: rgba(255,255,255,.03); }
+
+/* ─── SORTABLE COLUMNS ────────────────────────────────────────────────────────── */
+.sort-col { cursor: pointer; user-select: none; white-space: nowrap; }
+.sort-col:hover { color: #fff; background: rgba(255,107,53,.1); }
+.sort-col.sort-asc, .sort-col.sort-desc { color: var(--gold); }
+.sort-icon { font-size: 11px; opacity: .5; margin-left: 2px; }
+.sort-col:hover .sort-icon { opacity: 1; }
+
+/* ─── STANDINGS ROSTER ACCORDION (pure CSS, no JS needed) ───────────────────── */
+.standings-list { display: flex; flex-direction: column; gap: 2px; }
+.srow-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.srow-chk { display: none; }
+.srow-label {
+  display: grid;
+  grid-template-columns: 36px 1fr 52px 48px 48px 80px 100px;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background .15s;
+  user-select: none;
+  gap: 8px;
+}
+.srow-label:hover { background: rgba(255,255,255,.05); }
+.srow-rank { font-weight: 700; font-size: 14px; color: var(--muted); }
+.srow-rank.rank-top { color: var(--gold); }
+.srow-name { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; }
+.srow-dot { width: 4px; height: 24px; border-radius: 2px; flex-shrink: 0; }
+.srow-num { font-size: 14px; text-align: center; }
+.srow-players { font-size: 12px; color: var(--muted); text-align: right; }
+.srow-arrow { display: inline-block; transition: transform .25s; font-size: 11px; }
+.srow-panel { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.srow-panel-inner { padding: 16px 18px 20px; border-top: 1px solid rgba(255,255,255,.06); }
+.srow-panel-title { font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-bottom: 12px; }
+.srow-thead th { padding: 7px 10px; font-size: 10px; color: var(--muted); font-weight: 700; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(18,64,171,.1); }
+.srow-prow td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; }
+.srow-prow:last-child td { border-bottom: none; }
+.srow-empty { padding: 14px 18px; color: var(--muted); font-size: 13px; border-top: 1px solid rgba(255,255,255,.06); }
+
+/* Checked state — show panel and rotate arrow */
+.srow-chk:checked ~ .srow-label { background: rgba(255,255,255,.05); }
+.srow-chk:checked ~ .srow-label .srow-arrow { transform: rotate(180deg); }
+.srow-chk:checked ~ .srow-panel { max-height: 600px; }
+.srow-chk:checked ~ .srow-wrap { border-color: var(--border2); }
+
+/* Header row labels */
+.srow-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 52px 48px 48px 80px 100px;
+  padding: 8px 16px;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .srow-label { grid-template-columns: 28px 1fr 40px 40px 40px 60px 70px; padding: 12px; gap: 4px; font-size: 12px; }
+  .srow-header { grid-template-columns: 28px 1fr 40px 40px 40px 60px 70px; padding: 8px 12px; gap: 4px; }
+}
