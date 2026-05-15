@@ -214,19 +214,102 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-content">
       <div id="tab-standings" class="tab-pane">
-        <table class="stats-table">
-          <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th></tr></thead>
+        <table class="stats-table" id="standingsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team</th>
+              <th>GP</th>
+              <th>W</th>
+              <th>L</th>
+              <th>WIN%</th>
+              <th style="color:var(--muted);font-size:10px;letter-spacing:1px">ROSTER</th>
+            </tr>
+          </thead>
           <tbody>
-            ${teams.map((t,i)=>`
-              <tr>
+            ${teams.map((t,i) => {
+              const teamPlayers = players.filter(p => p.team_id == t.id);
+              const gp = t.wins + t.losses;
+              const winPct = gp > 0 ? ((t.wins/gp)*100).toFixed(1) : '0.0';
+              return `
+              <tr class="team-standing-row" data-team="${t.id}" style="cursor:pointer;transition:background .15s">
                 <td class="rank ${i<2?'rank-top':''}">${i+1}</td>
-                <td><div class="team-name-cell"><div class="team-dot" style="background:${t.color}"></div>${esc(t.name)}</div></td>
+                <td>
+                  <div class="team-name-cell">
+                    <div class="team-dot" style="background:${t.color}"></div>
+                    <span style="font-weight:700">${esc(t.name)}</span>
+                  </div>
+                </td>
+                <td style="color:var(--muted)">${gp}</td>
                 <td class="green">${t.wins}</td>
                 <td class="red">${t.losses}</td>
-                <td>${((t.wins/(t.wins+t.losses||1))*100).toFixed(1)}%</td>
-              </tr>`).join('') || '<tr><td colspan="5" class="empty">No teams yet.</td></tr>'}
+                <td style="color:var(--gold);font-weight:700">${winPct}%</td>
+                <td style="text-align:center;color:var(--muted);font-size:12px">
+                  ${teamPlayers.length} players ▾
+                </td>
+              </tr>
+              <tr class="team-roster-row hidden" id="roster-${t.id}">
+                <td colspan="7" style="padding:0;background:rgba(255,255,255,.02);border-bottom:2px solid ${t.color}30">
+                  ${teamPlayers.length > 0 ? `
+                  <div style="padding:16px 20px">
+                    <div style="font-size:11px;font-weight:700;color:${t.color};letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+                      <div style="width:3px;height:14px;background:${t.color};border-radius:2px"></div>
+                      ${esc(t.name)} — ROSTER
+                    </div>
+                    <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px">
+                      <thead>
+                        <tr style="border-bottom:1px solid rgba(255,255,255,.08)">
+                          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">#</th>
+                          <th style="padding:6px 10px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">PLAYER</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">POS</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">GP</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:#e63329;font-weight:700;letter-spacing:1px">PTS</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">REB</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">AST</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">STL</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px">BLK</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:var(--teal);font-weight:700;letter-spacing:1px">FG%</th>
+                          <th style="padding:6px 10px;text-align:center;font-size:10px;color:#f5c842;font-weight:700;letter-spacing:1px">EFF</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${teamPlayers.sort((a,b)=>b.pts-a.pts).map((p,pi) => {
+                          const ss  = seasonStats[p.id] || {};
+                          const eff = ss.eff != null ? ss.eff : '—';
+                          return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s" 
+                                      onmouseover="this.style.background='rgba(255,255,255,.04)'" 
+                                      onmouseout="this.style.background=''">
+                            <td style="padding:8px 10px;color:var(--muted);font-weight:700">#${p.jersey||'—'}</td>
+                            <td style="padding:8px 10px;font-weight:600">${esc(p.name)}</td>
+                            <td style="padding:8px 10px;text-align:center">
+                              <span style="background:rgba(18,64,171,.2);color:#6b9fff;border:1px solid rgba(18,64,171,.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:700">${p.pos||'—'}</span>
+                            </td>
+                            <td style="padding:8px 10px;text-align:center;color:var(--muted)">${p.gp||0}</td>
+                            <td style="padding:8px 10px;text-align:center;color:#e63329;font-weight:800">${p.pts||0}</td>
+                            <td style="padding:8px 10px;text-align:center">${p.reb||0}</td>
+                            <td style="padding:8px 10px;text-align:center">${p.ast||0}</td>
+                            <td style="padding:8px 10px;text-align:center">${p.stl||0}</td>
+                            <td style="padding:8px 10px;text-align:center">${p.blk||0}</td>
+                            <td style="padding:8px 10px;text-align:center;color:var(--teal);font-weight:700">${p.fg||0}%</td>
+                            <td style="padding:8px 10px;text-align:center;color:#f5c842;font-weight:700">${eff}</td>
+                          </tr>`;
+                        }).join('')}
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>` : `
+                  <div style="padding:16px 20px;color:var(--muted);font-size:13px;text-align:center">
+                    No players added to this team yet.
+                  </div>`}
+                </td>
+              </tr>`;
+            }).join('') || '<tr><td colspan="7" class="empty">No teams yet.</td></tr>'}
           </tbody>
         </table>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">
+          💡 Click any team row to view their roster and stats
+        </div>
       </div>
 
       <div id="tab-players" class="tab-pane hidden">
