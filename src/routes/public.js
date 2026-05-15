@@ -220,7 +220,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             ${teams.map((t,i)=>`
               <tr>
                 <td class="rank ${i<2?'rank-top':''}">${i+1}</td>
-                <td><div class="team-name-cell"><div class="team-dot" style="background:${t.color}"></div>${esc(t.name)}</div></td>
+                <td><div class="team-name-cell"><div class="team-dot" style="background:${t.color}"></div><a href="/league/${league.id}/team/${t.id}" class="team-link">${esc(t.name)}</a></div></td>
                 <td class="green">${t.wins}</td>
                 <td class="red">${t.losses}</td>
                 <td style="color:var(--gold);font-weight:700">${((t.wins/(t.wins+t.losses||1))*100).toFixed(1)}%</td>
@@ -450,4 +450,185 @@ router.get('/install', (req, res) => {
 
     </div>
   `));
+});
+
+// ── TEAM PAGE (/league/:id/team/:tid) ─────────────────────────────────────────
+router.get('/league/:id/team/:tid', async (req, res) => {
+  try {
+    const { page } = require('../helpers');
+
+    const league = await db.queryOne(
+      'SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]
+    );
+    if (!league) return res.redirect('/');
+
+    const team = await db.queryOne(
+      'SELECT * FROM teams WHERE id=$1 AND league_id=$2', [req.params.tid, req.params.id]
+    );
+    if (!team) return res.redirect(`/league/${req.params.id}`);
+
+    const players = await db.query(
+      `SELECT p.*, pss.pts as s_pts, pss.reb as s_reb, pss.ast as s_ast,
+              pss.stl as s_stl, pss.blk as s_blk, pss.to_val as s_to,
+              pss.fgp as s_fgp, pss.fg3p as s_fg3p, pss.ftp as s_ftp,
+              pss.eff as s_eff, pss.oreb as s_oreb, pss.dreb as s_dreb,
+              pss.gp as s_gp
+       FROM players p
+       LEFT JOIN player_season_stats pss ON pss.player_id=p.id AND pss.league_id=$2
+       WHERE p.team_id=$1
+       ORDER BY COALESCE(pss.pts,0) DESC`, [team.id, league.id]
+    );
+
+    const games = await db.query(
+      `SELECT g.*, ht.name as home_name, at.name as away_name,
+              ht.color as home_color, at.color as away_color
+       FROM games g
+       LEFT JOIN teams ht ON g.home_team_id=ht.id
+       LEFT JOIN teams at ON g.away_team_id=at.id
+       WHERE g.league_id=$1 AND (g.home_team_id=$2 OR g.away_team_id=$2)
+       AND g.status='final'
+       ORDER BY g.id DESC`, [league.id, team.id]
+    );
+
+    const standings = await db.query(
+      'SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC',
+      [league.id]
+    );
+    const rank = standings.findIndex(t => t.id == team.id) + 1;
+    const gp   = team.wins + team.losses;
+    const winPct = gp > 0 ? ((team.wins / gp) * 100).toFixed(1) : '0.0';
+
+    const statRow = (label, val, color='var(--text)') =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <span style="font-size:13px;color:var(--muted);font-weight:600">${label}</span>
+        <span style="font-size:15px;font-weight:800;color:${color}">${val}</span>
+      </div>`;
+
+    res.send(page(`${esc(team.name)} | ${esc(league.name)}`, `
+      <nav class="topnav">
+        <div class="nav-brand">
+          <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
+            <img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas"
+                 style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
+            <div class="nav-brand-text">
+              <div class="brand-text">HOOPSTATS</div>
+              <div class="brand-sub">Pilipinas</div>
+            </div>
+          </a>
+        </div>
+        <div class="nav-actions">
+          <a href="/league/${league.id}" class="btn-ghost-sm">← Back to League</a>
+        </div>
+      </nav>
+
+      <div style="max-width:900px;margin:0 auto;padding:28px 20px 60px">
+
+        <!-- TEAM HEADER -->
+        <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-left:5px solid ${team.color};border-radius:14px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="width:60px;height:60px;border-radius:14px;background:${team.color};display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:20px;color:#fff;flex-shrink:0">
+            ${esc(team.name.substring(0,2).toUpperCase())}
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Russo One',sans-serif;font-size:24px;margin-bottom:4px">${esc(team.name)}</div>
+            <div style="font-size:13px;color:var(--muted)">${esc(league.name)} · ${esc(league.level)} · ${esc(league.season)}</div>
+          </div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RANK</div>
+              <div style="font-size:32px;font-weight:900;color:var(--gold)">#${rank}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RECORD</div>
+              <div style="font-size:28px;font-weight:900"><span style="color:var(--teal)">${team.wins}W</span> <span style="color:var(--red)">${team.losses}L</span></div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">WIN%</div>
+              <div style="font-size:28px;font-weight:900;color:var(--gold)">${winPct}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROSTER -->
+        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:14px;letter-spacing:.5px">
+          👤 Roster &amp; Stats
+        </h2>
+        ${players.length > 0 ? `
+        <div style="overflow-x:auto;margin-bottom:28px">
+          <table class="stats-table">
+            <thead><tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>POS</th>
+              <th style="color:var(--muted)">GP</th>
+              <th style="color:var(--red)">PTS</th>
+              <th>REB</th>
+              <th>AST</th>
+              <th>STL</th>
+              <th>BLK</th>
+              <th>TO</th>
+              <th style="color:var(--teal)">FG%</th>
+              <th style="color:var(--purple)">3P%</th>
+              <th style="color:var(--gold)">EFF</th>
+            </tr></thead>
+            <tbody>
+              ${players.map((p,i) => `
+              <tr>
+                <td style="color:var(--muted);font-weight:700">#${p.jersey||'—'}</td>
+                <td><div style="font-weight:700">${esc(p.name)}</div></td>
+                <td><span class="pos-badge">${p.pos||'—'}</span></td>
+                <td style="color:var(--muted)">${p.s_gp||p.gp||0}</td>
+                <td style="color:var(--red);font-weight:800">${p.s_pts||p.pts||0}</td>
+                <td>${p.s_reb||p.reb||0}</td>
+                <td>${p.s_ast||p.ast||0}</td>
+                <td>${p.s_stl||p.stl||0}</td>
+                <td>${p.s_blk||p.blk||0}</td>
+                <td style="color:var(--red)">${p.s_to||'—'}</td>
+                <td style="color:var(--teal);font-weight:700">${p.s_fgp!=null?p.s_fgp+'%':(p.fg||0)+'%'}</td>
+                <td style="color:var(--purple)">${p.s_fg3p!=null?p.s_fg3p+'%':'—'}</td>
+                <td style="color:var(--gold);font-weight:700">${p.s_eff||'—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : `
+        <div class="empty-state" style="margin-bottom:28px">
+          <div class="es-icon">👤</div>
+          <div>No players added to this team yet.</div>
+        </div>`}
+
+        <!-- GAME RESULTS -->
+        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:14px;letter-spacing:.5px">
+          🏀 Game Results
+        </h2>
+        ${games.length > 0 ? `
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${games.map(g => {
+            const isHome  = g.home_team_id == team.id;
+            const oppName = isHome ? esc(g.away_name||'TBD') : esc(g.home_name||'TBD');
+            const oppColor= isHome ? g.away_color : g.home_color;
+            const myScore = isHome ? g.home_score : g.away_score;
+            const theirScore = isHome ? g.away_score : g.home_score;
+            const won = myScore > theirScore;
+            return `
+            <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid ${won?'var(--teal)':'var(--red)'};border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+              <div style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${won?'var(--teal-dim)':'var(--red-dim)'};color:${won?'var(--teal)':'var(--red)'}">${won?'WIN':'LOSS'}</div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:14px">${isHome?'vs':'@'} ${oppName}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">📍 ${esc(g.venue||'TBD')} · ${esc(g.date||'TBD')}</div>
+              </div>
+              <div style="font-size:24px;font-weight:900">
+                <span style="color:${won?'var(--teal)':'var(--text)'}">${myScore}</span>
+                <span style="color:var(--muted);font-size:14px;margin:0 6px">—</span>
+                <span style="color:${!won?'var(--red)':'var(--muted)'}">${theirScore}</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>` : `
+        <div class="empty-state">
+          <div class="es-icon">🏀</div>
+          <div>No completed games yet.</div>
+        </div>`}
+
+      </div>
+    `));
+  } catch(err) { console.error(err); res.redirect('/'); }
 });
