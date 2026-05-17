@@ -178,6 +178,10 @@ async function initSchema() {
     await run("UPDATE users SET role='superadmin', plan='pro' WHERE email='superadmin@phhoops.com' AND role='commissioner'");
   } catch(e) {}
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS facebook_url TEXT DEFAULT NULL'); } catch(e) {}
+  try { await run('ALTER TABLE players ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT NULL'); } catch(e) {}
+  try { await run('ALTER TABLE players ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL'); } catch(e) {}
+  try { await run('ALTER TABLE teams ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT NULL'); } catch(e) {}
+  try { await run('ALTER TABLE teams ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL'); } catch(e) {}
 
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 

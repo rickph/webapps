@@ -95,9 +95,9 @@ function renderLanding(leagues, stats, user) {
     </a>`;
   }).join('');
 
-  return page('HoopStats Pilipinas — Philippines Basketball Stats', `
+  return page('HoopStats — Philippines Basketball Stats', `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=3" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
         ${user
           ? `<a href="/admin" class="btn-nav">Admin Panel</a>`
@@ -147,9 +147,9 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     stl: [...players].sort((a,b)=>b.stl-a.stl),
   };
 
-  return page(`${esc(league.name)} | HoopStats Pilipinas`, `
+  return page(`${esc(league.name)} | HoopStats`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=2" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=3" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>
@@ -261,7 +261,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               const fgp  = p.fg != null ? p.fg : '—';
               return '<tr>' +
                 '<td class="rank" data-val="' + (i+1) + '">' + (i+1) + '</td>' +
-                '<td><div style="font-weight:600">' + esc(p.name) + '</div><div class="sub-text">' + esc(p.team_name||'') + '</div></td>' +
+                '<td><a href="/league/' + league.id + '/player/' + p.id + '" style="color:inherit;text-decoration:none"><div style="font-weight:700;transition:color .15s" class="player-name-link">' + esc(p.name) + '</div><div class="sub-text">' + esc(p.team_name||'') + '</div></a></td>' +
                 '<td><span class="pos-badge">' + p.pos + '</span></td>' +
                 '<td style="color:#888" data-val="' + (p.gp||0) + '">' + (p.gp||0) + '</td>' +
                 '<td class="orange" data-val="' + (p.pts||0) + '">' + p.pts + '</td>' +
@@ -337,11 +337,11 @@ function sortTh(col, label, title, sort, league) {
 // ── INSTALL PAGE ──────────────────────────────────────────────────────────────
 router.get('/install', (req, res) => {
   const { page } = require('../helpers');
-  res.send(page('Install App | HoopStats Pilipinas', `
+  res.send(page('Install App | HoopStats', `
     <nav class="topnav">
       <div class="nav-brand">
         <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-          <img src="/icons/icon-192.png?v=2" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+          <img src="/icons/icon-192.png?v=3" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
           <div class="nav-brand-text">
             <div class="brand-text">HOOPSTATS</div>
             <div class="brand-sub">Pilipinas</div>
@@ -357,12 +357,12 @@ router.get('/install', (req, res) => {
 
       <!-- HEADER -->
       <div style="text-align:center;margin-bottom:40px">
-        <img src="/icons/icon-192.png?v=2" alt="HoopStats Pilipinas"
+        <img src="/icons/icon-192.png?v=3" alt="HoopStats"
              style="width:96px;height:96px;border-radius:22px;object-fit:cover;
                     box-shadow:0 8px 32px rgba(230,51,41,.4);
                     border:2px solid rgba(245,200,66,.3);margin-bottom:20px">
         <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px">
-          Install HoopStats Pilipinas
+          Install HoopStats
         </h1>
         <p style="color:rgba(240,244,255,.55);font-size:15px">
           Add the app to your home screen for quick access — no App Store needed!
@@ -380,7 +380,7 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open HoopStats Pilipinas in <b>Chrome</b> on your Android phone'],
+            ['1', 'Open HoopStats in <b>Chrome</b> on your Android phone'],
             ['2', 'Tap the <b>⋮ menu</b> (three dots) at the top right corner'],
             ['3', 'Tap <b>"Add to Home Screen"</b> from the menu'],
             ['4', 'Tap <b>"Add"</b> on the confirmation popup'],
@@ -404,7 +404,7 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open HoopStats Pilipinas in <b>Safari</b> on your iPhone or iPad'],
+            ['1', 'Open HoopStats in <b>Safari</b> on your iPhone or iPad'],
             ['2', 'Tap the <b>Share button</b> (□ with an arrow pointing up) at the bottom of the screen'],
             ['3', 'Scroll down and tap <b>"Add to Home Screen"</b>'],
             ['4', 'Tap <b>"Add"</b> in the top right corner'],
@@ -431,10 +431,10 @@ router.get('/install', (req, res) => {
         </div>
         <div style="display:flex;flex-direction:column;gap:14px">
           ${[
-            ['1', 'Open HoopStats Pilipinas in <b>Chrome</b> or <b>Edge</b> on your computer'],
+            ['1', 'Open HoopStats in <b>Chrome</b> or <b>Edge</b> on your computer'],
             ['2', 'Look for the <b>install icon</b> (⊕) in the address bar on the right side'],
             ['3', 'Click it and select <b>"Install"</b>'],
-            ['4', '🎉 HoopStats Pilipinas opens like a <b>desktop app</b> with no browser chrome!'],
+            ['4', '🎉 HoopStats opens like a <b>desktop app</b> with no browser chrome!'],
           ].map(([num, text]) => `
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#f5c842;flex-shrink:0;margin-top:1px">${num}</div>
@@ -452,64 +452,71 @@ router.get('/install', (req, res) => {
   `));
 });
 
-// ── TEAM PAGE (/league/:id/team/:tid) ─────────────────────────────────────────
+// ── TEAM PAGE ─────────────────────────────────────────────────────────────────
 router.get('/league/:id/team/:tid', async (req, res) => {
   try {
     const { page } = require('../helpers');
-
-    const league = await db.queryOne(
-      'SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]
-    );
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]);
     if (!league) return res.redirect('/');
+    const team = await db.queryOne('SELECT * FROM teams WHERE id=$1 AND league_id=$2', [req.params.tid, req.params.id]);
+    if (!team) return res.redirect('/league/' + req.params.id);
 
-    const team = await db.queryOne(
-      'SELECT * FROM teams WHERE id=$1 AND league_id=$2', [req.params.tid, req.params.id]
-    );
-    if (!team) return res.redirect(`/league/${req.params.id}`);
+    // Server-side sort
+    const allowed = { pts:'pss.pts', reb:'pss.reb', ast:'pss.ast', stl:'pss.stl',
+      blk:'pss.blk', gp:'pss.gp', fgp:'pss.fgp', fg3p:'pss.fg3p',
+      ftp:'pss.ftp', eff:'pss.eff', to:'pss.to_val' };
+    const sk  = allowed[req.query.sort] ? req.query.sort : 'pts';
+    const sc  = allowed[sk];
+    const sd  = req.query.dir === 'asc' ? 'ASC' : 'DESC';
+    const nsd = sd === 'DESC' ? 'asc' : 'desc';
 
     const players = await db.query(
       `SELECT p.*, pss.pts as s_pts, pss.reb as s_reb, pss.ast as s_ast,
               pss.stl as s_stl, pss.blk as s_blk, pss.to_val as s_to,
               pss.fgp as s_fgp, pss.fg3p as s_fg3p, pss.ftp as s_ftp,
-              pss.eff as s_eff, pss.oreb as s_oreb, pss.dreb as s_dreb,
-              pss.gp as s_gp
+              pss.eff as s_eff, pss.gp as s_gp
        FROM players p
        LEFT JOIN player_season_stats pss ON pss.player_id=p.id AND pss.league_id=$2
        WHERE p.team_id=$1
-       ORDER BY COALESCE(pss.pts,0) DESC`, [team.id, league.id]
+       ORDER BY COALESCE(${sc},0) ${sd}, p.name ASC`,
+      [team.id, league.id]
     );
 
     const games = await db.query(
-      `SELECT g.*, ht.name as home_name, at.name as away_name,
-              ht.color as home_color, at.color as away_color
+      `SELECT g.*, ht.name as home_name, at.name as away_name
        FROM games g
        LEFT JOIN teams ht ON g.home_team_id=ht.id
        LEFT JOIN teams at ON g.away_team_id=at.id
-       WHERE g.league_id=$1 AND (g.home_team_id=$2 OR g.away_team_id=$2)
-       AND g.status='final'
-       ORDER BY g.id DESC`, [league.id, team.id]
+       WHERE g.league_id=$1 AND (g.home_team_id=$2 OR g.away_team_id=$2) AND g.status='final'
+       ORDER BY g.id DESC`,
+      [league.id, team.id]
     );
 
-    const standings = await db.query(
-      'SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC',
-      [league.id]
-    );
+    const standings = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC', [league.id]);
     const rank = standings.findIndex(t => t.id == team.id) + 1;
     const gp   = team.wins + team.losses;
-    const winPct = gp > 0 ? ((team.wins / gp) * 100).toFixed(1) : '0.0';
+    const winPct = gp > 0 ? ((team.wins/gp)*100).toFixed(1) : '0.0';
 
-    const statRow = (label, val, color='var(--text)') =>
-      `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)">
-        <span style="font-size:13px;color:var(--muted);font-weight:600">${label}</span>
-        <span style="font-size:15px;font-weight:800;color:${color}">${val}</span>
-      </div>`;
+    // Sort link helper
+    function th(col, label, color) {
+      const active  = sk === col;
+      const dir     = active && sd === 'DESC' ? 'asc' : 'desc';
+      const arrow   = active ? (sd === 'DESC' ? ' ↓' : ' ↑') : ' ↕';
+      const c       = active ? 'var(--gold)' : color;
+      return `<th style="cursor:pointer;white-space:nowrap;color:${c}">
+        <a href="/league/${league.id}/team/${team.id}?sort=${col}&dir=${dir}"
+           style="color:inherit;text-decoration:none;display:block">
+          ${label}<span style="font-size:10px;opacity:.7;margin-left:2px">${arrow}</span>
+        </a></th>`;
+    }
 
-    res.send(page(`${esc(team.name)} | ${esc(league.name)}`, `
+    const baseUrl = '/league/' + league.id + '/team/' + team.id;
+
+    res.send(page(esc(team.name) + ' | ' + esc(league.name), `
       <nav class="topnav">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
-            <img src="/icons/icon-192.png?v=3" alt="Hoopstats Pilipinas"
-                 style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
+            <img src="/icons/icon-192.png?v=3" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
               <div class="brand-sub">Pilipinas</div>
@@ -524,111 +531,268 @@ router.get('/league/:id/team/:tid', async (req, res) => {
       <div style="max-width:900px;margin:0 auto;padding:28px 20px 60px">
 
         <!-- TEAM HEADER -->
-        <div style="background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-left:5px solid ${team.color};border-radius:14px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <div style="width:60px;height:60px;border-radius:14px;background:${team.color};display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:20px;color:#fff;flex-shrink:0">
+        <div style="background:var(--card);border:1px solid var(--border);border-left:5px solid ${team.color};border-radius:14px;padding:24px 28px;margin-bottom:28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="width:60px;height:60px;border-radius:14px;background:${team.color};display:flex;align-items:center;justify-content:center;font-family:'Russo One',sans-serif;font-size:22px;color:#fff;flex-shrink:0">
             ${esc(team.name.substring(0,2).toUpperCase())}
           </div>
-          <div style="flex:1">
-            <div style="font-family:'Russo One',sans-serif;font-size:24px;margin-bottom:4px">${esc(team.name)}</div>
-            <div style="font-size:13px;color:var(--muted)">${esc(league.name)} · ${esc(league.level)} · ${esc(league.season)}</div>
+          <div style="flex:1;min-width:140px">
+            <div style="font-family:'Russo One',sans-serif;font-size:22px;margin-bottom:4px">${esc(team.name)}</div>
+            <div style="font-size:12px;color:var(--muted)">${esc(league.name)} · ${esc(league.level)} · ${esc(league.season)}</div>
           </div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div style="display:flex;gap:24px;flex-wrap:wrap">
             <div style="text-align:center">
-              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RANK</div>
-              <div style="font-size:32px;font-weight:900;color:var(--gold)">#${rank}</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RANK</div>
+              <div style="font-size:34px;font-weight:900;color:var(--gold)">#${rank}</div>
             </div>
             <div style="text-align:center">
-              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RECORD</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">RECORD</div>
               <div style="font-size:28px;font-weight:900"><span style="color:var(--teal)">${team.wins}W</span> <span style="color:var(--red)">${team.losses}L</span></div>
             </div>
             <div style="text-align:center">
-              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">WIN%</div>
+              <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px">WIN%</div>
               <div style="font-size:28px;font-weight:900;color:var(--gold)">${winPct}%</div>
             </div>
           </div>
         </div>
 
         <!-- ROSTER -->
-        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:14px;letter-spacing:.5px">
-          👤 Roster &amp; Stats
-        </h2>
+        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:10px">👤 Roster &amp; Stats</h2>
         ${players.length > 0 ? `
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">💡 Click any column header to sort</div>
         <div style="overflow-x:auto;margin-bottom:28px">
-          <table class="stats-table">
-            <thead><tr>
-              <th>#</th>
-              <th>Player</th>
-              <th>POS</th>
-              <th style="color:var(--muted)">GP</th>
-              <th style="color:var(--red)">PTS</th>
-              <th>REB</th>
-              <th>AST</th>
-              <th>STL</th>
-              <th>BLK</th>
-              <th>TO</th>
-              <th style="color:var(--teal)">FG%</th>
-              <th style="color:var(--purple)">3P%</th>
-              <th style="color:var(--gold)">EFF</th>
-            </tr></thead>
-            <tbody>
-              ${players.map((p,i) => `
-              <tr>
-                <td style="color:var(--muted);font-weight:700">#${p.jersey||'—'}</td>
-                <td><div style="font-weight:700">${esc(p.name)}</div></td>
-                <td><span class="pos-badge">${p.pos||'—'}</span></td>
-                <td style="color:var(--muted)">${p.s_gp||p.gp||0}</td>
-                <td style="color:var(--red);font-weight:800">${p.s_pts||p.pts||0}</td>
-                <td>${p.s_reb||p.reb||0}</td>
-                <td>${p.s_ast||p.ast||0}</td>
-                <td>${p.s_stl||p.stl||0}</td>
-                <td>${p.s_blk||p.blk||0}</td>
-                <td style="color:var(--red)">${p.s_to||'—'}</td>
-                <td style="color:var(--teal);font-weight:700">${p.s_fgp!=null?p.s_fgp+'%':(p.fg||0)+'%'}</td>
-                <td style="color:var(--purple)">${p.s_fg3p!=null?p.s_fg3p+'%':'—'}</td>
-                <td style="color:var(--gold);font-weight:700">${p.s_eff||'—'}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
+        <table class="stats-table">
+          <thead><tr>
+            <th style="text-align:center">#</th>
+            <th>Player</th>
+            <th>POS</th>
+            ${th('gp',  'GP',  'var(--muted)')}
+            ${th('pts', 'PTS', 'var(--red)')}
+            ${th('reb', 'REB', 'var(--text)')}
+            ${th('ast', 'AST', 'var(--text)')}
+            ${th('stl', 'STL', 'var(--text)')}
+            ${th('blk', 'BLK', 'var(--text)')}
+            ${th('to',  'TO',  'var(--red)')}
+            ${th('fgp', 'FG%', 'var(--teal)')}
+            ${th('fg3p','3P%', 'var(--purple)')}
+            ${th('ftp', 'FT%', 'var(--gold)')}
+            ${th('eff', 'EFF', 'var(--gold)')}
+          </tr></thead>
+          <tbody>
+            ${players.map(p => `<tr>
+              <td style="text-align:center;color:var(--muted);font-weight:700">#${esc(String(p.jersey||'—'))}</td>
+              <td style="font-weight:700">${esc(p.name)}</td>
+              <td style="text-align:center"><span class="pos-badge">${p.pos||'—'}</span></td>
+              <td style="text-align:center;color:var(--muted)">${p.s_gp||p.gp||0}</td>
+              <td style="text-align:center;color:var(--red);font-weight:800">${p.s_pts||p.pts||0}</td>
+              <td style="text-align:center">${p.s_reb||p.reb||0}</td>
+              <td style="text-align:center">${p.s_ast||p.ast||0}</td>
+              <td style="text-align:center">${p.s_stl||p.stl||0}</td>
+              <td style="text-align:center">${p.s_blk||p.blk||0}</td>
+              <td style="text-align:center;color:var(--red)">${p.s_to!=null?p.s_to:'—'}</td>
+              <td style="text-align:center;color:var(--teal);font-weight:700">${p.s_fgp!=null?p.s_fgp+'%':(p.fg||0)+'%'}</td>
+              <td style="text-align:center;color:var(--purple)">${p.s_fg3p!=null?p.s_fg3p+'%':'—'}</td>
+              <td style="text-align:center;color:var(--gold);font-weight:700">${p.s_ftp!=null?p.s_ftp+'%':'—'}</td>
+              <td style="text-align:center;color:var(--gold);font-weight:700">${p.s_eff!=null?p.s_eff:'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
         </div>` : `
-        <div class="empty-state" style="margin-bottom:28px">
-          <div class="es-icon">👤</div>
-          <div>No players added to this team yet.</div>
-        </div>`}
+        <div class="empty-state" style="margin-bottom:28px"><div class="es-icon">👤</div><div>No players yet.</div></div>`}
 
         <!-- GAME RESULTS -->
-        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:14px;letter-spacing:.5px">
-          🏀 Game Results
-        </h2>
+        <h2 style="font-family:'Russo One',sans-serif;font-size:18px;margin-bottom:14px">🏀 Game Results</h2>
         ${games.length > 0 ? `
         <div style="display:flex;flex-direction:column;gap:8px">
           ${games.map(g => {
-            const isHome  = g.home_team_id == team.id;
-            const oppName = isHome ? esc(g.away_name||'TBD') : esc(g.home_name||'TBD');
-            const oppColor= isHome ? g.away_color : g.home_color;
-            const myScore = isHome ? g.home_score : g.away_score;
+            const isHome     = g.home_team_id == team.id;
+            const oppName    = isHome ? esc(g.away_name||'TBD') : esc(g.home_name||'TBD');
+            const myScore    = isHome ? g.home_score : g.away_score;
             const theirScore = isHome ? g.away_score : g.home_score;
-            const won = myScore > theirScore;
-            return `
-            <div style="background:var(--card);border:1px solid var(--border);border-left:4px solid ${won?'var(--teal)':'var(--red)'};border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-              <div style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${won?'var(--teal-dim)':'var(--red-dim)'};color:${won?'var(--teal)':'var(--red)'}">${won?'WIN':'LOSS'}</div>
+            const won        = myScore > theirScore;
+            return `<div style="background:var(--card);border:1px solid var(--border);border-left:4px solid ${won?'var(--teal)':'var(--red)'};border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+              <div style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${won?'var(--teal-dim)':'var(--red-dim)'};color:${won?'var(--teal)':'var(--red)'};flex-shrink:0">${won?'WIN':'LOSS'}</div>
               <div style="flex:1">
-                <div style="font-weight:700;font-size:14px">${isHome?'vs':'@'} ${oppName}</div>
+                <div style="font-weight:700">${isHome?'vs':'@'} ${oppName}</div>
                 <div style="font-size:12px;color:var(--muted);margin-top:2px">📍 ${esc(g.venue||'TBD')} · ${esc(g.date||'TBD')}</div>
               </div>
-              <div style="font-size:24px;font-weight:900">
+              <div style="font-size:22px;font-weight:900">
                 <span style="color:${won?'var(--teal)':'var(--text)'}">${myScore}</span>
-                <span style="color:var(--muted);font-size:14px;margin:0 6px">—</span>
+                <span style="color:var(--muted);font-size:13px;margin:0 6px">—</span>
                 <span style="color:${!won?'var(--red)':'var(--muted)'}">${theirScore}</span>
               </div>
             </div>`;
           }).join('')}
         </div>` : `
-        <div class="empty-state">
-          <div class="es-icon">🏀</div>
-          <div>No completed games yet.</div>
-        </div>`}
+        <div class="empty-state"><div class="es-icon">🏀</div><div>No completed games yet.</div></div>`}
 
       </div>
     `));
-  } catch(err) { console.error(err); res.redirect('/'); }
+  } catch(err) { console.error('Team page error:', err); res.redirect('/'); }
+});
+
+// ── PLAYER PROFILE PAGE ───────────────────────────────────────────────────────
+router.get('/league/:id/player/:pid', async (req, res) => {
+  try {
+    const { page } = require('../helpers');
+
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]);
+    if (!league) return res.redirect('/');
+
+    const player = await db.queryOne(
+      `SELECT p.*, t.name as team_name, t.color as team_color, t.id as tid
+       FROM players p LEFT JOIN teams t ON p.team_id=t.id
+       WHERE p.id=$1 AND p.league_id=$2`,
+      [req.params.pid, req.params.id]
+    );
+    if (!player) return res.redirect('/league/' + req.params.id);
+
+    // Season stats
+    const ss = await db.queryOne(
+      'SELECT * FROM player_season_stats WHERE player_id=$1 AND league_id=$2',
+      [player.id, league.id]
+    );
+
+    // Game log
+    const gamelog = await db.query(
+      `SELECT gs.*, g.date, g.venue, g.home_score, g.away_score, g.status,
+              ht.name as home_name, at.name as away_name
+       FROM game_stats gs
+       JOIN games g ON gs.game_id=g.id
+       LEFT JOIN teams ht ON g.home_team_id=ht.id
+       LEFT JOIN teams at ON g.away_team_id=at.id
+       WHERE gs.player_id=$1 AND gs.league_id=$2
+       ORDER BY g.id DESC`,
+      [player.id, league.id]
+    );
+
+    const photoUrl = player.photo_url ? '/uploads/players/' + player.photo_url : null;
+    const pts  = ss?.pts  ?? player.pts  ?? 0;
+    const reb  = ss?.reb  ?? player.reb  ?? 0;
+    const ast  = ss?.ast  ?? player.ast  ?? 0;
+    const stl  = ss?.stl  ?? player.stl  ?? 0;
+    const blk  = ss?.blk  ?? player.blk  ?? 0;
+    const fgp  = ss?.fgp  ?? player.fg   ?? 0;
+    const fg3p = ss?.fg3p ?? null;
+    const ftp  = ss?.ftp  ?? null;
+    const eff  = ss?.eff  ?? null;
+    const gp   = ss?.gp   ?? player.gp   ?? 0;
+
+    function statBox(label, value, color='var(--text)') {
+      return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;flex:1;min-width:80px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:6px">${label}</div>
+        <div style="font-size:28px;font-weight:900;color:${color};line-height:1">${value}</div>
+      </div>`;
+    }
+
+    res.send(page(esc(player.name) + ' | ' + esc(league.name), `
+      <nav class="topnav">
+        <div class="nav-brand">
+          <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
+            <img src="/icons/icon-192.png?v=3" alt="HoopStats"
+                 style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
+            <div class="nav-brand-text">
+              <div class="brand-text">HOOPSTATS</div>
+              <div class="brand-sub">Pilipinas</div>
+            </div>
+          </a>
+        </div>
+        <div class="nav-actions">
+          <a href="/league/${league.id}?tab=players" class="btn-ghost-sm">← Player Stats</a>
+          <a href="/league/${league.id}" class="btn-ghost-sm">League</a>
+        </div>
+      </nav>
+
+      <div style="max-width:780px;margin:0 auto;padding:28px 20px 60px">
+
+        <!-- PLAYER CARD -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+          <!-- Photo -->
+          <div style="flex-shrink:0">
+            ${photoUrl
+              ? `<img src="${photoUrl}" alt="${esc(player.name)}"
+                   style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid ${player.team_color||'var(--border)'};">`
+              : `<div style="width:110px;height:110px;border-radius:50%;background:${player.team_color||'var(--card2)'};display:flex;align-items:center;justify-content:center;font-size:42px;font-family:'Russo One',sans-serif;color:#fff;border:3px solid ${player.team_color||'var(--border)'}">
+                  ${esc(player.name.charAt(0).toUpperCase())}
+                </div>`}
+          </div>
+          <!-- Info -->
+          <div style="flex:1;min-width:180px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+              <span class="pos-badge" style="font-size:13px;padding:4px 10px">${player.pos||'—'}</span>
+              <span style="font-size:22px;color:var(--muted);font-weight:700">#${player.jersey||'—'}</span>
+            </div>
+            <div style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:6px;line-height:1.1">${esc(player.name)}</div>
+            ${player.team_name ? `
+            <a href="/league/${league.id}/team/${player.tid}"
+               style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:8px">
+              <div style="width:10px;height:10px;border-radius:50%;background:${player.team_color||'#888'}"></div>
+              ${esc(player.team_name)}
+            </a>` : ''}
+            <div style="font-size:12px;color:var(--muted)">${esc(league.name)} · ${esc(league.season)}</div>
+            ${player.bio ? `<p style="font-size:13px;color:rgba(240,244,255,.7);margin-top:10px;line-height:1.7">${esc(player.bio)}</p>` : ''}
+          </div>
+        </div>
+
+        <!-- KEY STATS -->
+        <h2 style="font-family:'Russo One',sans-serif;font-size:17px;margin-bottom:12px;letter-spacing:.5px">📊 Season Averages</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          ${statBox('PTS', pts, 'var(--red)')}
+          ${statBox('REB', reb, 'var(--teal)')}
+          ${statBox('AST', ast, 'var(--purple)')}
+          ${statBox('STL', stl, 'var(--gold)')}
+          ${statBox('BLK', blk, 'var(--text)')}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px">
+          ${statBox('GP',  gp,  'var(--muted)')}
+          ${statBox('FG%', fgp+'%', 'var(--teal)')}
+          ${fg3p!=null ? statBox('3P%', fg3p+'%', 'var(--purple)') : ''}
+          ${ftp!=null  ? statBox('FT%', ftp+'%',  'var(--gold)') : ''}
+          ${eff!=null  ? statBox('EFF', eff,       'var(--gold)') : ''}
+        </div>
+
+        <!-- GAME LOG -->
+        ${gamelog.length > 0 ? `
+        <h2 style="font-family:'Russo One',sans-serif;font-size:17px;margin-bottom:12px;letter-spacing:.5px">📋 Game Log</h2>
+        <div style="overflow-x:auto;margin-bottom:20px">
+        <table class="stats-table">
+          <thead><tr>
+            <th>Game</th>
+            <th style="text-align:center;color:var(--red)">PTS</th>
+            <th style="text-align:center">REB</th>
+            <th style="text-align:center">AST</th>
+            <th style="text-align:center">STL</th>
+            <th style="text-align:center">BLK</th>
+            <th style="text-align:center">TO</th>
+            <th style="text-align:center;color:var(--teal)">FG</th>
+            <th style="text-align:center;color:var(--purple)">3PT</th>
+            <th style="text-align:center;color:var(--gold)">FT</th>
+          </tr></thead>
+          <tbody>
+            ${gamelog.map(g => {
+              const { computeGameStats } = require('../fiba-stats');
+              const c = computeGameStats(g);
+              return `<tr>
+                <td>
+                  <div style="font-weight:600;font-size:13px">${esc(g.home_name||'?')} vs ${esc(g.away_name||'?')}</div>
+                  <div style="font-size:11px;color:var(--muted)">${esc(g.date||'TBD')} · ${esc(g.venue||'')}</div>
+                </td>
+                <td style="text-align:center;color:var(--red);font-weight:800">${c.pts}</td>
+                <td style="text-align:center">${c.reb}</td>
+                <td style="text-align:center">${c.ast}</td>
+                <td style="text-align:center">${c.stl}</td>
+                <td style="text-align:center">${c.blk}</td>
+                <td style="text-align:center;color:var(--red)">${c.to}</td>
+                <td style="text-align:center;color:var(--teal);font-size:12px">${g.fg2m}/${g.fg2a}</td>
+                <td style="text-align:center;color:var(--purple);font-size:12px">${g.fg3m}/${g.fg3a}</td>
+                <td style="text-align:center;color:var(--gold);font-size:12px">${g.ftm}/${g.fta}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        </div>` : `
+        <div class="empty-state"><div class="es-icon">📋</div><div>No game stats recorded yet.</div></div>`}
+
+      </div>
+    `));
+  } catch(err) { console.error('Player profile error:', err); res.redirect('/'); }
 });

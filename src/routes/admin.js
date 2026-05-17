@@ -2,6 +2,9 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
+const { makeUploader } = require('../middleware/upload');
+const uploadPlayer = makeUploader('players').single('photo');
+const uploadTeam   = makeUploader('teams').single('photo');
 const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 
 router.use(requireAuth);
@@ -337,13 +340,24 @@ router.get('/league/:id/add-team', async (req, res) => {
       <h1>Add Team</h1>
     </div></div>
     <div class="card" style="max-width:480px">
-      <form action="/admin/league/${league.id}/add-team" method="POST">
+      <form action="/admin/league/${league.id}/add-team" method="POST" enctype="multipart/form-data">
+        <div class="field-group"><label>Team Logo / Photo</label>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+            <div style="width:64px;height:64px;border-radius:12px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:26px">🏀</div>
+            <div>
+              <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding:6px" />
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG, PNG or WebP · Max 3MB</div>
+            </div>
+          </div>
+        </div>
         <div class="field-group"><label>Team Name</label>
           <input name="name" class="input" placeholder="e.g. Purok 1 Ballers" required /></div>
         <div class="field-group"><label>Color</label>
           <select name="color" class="input">
             ${TEAM_COLORS.map(c=>`<option value="${c}" style="background:${c};color:${c==='#ffffff'||c==='#cccccc'?'#000':'#fff'}">${COLOR_NAMES[c]||c}</option>`).join('')}
           </select></div>
+        <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <textarea name="bio" class="input" rows="2" placeholder="e.g. Barangay champion 2024..."></textarea></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">Add Team →</button>
@@ -353,15 +367,18 @@ router.get('/league/:id/add-team', async (req, res) => {
   `));
 });
 
-router.post('/league/:id/add-team', async (req, res) => {
-  try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    const { name, color } = req.body;
-    if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-team`);
-    await db.run('INSERT INTO teams (league_id,name,color) VALUES ($1,$2,$3)',
-      [req.params.id, name.trim(), color||'#e63946']);
-    res.redirect(`/admin/league/${req.params.id}`);
-  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+router.post('/league/:id/add-team', (req, res) => {
+  uploadTeam(req, res, async (err) => {
+    try {
+      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      const { name, color, bio } = req.body;
+      if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-team`);
+      const photo = req.file ? req.file.filename : null;
+      await db.run('INSERT INTO teams (league_id,name,color,photo_url,bio) VALUES ($1,$2,$3,$4,$5)',
+        [req.params.id, name.trim(), color||'#e63946', photo, bio?.trim()||null]);
+      res.redirect(`/admin/league/${req.params.id}`);
+    } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
+  });
 });
 
 router.get('/league/:id/edit-team/:tid', async (req, res) => {
@@ -390,13 +407,22 @@ router.get('/league/:id/edit-team/:tid', async (req, res) => {
   `));
 });
 
-router.post('/league/:id/edit-team/:tid', async (req, res) => {
-  try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    await db.run('UPDATE teams SET name=$1,color=$2 WHERE id=$3',
-      [req.body.name, req.body.color, req.params.tid]);
-    res.redirect(`/admin/league/${req.params.id}`);
-  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+router.post('/league/:id/edit-team/:tid', (req, res) => {
+  uploadTeam(req, res, async (err) => {
+    try {
+      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      const { name, color, bio } = req.body;
+      const photo = req.file ? req.file.filename : null;
+      if (photo) {
+        await db.run('UPDATE teams SET name=$1,color=$2,bio=$3,photo_url=$4 WHERE id=$5',
+          [name, color, bio?.trim()||null, photo, req.params.tid]);
+      } else {
+        await db.run('UPDATE teams SET name=$1,color=$2,bio=$3 WHERE id=$4',
+          [name, color, bio?.trim()||null, req.params.tid]);
+      }
+      res.redirect(`/admin/league/${req.params.id}`);
+    } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
+  });
 });
 
 router.get('/league/:id/delete-team/:tid', async (req, res) => {
@@ -415,17 +441,20 @@ router.get('/league/:id/add-player', async (req, res) => {
   res.send(adminPage('Add Player', req.user, playerForm(league, teams, null)));
 });
 
-router.post('/league/:id/add-player', async (req, res) => {
-  try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    const { team_id, name, pos, jersey } = req.body;
-    if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-player`);
-    await db.run(
-      'INSERT INTO players (league_id,team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg) VALUES ($1,$2,$3,$4,$5,0,0,0,0,0,0,0)',
-      [req.params.id, team_id, name.trim(), pos||'', jersey||0]
-    );
-    res.redirect(`/admin/league/${req.params.id}`);
-  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+router.post('/league/:id/add-player', (req, res, next) => {
+  uploadPlayer(req, res, async (err) => {
+    try {
+      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      const { team_id, name, pos, jersey, bio } = req.body;
+      if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-player`);
+      const photo = req.file ? req.file.filename : null;
+      await db.run(
+        'INSERT INTO players (league_id,team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg,photo_url,bio) VALUES ($1,$2,$3,$4,$5,0,0,0,0,0,0,0,$6,$7)',
+        [req.params.id, team_id, name.trim(), pos||'', jersey||0, photo, bio?.trim()||null]
+      );
+      res.redirect(`/admin/league/${req.params.id}`);
+    } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
+  });
 });
 
 router.get('/league/:id/edit-player/:pid', async (req, res) => {
@@ -992,16 +1021,28 @@ router.get('/league/:id/delete', async (req, res) => {
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function playerForm(league, teams, player) {
   const v = (k, def='') => player ? esc(String(player[k]??def)) : def;
+  const photoUrl = player?.photo_url ? '/uploads/players/' + player.photo_url : null;
   return `
     <div class="admin-header"><div>
       <a href="/admin/league/${league.id}" class="back-link">← Back</a>
       <h1>${player ? 'Edit Player' : 'Add Player'}</h1>
-      <p style="color:#666;font-size:13px;margin-top:4px">
-        ${player ? 'Update player information below.' : 'Add player to the roster. Stats will be calculated automatically from game entries.'}
-      </p>
     </div></div>
-    <div class="card" style="max-width:480px">
-      <form action="/admin/league/${league.id}/${player?`edit-player/${player.id}`:'add-player'}" method="POST">
+    <div class="card" style="max-width:520px">
+      <form action="/admin/league/${league.id}/${player?`edit-player/${player.id}`:'add-player'}" method="POST" enctype="multipart/form-data">
+
+        <!-- PHOTO -->
+        <div class="field-group">
+          <label>Player Photo</label>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+            ${photoUrl ? `<img src="${photoUrl}" alt="Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">` :
+              `<div style="width:72px;height:72px;border-radius:50%;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>`}
+            <div>
+              <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding:6px" />
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG, PNG or WebP · Max 3MB</div>
+            </div>
+          </div>
+        </div>
+
         <div class="field-group"><label>Full Name</label>
           <input name="name" class="input" placeholder="e.g. Juan dela Cruz" value="${v('name')}" required /></div>
         <div class="modal-grid">
@@ -1018,18 +1059,14 @@ function playerForm(league, teams, player) {
             <option value="">Select team</option>
             ${teams.map(t=>`<option value="${t.id}" ${player?.team_id==t.id?'selected':''}>${esc(t.name)}</option>`).join('')}
           </select></div>
+        <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <textarea name="bio" class="input" rows="3" placeholder="e.g. Starting PG, team captain, 3-year veteran...">${v('bio')}</textarea></div>
         <div style="display:flex;gap:10px;margin-top:24px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">${player?'Save Changes':'Add Player'} →</button>
         </div>
       </form>
-    </div>
-    ${!player ? `
-    <div style="max-width:480px;margin-top:16px;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:#555;line-height:1.8">
-      💡 <b style="color:#888">Stats are auto-calculated</b> from game entries.<br>
-      Use <b style="color:#888">📋 Post-Game Stats</b> in the Games tab to enter box scores after each game.<br>
-      Use <b style="color:#888">🔴 Live Score</b> to record stats in real time during a game.
-    </div>` : ''}`;
+    </div>`;
 }
 
 function adminPage(title, user, content) {
