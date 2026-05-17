@@ -146,6 +146,10 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     ast: [...players].sort((a,b)=>b.ast-a.ast),
     stl: [...players].sort((a,b)=>b.stl-a.stl),
   };
+  const ptsLeader = players[0];
+  const rebLeader = sorted.reb[0];
+  const astLeader = sorted.ast[0];
+  const stlLeader = sorted.stl[0];
 
   return page(`${esc(league.name)} | HoopStats`, `
     <nav class="topnav">
@@ -194,15 +198,18 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-leaders">
       ${[
-        {label:'PTS', val:players[0]?.pts,         name:players[0]?.name,         c:'#ff6b35'},
-        {label:'REB', val:sorted.reb[0]?.reb,      name:sorted.reb[0]?.name,      c:'#00d4aa'},
-        {label:'AST', val:sorted.ast[0]?.ast,      name:sorted.ast[0]?.name,      c:'#a78bfa'},
-        {label:'STL', val:sorted.stl[0]?.stl,      name:sorted.stl[0]?.name,      c:'#f7c948'},
+        {label:'PTS', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'#ff6b35'},
+        {label:'REB', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'#00d4aa'},
+        {label:'AST', val:astLeader?.ast, name:astLeader?.name, id:astLeader?.id, c:'#a78bfa'},
+        {label:'STL', val:stlLeader?.stl, name:stlLeader?.name, id:stlLeader?.id, c:'#f7c948'},
       ].map(s=>`
         <div class="leader-card">
           <div class="leader-label">${s.label} LEADER</div>
           <div class="leader-val" style="color:${s.c}">${s.val ?? '—'}</div>
-          <div class="leader-name">${esc(s.name ?? 'N/A')}</div>
+          ${s.id
+            ? `<a href="/league/${league.id}/player/${s.id}" class="leader-name leader-link">${esc(s.name ?? 'N/A')}</a>`
+            : `<div class="leader-name">${esc(s.name ?? 'N/A')}</div>`
+          }
         </div>`).join('')}
     </div>
 
