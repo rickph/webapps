@@ -414,3 +414,21 @@ select.input option { background: #1a2540; color: var(--text); }
   text-overflow: ellipsis;
 }
 .leader-link:hover { color: var(--gold); text-decoration: underline; }
+
+/* ─── DATE / TIME PICKER ─────────────────────────────────────────────────────── */
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(3) hue-rotate(180deg);
+  cursor: pointer;
+  opacity: .7;
+  transition: opacity .15s;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
