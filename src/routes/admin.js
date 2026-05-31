@@ -2,10 +2,19 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
-const { makeUploader } = require('../middleware/upload');
-const uploadPlayer = makeUploader('players').single('photo');
-const uploadTeam   = makeUploader('teams').single('photo');
 const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
+const multer      = require('multer');
+const { importStats, generateTemplate } = require('../import-stats');
+
+// Spreadsheet upload (memory storage — no disk write needed)
+const uploadSheet = multer({
+  storage: multer.memoryStorage(),
+  limits:  { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const ok = /\.(xlsx|xls|csv)$/i.test(file.originalname);
+    cb(ok ? null : new Error('Only .xlsx, .xls or .csv files allowed'), ok);
+  },
+}).single('statsFile');
 
 router.use(requireAuth);
 
@@ -301,6 +310,7 @@ router.get('/league/:id', async (req, res) => {
                 ${statusBadge(g.status)}
                 <a href="/admin/league/${league.id}/edit-game/${g.id}" class="btn-ghost-sm">✏ Edit</a>
                 <a href="/admin/league/${league.id}/game-stats/${g.id}" class="btn-ghost-sm" title="Enter/Edit Player Stats">📋 Stats</a>
+                <a href="/admin/league/${league.id}/import-stats/${g.id}" class="btn-ghost-sm" title="Import Stats from Spreadsheet" style="color:var(--teal)">📤 Import</a>
                 ${g.status!=='final'?`<a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Live</a>`:''}
                 <a href="/admin/league/${league.id}/delete-game/${g.id}" class="btn-danger-sm" data-confirm="Delete this game?">🗑</a>
               </div>
@@ -341,12 +351,12 @@ router.get('/league/:id/add-team', async (req, res) => {
     </div></div>
     <div class="card" style="max-width:480px">
       <form action="/admin/league/${league.id}/add-team" method="POST" enctype="multipart/form-data">
-        <div class="field-group"><label>Team Logo / Photo</label>
-          <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
-            <div style="width:64px;height:64px;border-radius:12px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:26px">🏀</div>
-            <div>
+        <div class="field-group"><label>Team Logo / Photo <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="width:56px;height:56px;border-radius:10px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏀</div>
+            <div style="flex:1">
               <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding:6px" />
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG, PNG or WebP · Max 3MB</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">JPG, PNG or WebP · Max 3MB</div>
             </div>
           </div>
         </div>
@@ -357,7 +367,7 @@ router.get('/league/:id/add-team', async (req, res) => {
             ${TEAM_COLORS.map(c=>`<option value="${c}" style="background:${c};color:${c==='#ffffff'||c==='#cccccc'?'#000':'#fff'}">${COLOR_NAMES[c]||c}</option>`).join('')}
           </select></div>
         <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
-          <textarea name="bio" class="input" rows="2" placeholder="e.g. Barangay champion 2024..."></textarea></div>
+          <textarea name="bio" class="input" rows="2" placeholder="e.g. Barangay champions 2024, home court: Plaza..."></textarea></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">Add Team →</button>
@@ -368,14 +378,26 @@ router.get('/league/:id/add-team', async (req, res) => {
 });
 
 router.post('/league/:id/add-team', (req, res) => {
-  uploadTeam(req, res, async (err) => {
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
+  upload(req, res, async (err) => {
     try {
       if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
       const { name, color, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-team`);
-      const photo = req.file ? req.file.filename : null;
-      await db.run('INSERT INTO teams (league_id,name,color,photo_url,bio) VALUES ($1,$2,$3,$4,$5)',
-        [req.params.id, name.trim(), color||'#e63946', photo, bio?.trim()||null]);
+      let photo_url = null;
+      if (req.file) {
+        const path = require('path'), fs = require('fs');
+        const dir  = path.join(__dirname, '../../public/uploads/teams');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const ext  = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const fname = Date.now() + '-' + Math.round(Math.random()*1e6) + ext;
+        fs.writeFileSync(path.join(dir, fname), req.file.buffer);
+        photo_url = fname;
+      }
+      await db.run(
+        'INSERT INTO teams (league_id,name,color,photo_url,bio) VALUES ($1,$2,$3,$4,$5)',
+        [req.params.id, name.trim(), color||'#e63946', photo_url, bio?.trim()||null]
+      );
       res.redirect(`/admin/league/${req.params.id}`);
     } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
   });
@@ -391,13 +413,26 @@ router.get('/league/:id/edit-team/:tid', async (req, res) => {
       <h1>Edit Team</h1>
     </div></div>
     <div class="card" style="max-width:480px">
-      <form action="/admin/league/${league.id}/edit-team/${team.id}" method="POST">
+      <form action="/admin/league/${league.id}/edit-team/${team.id}" method="POST" enctype="multipart/form-data">
+        <div class="field-group"><label>Team Logo / Photo <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <div style="display:flex;align-items:center;gap:14px">
+            ${team.photo_url
+              ? `<img src="/uploads/teams/${esc(team.photo_url)}" style="width:56px;height:56px;border-radius:10px;object-fit:cover;border:2px solid var(--border);flex-shrink:0">`
+              : `<div style="width:56px;height:56px;border-radius:10px;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🏀</div>`}
+            <div style="flex:1">
+              <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding:6px" />
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Upload new photo to replace · Max 3MB</div>
+            </div>
+          </div>
+        </div>
         <div class="field-group"><label>Team Name</label>
           <input name="name" class="input" value="${esc(team.name)}" required /></div>
         <div class="field-group"><label>Color</label>
           <select name="color" class="input">
-            ${TEAM_COLORS.map(c=>`<option value="${c}" ${c===team.color?'selected':''}>${c}</option>`).join('')}
+            ${TEAM_COLORS.map(c=>`<option value="${c}" ${c===team.color?'selected':''}>${COLOR_NAMES[c]||c}</option>`).join('')}
           </select></div>
+        <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <textarea name="bio" class="input" rows="2" placeholder="Team description...">${team.bio?esc(team.bio):''}</textarea></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">Save Changes →</button>
@@ -408,17 +443,28 @@ router.get('/league/:id/edit-team/:tid', async (req, res) => {
 });
 
 router.post('/league/:id/edit-team/:tid', (req, res) => {
-  uploadTeam(req, res, async (err) => {
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
+  upload(req, res, async (err) => {
     try {
       if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
       const { name, color, bio } = req.body;
-      const photo = req.file ? req.file.filename : null;
-      if (photo) {
+      if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/edit-team/${req.params.tid}`);
+      let photo_url = null;
+      if (req.file) {
+        const path = require('path'), fs = require('fs');
+        const dir  = path.join(__dirname, '../../public/uploads/teams');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const ext  = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const fname = Date.now() + '-' + Math.round(Math.random()*1e6) + ext;
+        fs.writeFileSync(path.join(dir, fname), req.file.buffer);
+        photo_url = fname;
+      }
+      if (photo_url) {
         await db.run('UPDATE teams SET name=$1,color=$2,bio=$3,photo_url=$4 WHERE id=$5',
-          [name, color, bio?.trim()||null, photo, req.params.tid]);
+          [name.trim(), color||'#e63946', bio?.trim()||null, photo_url, req.params.tid]);
       } else {
         await db.run('UPDATE teams SET name=$1,color=$2,bio=$3 WHERE id=$4',
-          [name, color, bio?.trim()||null, req.params.tid]);
+          [name.trim(), color||'#e63946', bio?.trim()||null, req.params.tid]);
       }
       res.redirect(`/admin/league/${req.params.id}`);
     } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
@@ -441,16 +487,27 @@ router.get('/league/:id/add-player', async (req, res) => {
   res.send(adminPage('Add Player', req.user, playerForm(league, teams, null)));
 });
 
-router.post('/league/:id/add-player', (req, res, next) => {
-  uploadPlayer(req, res, async (err) => {
+router.post('/league/:id/add-player', (req, res) => {
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
+  upload(req, res, async (err) => {
     try {
       if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
       const { team_id, name, pos, jersey, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-player`);
-      const photo = req.file ? req.file.filename : null;
+      let photo_url = null;
+      if (req.file) {
+        const path = require('path');
+        const fs   = require('fs');
+        const dir  = path.join(__dirname, '../../public/uploads/players');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const ext  = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const fname = Date.now() + '-' + Math.round(Math.random()*1e6) + ext;
+        fs.writeFileSync(path.join(dir, fname), req.file.buffer);
+        photo_url = fname;
+      }
       await db.run(
         'INSERT INTO players (league_id,team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg,photo_url,bio) VALUES ($1,$2,$3,$4,$5,0,0,0,0,0,0,0,$6,$7)',
-        [req.params.id, team_id, name.trim(), pos||'', jersey||0, photo, bio?.trim()||null]
+        [req.params.id, team_id, name.trim(), pos||'', jersey||0, photo_url, bio?.trim()||null]
       );
       res.redirect(`/admin/league/${req.params.id}`);
     } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
@@ -465,16 +522,40 @@ router.get('/league/:id/edit-player/:pid', async (req, res) => {
   res.send(adminPage('Edit Player', req.user, playerForm(league, teams, player)));
 });
 
-router.post('/league/:id/edit-player/:pid', async (req, res) => {
-  try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
-    const { team_id,name,pos,jersey,gp,pts,reb,ast,stl,blk,fg } = req.body;
-    await db.run(
-      'UPDATE players SET team_id=$1,name=$2,pos=$3,jersey=$4,gp=$5,pts=$6,reb=$7,ast=$8,stl=$9,blk=$10,fg=$11 WHERE id=$12',
-      [team_id,name,pos,jersey||0,gp||0,pts||0,reb||0,ast||0,stl||0,blk||0,fg||0,req.params.pid]
-    );
-    res.redirect(`/admin/league/${req.params.id}`);
-  } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
+router.post('/league/:id/edit-player/:pid', (req, res) => {
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
+  upload(req, res, async (err) => {
+    try {
+      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      const { team_id, name, pos, jersey, bio } = req.body;
+      if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/edit-player/${req.params.pid}`);
+
+      let photo_url = null;
+      if (req.file) {
+        const path = require('path');
+        const fs   = require('fs');
+        const dir  = path.join(__dirname, '../../public/uploads/players');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        const ext  = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+        const fname = Date.now() + '-' + Math.round(Math.random()*1e6) + ext;
+        fs.writeFileSync(path.join(dir, fname), req.file.buffer);
+        photo_url = fname;
+      }
+
+      if (photo_url) {
+        await db.run(
+          'UPDATE players SET team_id=$1,name=$2,pos=$3,jersey=$4,bio=$5,photo_url=$6 WHERE id=$7',
+          [team_id, name.trim(), pos||'', jersey||0, bio?.trim()||null, photo_url, req.params.pid]
+        );
+      } else {
+        await db.run(
+          'UPDATE players SET team_id=$1,name=$2,pos=$3,jersey=$4,bio=$5 WHERE id=$6',
+          [team_id, name.trim(), pos||'', jersey||0, bio?.trim()||null, req.params.pid]
+        );
+      }
+      res.redirect(`/admin/league/${req.params.id}`);
+    } catch (e) { console.error(e); res.redirect(`/admin/league/${req.params.id}`); }
+  });
 });
 
 router.get('/league/:id/delete-player/:pid', async (req, res) => {
@@ -918,7 +999,7 @@ router.get('/league/:id/pdf', async (req, res) => {
     res.setHeader('Content-Disposition',`attachment; filename="${league.name.replace(/[^a-z0-9]/gi,'_')}_stats.pdf"`);
     doc.pipe(res);
     doc.rect(0,0,595,80).fill('#0f0f1a');
-    doc.fillColor('#ff6b35').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS',40,18);
+    doc.fillColor('#ff6b35').fontSize(22).font('Helvetica-Bold').text('PH HOOPS',40,18);
     doc.fillColor('#ffffff').fontSize(14).text(league.name,40,44);
     doc.fillColor('#888888').fontSize(10).text(`${league.location} · ${league.season} · ${league.level}`,40,62);
     let y=100;
@@ -957,7 +1038,7 @@ router.get('/league/:id/pdf', async (req, res) => {
       doc.fillColor('#00d4aa').text(`${p.fg}%`,480,y);
       y+=16;
     }
-    doc.fillColor('#444').fontSize(8).text(`Generated by HoopStats Pilipinas · ${new Date().toLocaleDateString('en-PH')}`,40,800);
+    doc.fillColor('#444').fontSize(8).text(`Generated by PH Hoops · ${new Date().toLocaleDateString('en-PH')}`,40,800);
     doc.end();
   } catch (err) { console.error(err); res.status(500).send('Error generating PDF'); }
 });
@@ -1021,28 +1102,16 @@ router.get('/league/:id/delete', async (req, res) => {
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function playerForm(league, teams, player) {
   const v = (k, def='') => player ? esc(String(player[k]??def)) : def;
-  const photoUrl = player?.photo_url ? '/uploads/players/' + player.photo_url : null;
   return `
     <div class="admin-header"><div>
       <a href="/admin/league/${league.id}" class="back-link">← Back</a>
       <h1>${player ? 'Edit Player' : 'Add Player'}</h1>
+      <p style="color:#666;font-size:13px;margin-top:4px">
+        ${player ? 'Update player information below.' : 'Add player to the roster. Stats will be calculated automatically from game entries.'}
+      </p>
     </div></div>
-    <div class="card" style="max-width:520px">
+    <div class="card" style="max-width:480px">
       <form action="/admin/league/${league.id}/${player?`edit-player/${player.id}`:'add-player'}" method="POST" enctype="multipart/form-data">
-
-        <!-- PHOTO -->
-        <div class="field-group">
-          <label>Player Photo</label>
-          <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
-            ${photoUrl ? `<img src="${photoUrl}" alt="Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">` :
-              `<div style="width:72px;height:72px;border-radius:50%;background:var(--card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>`}
-            <div>
-              <input name="photo" type="file" accept="image/jpeg,image/png,image/webp" class="input" style="padding:6px" />
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">JPG, PNG or WebP · Max 3MB</div>
-            </div>
-          </div>
-        </div>
-
         <div class="field-group"><label>Full Name</label>
           <input name="name" class="input" placeholder="e.g. Juan dela Cruz" value="${v('name')}" required /></div>
         <div class="modal-grid">
@@ -1059,14 +1128,18 @@ function playerForm(league, teams, player) {
             <option value="">Select team</option>
             ${teams.map(t=>`<option value="${t.id}" ${player?.team_id==t.id?'selected':''}>${esc(t.name)}</option>`).join('')}
           </select></div>
-        <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
-          <textarea name="bio" class="input" rows="3" placeholder="e.g. Starting PG, team captain, 3-year veteran...">${v('bio')}</textarea></div>
         <div style="display:flex;gap:10px;margin-top:24px">
           <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">${player?'Save Changes':'Add Player'} →</button>
         </div>
       </form>
-    </div>`;
+    </div>
+    ${!player ? `
+    <div style="max-width:480px;margin-top:16px;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:#555;line-height:1.8">
+      💡 <b style="color:#888">Stats are auto-calculated</b> from game entries.<br>
+      Use <b style="color:#888">📋 Post-Game Stats</b> in the Games tab to enter box scores after each game.<br>
+      Use <b style="color:#888">🔴 Live Score</b> to record stats in real time during a game.
+    </div>` : ''}`;
 }
 
 function adminPage(title, user, content) {
@@ -1075,15 +1148,12 @@ function adminPage(title, user, content) {
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
-<title>${title} | HoopStats Pilipinas Admin</title>
+<title>${title} | PH Hoops Admin</title>
 <link rel="stylesheet" href="/css/main.css">
 </head>
 <body class="dark-bg">
 <nav class="topnav">
-  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
-      <img src="/icons/icon-192.png?v=3" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
-      <div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div>
-    </a></div>
+  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none">🏀 <span class="brand-text">PH HOOPS</span></a></div>
   <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:#888">${esc(user.name)}</span>
@@ -1123,6 +1193,240 @@ async function recalcStandings(leagueId, dbRef) {
   }
   console.log(`✅ Standings recalculated for league ${leagueId} — ${finalGames.length} final games processed`);
 }
+
+// ── DOWNLOAD STATS TEMPLATE ───────────────────────────────────────────────────
+router.get('/league/:id/import-stats/template', async (req, res) => {
+  try {
+    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const players = await db.query(
+      'SELECT name FROM players WHERE league_id=$1 ORDER BY name', [req.params.id]
+    );
+    const buf = generateTemplate(players);
+    res.setHeader('Content-Disposition', 'attachment; filename="hoopstats-template.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── GET IMPORT STATS PAGE ─────────────────────────────────────────────────────
+router.get('/league/:id/import-stats/:gid', async (req, res) => {
+  try {
+    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    const [league, game, players] = await Promise.all([
+      db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]),
+      db.queryOne(
+        `SELECT g.*, ht.name as home_name, at.name as away_name
+         FROM games g
+         LEFT JOIN teams ht ON g.home_team_id=ht.id
+         LEFT JOIN teams at ON g.away_team_id=at.id
+         WHERE g.id=$1`, [req.params.gid]
+      ),
+      db.query('SELECT * FROM players WHERE league_id=$1 ORDER BY name', [req.params.id]),
+    ]);
+    if (!league || !game) return res.redirect('/admin');
+
+    const user = req.user;
+    res.send(adminPage('Import Stats | ' + esc(league.name), user, `
+      <div class="admin-header"><div>
+        <a href="/admin/league/${league.id}" class="back-link">← Back</a>
+        <h1>📤 Import Stats from Spreadsheet</h1>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">
+          ${esc(game.home_name||'TBD')} vs ${esc(game.away_name||'TBD')}
+          ${game.date ? '· ' + esc(game.date) : ''}
+        </p>
+      </div></div>
+
+      <!-- STEP 1: DOWNLOAD TEMPLATE -->
+      <div class="card" style="max-width:600px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--teal);font-size:16px;flex-shrink:0">1</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Download the Template</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Pre-filled with all players in this league</div>
+          </div>
+        </div>
+        <a href="/admin/league/${league.id}/import-stats/template"
+           class="btn-primary" style="display:inline-flex;align-items:center;gap:8px">
+          📥 Download Template (.xlsx)
+        </a>
+        <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8">
+          <strong style="color:var(--text)">Template columns:</strong><br>
+          Name · FG2M · FG2A · FG3M · FG3A · FTM · FTA · OREB · DREB · AST · STL · BLK · TO · Foul<br><br>
+          <strong style="color:var(--text)">Tips:</strong><br>
+          • Player names must match exactly (case-insensitive)<br>
+          • Leave cells blank or 0 for stats not recorded<br>
+          • CSV and Excel (.xlsx/.xls) are both accepted
+        </div>
+      </div>
+
+      <!-- STEP 2: UPLOAD -->
+      <div class="card" style="max-width:600px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(230,51,41,.15);border:1px solid rgba(230,51,41,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--red);font-size:16px;flex-shrink:0">2</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Upload Filled Spreadsheet</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Accepts .xlsx, .xls, or .csv · Max 5MB</div>
+          </div>
+        </div>
+        <form action="/admin/league/${league.id}/import-stats/${game.id}" method="POST" enctype="multipart/form-data">
+          <div class="field-group">
+            <label>Select File</label>
+            <input name="statsFile" type="file" class="input"
+                   accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                   required style="padding:10px" />
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">📤 Import Stats →</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PLAYER LIST REFERENCE -->
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <div style="font-weight:700;margin-bottom:10px;font-size:14px">👥 Players in this league (${players.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${players.map(p => `
+          <span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600">
+            ${esc(p.name)}
+          </span>`).join('')}
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+          ⚠️ Names in spreadsheet must match exactly (spelling counts, case doesn't)
+        </div>
+      </div>
+    `));
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── POST IMPORT STATS ─────────────────────────────────────────────────────────
+router.post('/league/:id/import-stats/:gid', (req, res) => {
+  uploadSheet(req, res, async (err) => {
+    try {
+      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+
+      if (err) {
+        return res.send(adminPage('Import Error', req.user, `
+          <div class="admin-header"><div>
+            <a href="/admin/league/${req.params.id}/import-stats/${req.params.gid}" class="back-link">← Back</a>
+            <h1>Import Error</h1>
+          </div></div>
+          <div class="card" style="max-width:600px">
+            <div class="alert-error">❌ ${esc(err.message)}</div>
+            <a href="/admin/league/${req.params.id}/import-stats/${req.params.gid}" class="btn-primary" style="margin-top:16px;display:inline-block">Try Again</a>
+          </div>
+        `));
+      }
+
+      if (!req.file) return res.redirect(`/admin/league/${req.params.id}/import-stats/${req.params.gid}`);
+
+      const result = await importStats(req.file.buffer, req.file.mimetype, {
+        leagueId: req.params.id,
+        gameId:   req.params.gid,
+        db,
+      });
+
+      // Recalculate season averages for imported players
+      if (result.imported.length > 0) {
+        const { computeSeasonAverages } = require('../fiba-stats');
+        const leaguePlayers = await db.query(
+          'SELECT * FROM players WHERE league_id=$1', [req.params.id]
+        );
+        for (const p of leaguePlayers) {
+          const allGames = await db.query(
+            'SELECT * FROM game_stats WHERE player_id=$1 AND league_id=$2', [p.id, req.params.id]
+          );
+          if (!allGames.length) continue;
+          const season = computeSeasonAverages(allGames);
+          if (!season) continue;
+          const av = season.averages;
+          await db.run(
+            `INSERT INTO player_season_stats
+               (player_id,league_id,gp,pts,reb,oreb,dreb,ast,stl,blk,to_val,foul,
+                fg2m,fg2a,fg3m,fg3a,fgm,fga,ftm,fta,fgp,fg2p,fg3p,ftp,eff)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+             ON CONFLICT (player_id,league_id) DO UPDATE SET
+               gp=$3,pts=$4,reb=$5,oreb=$6,dreb=$7,ast=$8,stl=$9,blk=$10,to_val=$11,foul=$12,
+               fg2m=$13,fg2a=$14,fg3m=$15,fg3a=$16,fgm=$17,fga=$18,ftm=$19,fta=$20,
+               fgp=$21,fg2p=$22,fg3p=$23,ftp=$24,eff=$25`,
+            [p.id, req.params.id, season.gp,
+             av.pts,av.reb,av.oreb,av.dreb,av.ast,av.stl,av.blk,av.to,av.foul,
+             season.totals.fg2m,season.totals.fg2a,season.totals.fg3m,season.totals.fg3a,
+             season.totals.fgm,season.totals.fga,season.totals.ftm,season.totals.fta,
+             av.fgp,av.fg2p,av.fg3p,av.ftp,av.eff]
+          );
+          await db.run('UPDATE players SET gp=$1,pts=$2,reb=$3,ast=$4,stl=$5,blk=$6,fg=$7 WHERE id=$8',
+            [season.gp, av.pts, av.reb, av.ast, av.stl, av.blk, av.fgp, p.id]);
+        }
+        // Recalc standings
+        await recalcStandings(req.params.id, db);
+      }
+
+      const user = req.user;
+      const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+
+      res.send(adminPage('Import Results | ' + esc(league.name), user, `
+        <div class="admin-header"><div>
+          <a href="/admin/league/${league.id}" class="back-link">← Back to League</a>
+          <h1>📊 Import Results</h1>
+        </div></div>
+        <div class="card" style="max-width:600px">
+
+          <!-- SUMMARY -->
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+            <div style="flex:1;min-width:120px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:32px;font-weight:900;color:var(--teal)">${result.imported.length}</div>
+              <div style="font-size:11px;color:var(--teal);font-weight:700;letter-spacing:1px;margin-top:4px">IMPORTED</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:rgba(247,201,72,.08);border:1px solid rgba(247,201,72,.2);border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:32px;font-weight:900;color:var(--gold)">${result.skipped.length}</div>
+              <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-top:4px">SKIPPED</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;text-align:center">
+              <div style="font-size:32px;font-weight:900;color:var(--muted)">${result.total}</div>
+              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-top:4px">TOTAL ROWS</div>
+            </div>
+          </div>
+
+          <!-- IMPORTED -->
+          ${result.imported.length > 0 ? `
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:8px">✅ SUCCESSFULLY IMPORTED</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${result.imported.map(n => `<span style="background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--teal)">${esc(n)}</span>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <!-- WARNINGS -->
+          ${result.warnings.length > 0 ? `
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:8px">⚠️ WARNINGS</div>
+            <div style="background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.15);border-radius:8px;padding:12px;font-size:12px;line-height:2">
+              ${result.warnings.map(w => `<div>• ${esc(w)}</div>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <!-- ERRORS -->
+          ${result.errors.length > 0 ? `
+          <div style="margin-bottom:16px">
+            <div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:8px">❌ ERRORS</div>
+            <div style="background:rgba(230,51,41,.06);border:1px solid rgba(230,51,41,.15);border-radius:8px;padding:12px;font-size:12px;line-height:2">
+              ${result.errors.map(e => `<div>• ${esc(e)}</div>`).join('')}
+            </div>
+          </div>` : ''}
+
+          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+            <a href="/admin/league/${league.id}" class="btn-primary">← Back to League</a>
+            <a href="/admin/league/${league.id}/import-stats/${req.params.gid}" class="btn-ghost">Import Another File</a>
+          </div>
+        </div>
+      `));
+    } catch (err) {
+      console.error('Import error:', err);
+      res.redirect('/admin/league/' + req.params.id);
+    }
+  });
+});
 
 module.exports = router;
 

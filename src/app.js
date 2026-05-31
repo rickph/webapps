@@ -37,7 +37,6 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'phhoops-session-secret-change-in-production',
@@ -61,7 +60,7 @@ app.get('/upgrade', (req, res) => res.redirect('/admin'));
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).send(`<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>Not Found | HoopStats Pilipinas</title>
+<html lang="en"><head><meta charset="UTF-8"><title>Not Found | PH Hoops</title>
 <link rel="stylesheet" href="/css/main.css"></head>
 <body class="dark-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
   <div style="font-size:64px">🏀</div>
@@ -84,7 +83,7 @@ async function boot() {
     app.listen(PORT, () => {
       console.log(`
 ╔══════════════════════════════════════════╗
-║  🏀  HoopStats Pilipinas             ║
+║  🏀  PH HOOPS League Manager             ║
 ║  http://localhost:${PORT}                   ║
 ║  Demo: demo@phhoops.com / demo1234       ║
 ╚══════════════════════════════════════════╝`);
