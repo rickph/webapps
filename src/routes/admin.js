@@ -581,7 +581,37 @@ router.get('/league/:id/add-game', async (req, res) => {
       <form action="/admin/league/${league.id}/add-game" method="POST">
         <div class="field-group"><label>Home Team</label><select name="home_team_id" class="input">${topts}</select></div>
         <div class="field-group"><label>Away Team</label><select name="away_team_id" class="input">${topts}</select></div>
-        <div class="field-group"><label>Date</label><input name="date" class="input" placeholder="e.g. May 1, 2025" /></div>
+        <div class="field-group">
+          <label>Date &amp; Time</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <input name="game_date" type="date" class="input"
+                     style="color-scheme:dark;cursor:pointer" />
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Date</div>
+            </div>
+            <div>
+              <input name="game_time" type="time" class="input"
+                     style="color-scheme:dark;cursor:pointer" value="09:00" />
+              <div style="font-size:11px;color:var(--muted);margin-top:3px">Time</div>
+            </div>
+          </div>
+          <input name="date" type="hidden" id="addGameDate" />
+        </div>
+        <script>
+        (function(){
+          var d = document.querySelector('[name="game_date"]');
+          var t = document.querySelector('[name="game_time"]');
+          var h = document.getElementById('addGameDate');
+          function upd(){
+            if(d.value){
+              var dt = new Date(d.value + 'T' + (t.value||'00:00'));
+              h.value = dt.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}) + (t.value ? ', ' + dt.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true}) : '');
+            } else { h.value = ''; }
+          }
+          d.addEventListener('change', upd);
+          t.addEventListener('change', upd);
+        })();
+        </script>
         <div class="field-group"><label>Venue / Court</label><input name="venue" class="input" placeholder="e.g. Brgy. Court Name" /></div>
         <div class="field-group"><label>Status</label>
           <select name="status" class="input">
@@ -1515,8 +1545,42 @@ router.get('/league/:id/edit-game/:gid', async (req, res) => {
             <select name="home_team_id" class="input">${topts}</select></div>
           <div class="field-group"><label>Away Team</label>
             <select name="away_team_id" class="input">${topts2}</select></div>
-          <div class="field-group"><label>Date</label>
-            <input name="date" class="input" value="${esc(game.date||'')}" placeholder="e.g. May 1, 2025" /></div>
+          <div class="field-group">
+            <label>Date &amp; Time</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div>
+                <input name="game_date" type="date" class="input"
+                       style="color-scheme:dark;cursor:pointer"
+                       id="editGameDatePicker" />
+                <div style="font-size:11px;color:var(--muted);margin-top:3px">Date</div>
+              </div>
+              <div>
+                <input name="game_time" type="time" class="input"
+                       style="color-scheme:dark;cursor:pointer"
+                       id="editGameTimePicker" value="09:00" />
+                <div style="font-size:11px;color:var(--muted);margin-top:3px">Time</div>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:6px">
+              Current: <span style="color:var(--text)">${esc(game.date||'Not set')}</span>
+            </div>
+            <input name="date" type="hidden" id="editGameDate" value="${esc(game.date||'')}" />
+          </div>
+          <script>
+          (function(){
+            var d = document.getElementById('editGameDatePicker');
+            var t = document.getElementById('editGameTimePicker');
+            var h = document.getElementById('editGameDate');
+            function upd(){
+              if(d.value){
+                var dt = new Date(d.value + 'T' + (t.value||'00:00'));
+                h.value = dt.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}) + (t.value ? ', ' + dt.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true}) : '');
+              }
+            }
+            d.addEventListener('change', upd);
+            t.addEventListener('change', upd);
+          })();
+          </script>
           <div class="field-group"><label>Venue / Court</label>
             <input name="venue" class="input" value="${esc(game.venue||'')}" placeholder="e.g. Brgy. Court Name" /></div>
           <div class="field-group"><label>Status</label>
