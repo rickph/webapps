@@ -203,3 +203,53 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 }); // end DOMContentLoaded
+
+// ── JERSEY SEARCH ─────────────────────────────────────────────────────────────
+(function () {
+  var searchInput = document.getElementById('playerSearch');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', function () {
+    var q = searchInput.value.trim().toLowerCase();
+    var players = document.querySelectorAll('.lsc-player');
+    var firstMatch = null;
+
+    players.forEach(function (el) {
+      var jersey = (el.dataset.jersey || '').toLowerCase();
+      var name   = (el.dataset.name   || '').toLowerCase();
+
+      // Match if jersey starts with query OR name contains query
+      var matches = !q || jersey.startsWith(q) || name.includes(q);
+      el.classList.toggle('hidden-search', !matches);
+      if (matches && !firstMatch) firstMatch = el;
+    });
+
+    // Auto-select if exactly one player matches jersey number
+    if (q && firstMatch) {
+      var visiblePlayers = Array.from(players).filter(function (el) {
+        return !el.classList.contains('hidden-search');
+      });
+      if (visiblePlayers.length === 1) {
+        visiblePlayers[0].click();
+      }
+    }
+  });
+
+  // Clear search and re-show all when a player is clicked
+  document.querySelectorAll('.lsc-player').forEach(function (el) {
+    el.addEventListener('click', function () {
+      // Don't clear — let user keep searching if they want
+      // Just highlight matched state
+    });
+  });
+
+  // Press Escape to clear search
+  searchInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      document.querySelectorAll('.lsc-player').forEach(function (el) {
+        el.classList.remove('hidden-search');
+      });
+    }
+  });
+})();
