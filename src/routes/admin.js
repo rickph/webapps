@@ -702,190 +702,341 @@ router.get('/league/:id/score/:gid', async (req, res) => {
       }).join('')}
     `;
 
+
     res.send(adminPage('Live Score', req.user, `
       <style>
-        .lsc-wrap { display:grid; grid-template-columns:280px 1fr; gap:16px; max-width:1100px; }
-        .lsc-scoreboard { background:linear-gradient(135deg,#1a2a6c,#2a4db5); border-radius:14px; padding:24px 28px; margin-bottom:16px; position:relative; }
-        .lsc-live-badge { background:#ff4757; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px; letter-spacing:1px; display:inline-flex; align-items:center; gap:5px; margin-bottom:16px; }
-        .lsc-live-dot { width:7px; height:7px; border-radius:50%; background:#fff; animation:pulse 1s infinite; }
-        .lsc-teams { display:flex; align-items:center; justify-content:space-between; }
-        .lsc-team { text-align:center; flex:1; }
-        .lsc-team-logo { width:52px; height:52px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:#fff; margin:0 auto 8px; }
-        .lsc-team-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; }
-        .lsc-score { font-size:72px; font-weight:900; color:#fff; line-height:1; }
-        .lsc-vs { color:rgba(255,255,255,.4); font-size:18px; font-weight:700; flex-shrink:0; padding:0 20px; }
-        .lsc-qtr { position:absolute; top:24px; right:28px; text-align:right; }
-        .lsc-qtr-label { font-size:11px; color:rgba(255,255,255,.5); letter-spacing:1px; font-weight:700; }
-        .lsc-qtr-val { font-size:22px; font-weight:800; color:#f7c948; }
-        .lsc-end-btn { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.25); padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-top:16px; }
-        .lsc-sidebar { background:#0f1a2e; border-radius:12px; padding:16px; overflow-y:auto; max-height:calc(100vh - 180px); }
-        .lsc-section-label { font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; padding:4px 8px; border-radius:4px; background:rgba(255,255,255,.06); }
-        .lsc-player { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; cursor:pointer; border:1px solid transparent; margin-bottom:4px; transition:all .15s; }
-        .lsc-player:hover { background:rgba(255,255,255,.06); }
-        .lsc-player.active { background:rgba(255,107,53,.12); border-color:#ff6b35; }
-        .lsc-player-pos { font-size:10px; font-weight:700; background:rgba(255,255,255,.1); color:#aaa; padding:2px 5px; border-radius:3px; flex-shrink:0; }
-        .lsc-player-name { flex:1; font-size:13px; font-weight:600; color:#ddd; }
-        .lsc-player-pts { font-size:13px; font-weight:800; color:#ff6b35; min-width:24px; text-align:right; }
-        .lsc-panel { background:#0f1a2e; border-radius:12px; padding:20px; }
-        .lsc-panel-header { margin-bottom:16px; }
-        .lsc-panel-name { font-size:20px; font-weight:800; color:#fff; }
-        .lsc-panel-sub { font-size:13px; color:#666; margin-top:2px; }
-        .lsc-panel-pts { font-size:32px; font-weight:900; color:#ff6b35; text-align:right; line-height:1; }
-        .lsc-panel-pts-label { font-size:10px; color:#666; font-weight:700; letter-spacing:1px; text-align:right; }
-        .lsc-shot-grid { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:8px; align-items:center; margin-bottom:16px; }
-        .lsc-shot-btn { padding:12px 8px; border-radius:8px; border:none; font-weight:800; font-size:14px; cursor:pointer; transition:all .15s; width:100%; }
-        .lsc-shot-btn.make { background:#e63946; color:#fff; }
-        .lsc-shot-btn.make:hover { background:#c1121f; transform:scale(1.03); }
-        .lsc-shot-btn.miss { background:rgba(255,255,255,.08); color:#aaa; border:1px solid rgba(255,255,255,.12); }
-        .lsc-shot-btn.miss:hover { background:rgba(255,255,255,.13); color:#fff; }
-        .lsc-minus { background:none; border:none; color:#ff4444; font-size:18px; font-weight:700; cursor:pointer; padding:0 4px; }
-        .lsc-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:4px; }
-        .lsc-stat-box { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:12px; }
-        .lsc-stat-label { font-size:10px; font-weight:700; color:#666; letter-spacing:1px; margin-bottom:6px; }
-        .lsc-stat-val { font-size:22px; font-weight:800; color:#fff; text-align:center; margin-bottom:8px; }
-        .lsc-stat-btns { display:flex; justify-content:space-between; }
-        .lsc-stat-btn { background:none; border:none; font-size:18px; font-weight:700; cursor:pointer; padding:0 8px; transition:color .15s; }
-        .lsc-stat-btn.minus { color:#ff4444; }
-        .lsc-stat-btn.plus  { color:#00d4aa; }
-        .lsc-stat-btn:hover { opacity:.7; }
-        .lsc-save-bar { display:flex; gap:10px; margin-top:16px; }
-        .lsc-empty { color:#444; text-align:center; padding:40px; font-size:14px; }
-        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
-        @media(max-width:700px){ .lsc-wrap{grid-template-columns:1fr;} .lsc-sidebar{max-height:200px;} }
+        body { overflow:hidden; }
+        .lsc-page { display:flex; flex-direction:column; height:100vh; margin:-24px; background:#0a0e1a; font-family:'Outfit',sans-serif; }
+
+        /* ── SCOREBOARD ─────────────────────────────────────── */
+        .lsc-scoreboard {
+          background: linear-gradient(180deg,#1a2547 0%,#0f1a38 100%);
+          padding: 18px 24px 14px;
+          flex-shrink: 0;
+        }
+        .lsc-teams { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .lsc-team  { flex:1; text-align:center; }
+        .lsc-team-logo {
+          width:52px; height:52px; border-radius:12px;
+          display:inline-flex; align-items:center; justify-content:center;
+          font-family:'Russo One',sans-serif; font-size:18px; font-weight:900; color:#fff;
+          margin-bottom:6px;
+        }
+        .lsc-team-name { font-size:14px; font-weight:700; color:#fff; margin-bottom:2px; }
+        .lsc-score { font-size:72px; font-weight:900; color:#fff; line-height:1; letter-spacing:-2px; }
+        .lsc-vs { color:rgba(255,255,255,.3); font-size:15px; font-weight:700; flex-shrink:0; text-align:center; }
+        .lsc-vs-inner { display:flex; flex-direction:column; align-items:center; gap:6px; }
+        .lsc-qtr-wrap { display:flex; align-items:center; gap:6px; }
+        .lsc-qtr-btn  { width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+        .lsc-qtr-btn:hover { background:rgba(255,255,255,.22); }
+        .lsc-qtr-val  { font-size:20px; font-weight:800; color:#f7c948; min-width:22px; text-align:center; }
+
+        /* ── ACTION BAR ─────────────────────────────────────── */
+        .lsc-action-bar { display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); }
+        .lsc-save-btn { padding:9px 20px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:6px; transition:all .15s; font-family:'Outfit',sans-serif; }
+        .lsc-save-btn.save { background:rgba(255,255,255,.12); color:#fff; border:1px solid rgba(255,255,255,.2); }
+        .lsc-save-btn.save:hover { background:rgba(255,255,255,.2); }
+        .lsc-save-btn.end  { background:#e63329; color:#fff; border:1px solid #e63329; }
+        .lsc-save-btn.end:hover  { background:#c72820; }
+
+        /* ── 3-COL BODY ─────────────────────────────────────── */
+        .lsc-body { display:grid; grid-template-columns:240px 1fr 220px; flex:1; overflow:hidden; }
+
+        /* ── SIDEBARS ───────────────────────────────────────── */
+        .lsc-sidebar { overflow-y:auto; background:#0d1120; padding:8px 0; }
+        .lsc-sidebar-label { font-size:10px; font-weight:800; letter-spacing:2px; padding:8px 14px 6px; color:rgba(255,255,255,.4); }
+        .lsc-section-label { font-size:10px; font-weight:800; letter-spacing:2px; padding:8px 14px 4px; }
+
+        .lsc-player {
+          display:flex; align-items:center; gap:8px;
+          padding:9px 14px; cursor:pointer;
+          transition:background .12s; border-left:3px solid transparent;
+        }
+        .lsc-player:hover { background:rgba(255,255,255,.05); }
+        .lsc-player.active { background:rgba(255,255,255,.08); border-left-color:var(--player-color,#e63329); }
+        .lsc-player-pos  { font-size:10px; font-weight:800; color:rgba(255,255,255,.4); width:20px; flex-shrink:0; }
+        .lsc-player-name { font-size:13px; font-weight:600; color:#f0f4ff; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .lsc-player-pts  { font-size:13px; font-weight:800; color:#f97316; flex-shrink:0; min-width:18px; text-align:right; }
+
+        /* ── STAT PANEL ─────────────────────────────────────── */
+        .lsc-panel { flex:1; overflow-y:auto; background:#0f1628; padding:0; }
+
+        .lsc-no-player {
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          height:100%; color:rgba(240,244,255,.25); font-size:14px; gap:8px;
+        }
+
+        .lsc-pp-header {
+          display:flex; align-items:flex-start; justify-content:space-between;
+          padding:18px 22px 14px; border-bottom:1px solid rgba(255,255,255,.07);
+          background:#131c35;
+        }
+        .lsc-pp-name { font-size:22px; font-weight:900; color:#f0f4ff; font-family:'Russo One',sans-serif; }
+        .lsc-pp-sub  { font-size:13px; color:rgba(240,244,255,.45); margin-top:3px; }
+        .lsc-pp-pts-wrap { text-align:right; }
+        .lsc-pp-pts  { font-size:36px; font-weight:900; color:#f97316; line-height:1; }
+        .lsc-pp-pts-lbl { font-size:9px; color:rgba(240,244,255,.4); letter-spacing:2px; font-weight:700; margin-top:2px; }
+
+        .lsc-recording { font-size:10px; font-weight:700; letter-spacing:2px; color:rgba(240,244,255,.3); padding:10px 22px 6px; }
+
+        /* ── SHOT BUTTONS ───────────────────────────────────── */
+        .lsc-shots { padding:10px 22px; display:flex; flex-direction:column; gap:8px; }
+
+        .lsc-shot-row { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; gap:6px; align-items:center; }
+        .lsc-shot-row-2 { display:grid; grid-template-columns:auto 1fr auto; gap:6px; align-items:center; padding-left:calc(33.3% + 6px); padding-right:calc(33.3% + 6px); }
+
+        .lsc-shot-btn {
+          padding:14px 8px; border-radius:8px; font-size:15px; font-weight:800;
+          cursor:pointer; border:none; transition:all .12s; font-family:'Outfit',sans-serif;
+          text-align:center;
+        }
+        .lsc-shot-btn.make { background:#e63329; color:#fff; }
+        .lsc-shot-btn.make:hover { background:#c72820; transform:scale(1.02); }
+        .lsc-shot-btn.miss { background:rgba(255,255,255,.08); color:rgba(240,244,255,.7); border:1px solid rgba(255,255,255,.1); }
+        .lsc-shot-btn.miss:hover { background:rgba(255,255,255,.14); }
+        .lsc-minus-btn {
+          width:28px; height:28px; border-radius:6px; background:rgba(255,255,255,.06);
+          border:1px solid rgba(255,255,255,.12); color:rgba(240,244,255,.5);
+          cursor:pointer; font-size:16px; font-weight:700; transition:all .12s;
+          display:flex; align-items:center; justify-content:center; flex-shrink:0;
+        }
+        .lsc-minus-btn:hover { background:rgba(255,71,87,.2); color:#ff4757; }
+
+        .lsc-fg-line { font-size:11px; color:rgba(240,244,255,.4); text-align:center; padding:6px 22px; background:rgba(255,255,255,.03); margin:0 22px; border-radius:6px; }
+
+        /* ── STAT BOXES ─────────────────────────────────────── */
+        .lsc-stat-section { padding:12px 22px 0; }
+        .lsc-stat-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px; }
+        .lsc-stat-box {
+          background:#0a0e1a; border:1px solid rgba(255,255,255,.08); border-radius:10px;
+          padding:12px 10px 8px; text-align:center;
+        }
+        .lsc-stat-lbl { font-size:10px; font-weight:800; letter-spacing:1px; color:rgba(240,244,255,.4); margin-bottom:6px; }
+        .lsc-stat-val { font-size:26px; font-weight:900; color:#f0f4ff; line-height:1; margin-bottom:8px; }
+        .lsc-stat-row { display:flex; justify-content:space-between; gap:6px; }
+        .lsc-cnt-btn {
+          flex:1; padding:6px; border-radius:6px; font-size:16px; font-weight:700;
+          cursor:pointer; border:none; transition:all .12s; font-family:'Outfit',sans-serif;
+        }
+        .lsc-cnt-btn.minus { background:rgba(255,71,87,.15); color:#ff4757; }
+        .lsc-cnt-btn.minus:hover { background:rgba(255,71,87,.3); }
+        .lsc-cnt-btn.plus  { background:rgba(0,212,170,.15); color:#00d4aa; }
+        .lsc-cnt-btn.plus:hover  { background:rgba(0,212,170,.3); }
+
+        .lsc-right { overflow-y:auto; background:#0d1120; border-left:1px solid rgba(255,255,255,.06); }
+
+        @media(max-width:900px) {
+          .lsc-body { grid-template-columns:180px 1fr 0; }
+          .lsc-right { display:none; }
+        }
+        @media(max-width:640px) {
+          .lsc-body { grid-template-columns:140px 1fr; }
+          .lsc-score { font-size:52px; }
+          .lsc-pp-name { font-size:18px; }
+        }
       </style>
 
-      <a href="/admin/league/${league.id}" class="back-link" style="display:inline-block;margin-bottom:16px">← Back to League</a>
+      <div class="lsc-page">
 
-      <!-- SCOREBOARD -->
-      <div class="lsc-scoreboard">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <span class="lsc-live-badge"><span class="lsc-live-dot"></span> LIVE</span>
-          <span style="color:rgba(255,255,255,.5);font-size:13px">${esc(game.date||'')}</span>
-        </div>
-        <div class="lsc-teams">
-          <div class="lsc-team">
-            <div class="lsc-team-logo" style="background:${homeColor}" id="sb-home-logo">${esc((game.home_name||'H').substring(0,3).toUpperCase())}</div>
-            <div class="lsc-team-name">${esc(game.home_name||'Home')}</div>
-            <div class="lsc-score" id="sb-home-score">${game.home_score||0}</div>
-          </div>
-          <div class="lsc-vs">VS</div>
-          <div class="lsc-team">
-            <div class="lsc-team-logo" style="background:${awayColor}" id="sb-away-logo">${esc((game.away_name||'A').substring(0,3).toUpperCase())}</div>
-            <div class="lsc-team-name">${esc(game.away_name||'Away')}</div>
-            <div class="lsc-score" id="sb-away-score">${game.away_score||0}</div>
-          </div>
-        </div>
-        <div class="lsc-qtr">
-          <div class="lsc-qtr-label">QUARTER</div>
-          <div class="lsc-qtr-val" id="sb-qtr">${game.quarter||1}</div>
-          <div style="display:flex;gap:4px;margin-top:4px">
-            <button class="lsc-end-btn" style="padding:4px 10px;font-size:12px" id="qtrMinus">−</button>
-            <button class="lsc-end-btn" style="padding:4px 10px;font-size:12px" id="qtrPlus">+</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:16px;align-items:center">
-          <button class="lsc-end-btn" id="saveProgressBtn">💾 Save Progress</button>
-          <button class="lsc-end-btn" id="endGameBtn" style="background:rgba(255,71,87,.25);border-color:rgba(255,71,87,.4)">⏹ End Game</button>
-        </div>
-      </div>
-
-      <!-- MAIN LAYOUT -->
-      <div class="lsc-wrap">
-        <!-- PLAYER LIST -->
-        <div class="lsc-sidebar">
-          <div style="font-size:11px;color:#555;font-weight:700;letter-spacing:2px;margin-bottom:12px">SELECT PLAYER</div>
-          ${allPlayers.length > 0 ? playerListHTML : '<div class="lsc-empty">No players added yet.<br><a href="/admin/league/${league.id}/add-player" style="color:#ff6b35">Add players first →</a></div>'}
-        </div>
-
-        <!-- STAT PANEL -->
-        <div class="lsc-panel" id="statPanel">
-          <div class="lsc-empty" id="noPlayerMsg">
-            👆 Select a player from the left to record stats
-          </div>
-          <div id="playerPanel" style="display:none">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
-              <div class="lsc-panel-header">
-                <div class="lsc-panel-name" id="pp-name">—</div>
-                <div class="lsc-panel-sub" id="pp-sub">—</div>
+        <!-- ── SCOREBOARD ────────────────────────────────────── -->
+        <div class="lsc-scoreboard">
+          <div class="lsc-teams">
+            <!-- HOME -->
+            <div class="lsc-team">
+              <div class="lsc-team-logo" style="background:${homeColor}">
+                ${esc((game.home_name||'H').substring(0,3).toUpperCase())}
               </div>
-              <div>
-                <div class="lsc-panel-pts" id="pp-pts">0</div>
-                <div class="lsc-panel-pts-label">POINTS</div>
-              </div>
+              <div class="lsc-team-name">${esc(game.home_name||'Home Team')}</div>
+              <div class="lsc-score" id="sb-home-score">${game.home_score||0}</div>
             </div>
 
-            <!-- FIBA SHOT BUTTONS -->
-            <div style="font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;margin-bottom:10px;text-align:center">RECORDING: <span id="pp-recording"></span></div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:6px">
-              <button class="lsc-shot-btn make" id="btn-2pt">+2 PT</button>
-              <button class="lsc-minus" id="btn-2pt-minus">−</button>
-              <button class="lsc-shot-btn miss" id="btn-miss2">Miss 2</button>
-              <button class="lsc-minus" id="btn-miss2-minus">−</button>
-              <button class="lsc-shot-btn make" id="btn-3pt">+3 PT</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:16px">
-              <button class="lsc-minus" id="btn-3pt-minus">−</button>
-              <div></div>
-              <button class="lsc-shot-btn miss" id="btn-miss3">Miss 3</button>
-              <button class="lsc-minus" id="btn-miss3-minus">−</button>
-              <div></div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:6px;align-items:center;justify-items:center;margin-bottom:16px">
-              <button class="lsc-shot-btn make" id="btn-ft">+1 FT</button>
-              <button class="lsc-minus" id="btn-ft-minus">−</button>
-              <button class="lsc-shot-btn miss" id="btn-missft">Miss FT</button>
-              <button class="lsc-minus" id="btn-missft-minus">−</button>
-              <div></div>
-            </div>
-
-            <!-- FIBA SHOOTING LINE -->
-            <div style="background:rgba(255,255,255,.04);border-radius:6px;padding:8px 12px;font-size:12px;color:#888;margin-bottom:12px;font-weight:600;letter-spacing:.5px;text-align:center" id="pp-fg-line">0/0 2PT &nbsp; 0/0 3PT &nbsp; 0/0 FT</div>
-
-            <!-- FIBA STAT COUNTERS -->
-            <div class="lsc-stat-grid">
-              ${[
-                {k:'oreb',label:'OREB',desc:'Off. Reb'},
-                {k:'dreb',label:'DREB',desc:'Def. Reb'},
-                {k:'ast', label:'AST', desc:'Assists'},
-                {k:'stl', label:'STL', desc:'Steals'},
-                {k:'blk', label:'BLK', desc:'Blocks'},
-                {k:'to',  label:'TO',  desc:'Turnovers'},
-                {k:'foul',label:'FOUL',desc:'Pers. Fouls'},
-              ].map(s => `
-              <div class="lsc-stat-box">
-                <div class="lsc-stat-label">${s.label}</div>
-                <div class="lsc-stat-val" id="pp-${s.k}">0</div>
-                <div class="lsc-stat-btns">
-                  <button class="lsc-stat-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
-                  <button class="lsc-stat-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
+            <!-- VS / QUARTER -->
+            <div class="lsc-vs">
+              <div class="lsc-vs-inner">
+                <div>VS</div>
+                <div class="lsc-qtr-wrap">
+                  <button class="lsc-qtr-btn" id="qtr-minus">−</button>
+                  <div class="lsc-qtr-val" id="sb-qtr">${game.quarter||1}</div>
+                  <button class="lsc-qtr-btn" id="qtr-plus">+</button>
                 </div>
-              </div>`).join('')}
+                <div style="font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px">QTR</div>
+              </div>
             </div>
 
-            <!-- FIBA EFF + PERCENTAGES -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
-              <div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.2);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:#ff6b35;font-weight:700;letter-spacing:1px">EFF</div>
-                <div style="font-size:22px;font-weight:800;color:#ff6b35" id="pp-eff">0</div>
+            <!-- AWAY -->
+            <div class="lsc-team">
+              <div class="lsc-team-logo" style="background:${awayColor}">
+                ${esc((game.away_name||'A').substring(0,3).toUpperCase())}
               </div>
-              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">FG%</div>
-                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-fgp">—</div>
-              </div>
-              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">3P%</div>
-                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-fg3p">—</div>
-              </div>
-              <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
-                <div style="font-size:10px;color:#666;font-weight:700;letter-spacing:1px">FT%</div>
-                <div style="font-size:18px;font-weight:800;color:#fff" id="pp-ftp">—</div>
-              </div>
+              <div class="lsc-team-name">${esc(game.away_name||'Away Team')}</div>
+              <div class="lsc-score" id="sb-away-score">${game.away_score||0}</div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- HIDDEN FORM for submission -->
+          <!-- ACTION BAR -->
+          <div class="lsc-action-bar">
+            <button class="lsc-save-btn save" id="btn-save">💾 Save Progress</button>
+            <button class="lsc-save-btn end"  id="btn-end">⏹ End Game</button>
+          </div>
+        </div>
+
+        <!-- ── 3-COL BODY ─────────────────────────────────────── -->
+        <div class="lsc-body">
+
+          <!-- LEFT: HOME PLAYERS -->
+          <div class="lsc-sidebar" id="leftSidebar">
+            <div class="lsc-sidebar-label" style="color:${homeColor}">SELECT PLAYER</div>
+            <div class="lsc-section-label" style="color:${homeColor}">${esc(game.home_name||'Home').toUpperCase()}</div>
+            ${homePlayers.length > 0
+              ? homePlayers.map(p => {
+                  const s = statMap[p.id] || {};
+                  const pts = (s.fg2m||0)*2 + (s.fg3m||0)*3 + (s.ftm||0);
+                  return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos||''}" data-jersey="${p.jersey||''}" data-team="${esc(game.home_name||'Home')}" data-color="${homeColor}"
+                    data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}"
+                    data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}"
+                    data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}"
+                    style="--player-color:${homeColor}">
+                    <span class="lsc-player-pos">${p.pos||'?'}</span>
+                    <span class="lsc-player-name">${esc(p.name)}</span>
+                    <span class="lsc-player-pts">${pts}</span>
+                  </div>`;
+                }).join('')
+              : '<div style="padding:14px;font-size:12px;color:rgba(240,244,255,.3)">No players</div>'}
+          </div>
+
+          <!-- CENTER: STAT PANEL -->
+          <div class="lsc-panel" id="statPanel">
+
+            <!-- No player selected -->
+            <div class="lsc-no-player" id="noPlayerMsg">
+              <div style="font-size:32px">👆</div>
+              <div>Select a player to record stats</div>
+            </div>
+
+            <!-- Player stats panel (hidden until player selected) -->
+            <div id="playerPanel" style="display:none">
+
+              <!-- Header -->
+              <div class="lsc-pp-header">
+                <div>
+                  <div class="lsc-pp-name" id="pp-name">—</div>
+                  <div class="lsc-pp-sub"  id="pp-sub">—</div>
+                </div>
+                <div class="lsc-pp-pts-wrap">
+                  <div class="lsc-pp-pts" id="pp-pts">0</div>
+                  <div class="lsc-pp-pts-lbl">POINTS</div>
+                </div>
+              </div>
+
+              <!-- Recording label -->
+              <div class="lsc-recording">RECORDING: <span id="pp-recording" style="color:rgba(240,244,255,.6)"></span></div>
+
+              <!-- Shot buttons -->
+              <div class="lsc-shots">
+                <!-- 2PT / Miss2 / 3PT row -->
+                <div class="lsc-shot-row">
+                  <button class="lsc-shot-btn make" id="btn-2pt">+2 PT</button>
+                  <button class="lsc-minus-btn"     id="btn-2pt-minus">−</button>
+                  <button class="lsc-shot-btn miss" id="btn-miss2">Miss 2</button>
+                  <button class="lsc-minus-btn"     id="btn-miss2-minus">−</button>
+                  <button class="lsc-shot-btn make" id="btn-3pt">+3 PT</button>
+                </div>
+                <!-- Miss3 row (offset right) -->
+                <div class="lsc-shot-row-2">
+                  <button class="lsc-minus-btn"     id="btn-3pt-minus">−</button>
+                  <button class="lsc-shot-btn miss" id="btn-miss3">Miss 3</button>
+                  <button class="lsc-minus-btn"     id="btn-miss3-minus">−</button>
+                </div>
+                <!-- FT row -->
+                <div class="lsc-shot-row">
+                  <button class="lsc-shot-btn make" id="btn-ft">+1 FT</button>
+                  <button class="lsc-minus-btn"     id="btn-ft-minus">−</button>
+                  <button class="lsc-shot-btn miss" id="btn-missft">Miss FT</button>
+                  <button class="lsc-minus-btn"     id="btn-missft-minus">−</button>
+                  <div></div>
+                </div>
+              </div>
+
+              <!-- Shot line -->
+              <div class="lsc-fg-line" id="pp-fg-line">0/0 2PT &nbsp;·&nbsp; 0/0 3PT &nbsp;·&nbsp; 0/0 FT</div>
+
+              <!-- Counting stats: OREB / DREB / AST -->
+              <div class="lsc-stat-section">
+                <div class="lsc-stat-grid">
+                  ${[{k:'oreb',l:'OREB'},{k:'dreb',l:'DREB'},{k:'ast',l:'AST'}].map(s=>`
+                  <div class="lsc-stat-box">
+                    <div class="lsc-stat-lbl">${s.l}</div>
+                    <div class="lsc-stat-val" id="pp-${s.k}">0</div>
+                    <div class="lsc-stat-row">
+                      <button class="lsc-cnt-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
+                      <button class="lsc-cnt-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
+                    </div>
+                  </div>`).join('')}
+                </div>
+
+                <!-- STL / BLK / TO -->
+                <div class="lsc-stat-grid">
+                  ${[{k:'stl',l:'STL'},{k:'blk',l:'BLK'},{k:'to',l:'TO'}].map(s=>`
+                  <div class="lsc-stat-box">
+                    <div class="lsc-stat-lbl">${s.l}</div>
+                    <div class="lsc-stat-val" id="pp-${s.k}">0</div>
+                    <div class="lsc-stat-row">
+                      <button class="lsc-cnt-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
+                      <button class="lsc-cnt-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
+                    </div>
+                  </div>`).join('')}
+                </div>
+
+                <!-- FOUL / EFF / FG% -->
+                <div class="lsc-stat-grid" style="margin-bottom:20px">
+                  <div class="lsc-stat-box" style="border-color:rgba(255,71,87,.2)">
+                    <div class="lsc-stat-lbl" style="color:#ff4757">FOUL</div>
+                    <div class="lsc-stat-val" id="pp-foul">0</div>
+                    <div class="lsc-stat-row">
+                      <button class="lsc-cnt-btn minus" data-stat="foul" data-dir="-1">−</button>
+                      <button class="lsc-cnt-btn plus"  data-stat="foul" data-dir="1">+</button>
+                    </div>
+                  </div>
+                  <div class="lsc-stat-box" style="border-color:rgba(249,115,22,.2)">
+                    <div class="lsc-stat-lbl" style="color:#f97316">EFF</div>
+                    <div class="lsc-stat-val" style="color:#f97316" id="pp-eff">0</div>
+                    <div style="height:28px"></div>
+                  </div>
+                  <div class="lsc-stat-box">
+                    <div class="lsc-stat-lbl">FG%</div>
+                    <div class="lsc-stat-val" style="font-size:18px;padding-top:4px" id="pp-fgp">—</div>
+                    <div style="height:28px"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- end playerPanel -->
+          </div><!-- end lsc-panel -->
+
+          <!-- RIGHT: AWAY PLAYERS -->
+          <div class="lsc-right">
+            <div class="lsc-sidebar-label" style="color:${awayColor}">${esc(game.away_name||'Away').toUpperCase()}</div>
+            ${awayPlayers.length > 0
+              ? awayPlayers.map(p => {
+                  const s = statMap[p.id] || {};
+                  const pts = (s.fg2m||0)*2 + (s.fg3m||0)*3 + (s.ftm||0);
+                  return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos||''}" data-jersey="${p.jersey||''}" data-team="${esc(game.away_name||'Away')}" data-color="${awayColor}"
+                    data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}"
+                    data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}"
+                    data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}"
+                    style="--player-color:${awayColor}">
+                    <span class="lsc-player-pos">${p.pos||'?'}</span>
+                    <span class="lsc-player-name">${esc(p.name)}</span>
+                    <span class="lsc-player-pts">${pts}</span>
+                  </div>`;
+                }).join('')
+              : '<div style="padding:14px;font-size:12px;color:rgba(240,244,255,.3)">No players</div>'}
+          </div>
+
+        </div><!-- end lsc-body -->
+      </div><!-- end lsc-page -->
+
+      <!-- HIDDEN FORM -->
       <form id="scoreForm" action="/admin/league/${league.id}/score/${game.id}" method="POST" style="display:none">
         <input type="hidden" name="player_ids"  id="f-player-ids"  value="${allPlayerIds}" />
         <input type="hidden" name="home_score"  id="f-home-score"  value="${game.home_score||0}" />
@@ -893,13 +1044,11 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         <input type="hidden" name="quarter"     id="f-quarter"     value="${game.quarter||1}" />
         <input type="hidden" name="status"      id="f-status"      value="${game.status||'ongoing'}" />
         <input type="hidden" name="save_type"   id="f-save-type"   value="save" />
-        <!-- Player stat hidden fields populated by JS -->
         <div id="f-player-fields"></div>
       </form>
 
       <script src="/js/livescore.js"></script>
       <script>
-        // Pass server data to JS
         window.LSC_DATA = {
           homeTeam: "${esc(game.home_name||'Home')}",
           awayTeam: "${esc(game.away_name||'Away')}",
@@ -909,7 +1058,6 @@ router.get('/league/:id/score/:gid', async (req, res) => {
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
-
 
 router.post('/league/:id/score/:gid', async (req, res) => {
   try {
