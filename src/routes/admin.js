@@ -754,9 +754,23 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         }
         .lsc-player:hover { background:rgba(255,255,255,.05); }
         .lsc-player.active { background:rgba(255,255,255,.08); border-left-color:var(--player-color,#e63329); }
-        .lsc-player-pos  { font-size:10px; font-weight:800; color:rgba(255,255,255,.4); width:20px; flex-shrink:0; }
-        .lsc-player-name { font-size:13px; font-weight:600; color:#f0f4ff; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .lsc-player-pts  { font-size:13px; font-weight:800; color:#f97316; flex-shrink:0; min-width:18px; text-align:right; }
+        .lsc-player-pos    { font-size:10px; font-weight:800; color:rgba(255,255,255,.4); width:22px; flex-shrink:0; }
+        .lsc-player-jersey { font-size:11px; font-weight:800; color:rgba(255,255,255,.5); width:28px; flex-shrink:0; text-align:center; background:rgba(255,255,255,.07); border-radius:4px; padding:1px 3px; }
+        .lsc-player-name   { font-size:13px; font-weight:600; color:#f0f4ff; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .lsc-player-pts    { font-size:13px; font-weight:800; color:#f97316; flex-shrink:0; min-width:18px; text-align:right; }
+        .lsc-search-wrap   { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.06); position:sticky; top:0; background:#0d1120; z-index:10; }
+        .lsc-search-input  {
+          width:100%; box-sizing:border-box; background:rgba(255,255,255,.07);
+          border:1px solid rgba(255,255,255,.12); border-radius:7px;
+          padding:7px 10px 7px 30px; font-size:13px; font-weight:700;
+          color:#f0f4ff; font-family:'Outfit',sans-serif; outline:none;
+          transition:border .15s;
+        }
+        .lsc-search-input::placeholder { color:rgba(255,255,255,.3); font-weight:400; }
+        .lsc-search-input:focus { border-color:rgba(249,115,22,.5); }
+        .lsc-search-icon   { position:absolute; left:18px; top:50%; transform:translateY(-50%); font-size:13px; pointer-events:none; opacity:.4; }
+        .lsc-search-wrap   { position:relative; }
+        .lsc-player.hidden-search { display:none; }
 
         /* ── STAT PANEL ─────────────────────────────────────── */
         .lsc-panel { flex:1; overflow-y:auto; background:#0f1628; padding:0; }
