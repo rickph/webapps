@@ -253,3 +253,42 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 })();
+
+// ── SCORE CORRECTION BUTTONS ─────────────────────────────────────────────────
+// These let the scorer manually fix the score if something was entered wrong
+(function() {
+  function wireScoreAdj(minusId, plusId, getScore, setScore) {
+    var minusBtn = document.getElementById(minusId);
+    var plusBtn  = document.getElementById(plusId);
+    if (minusBtn) {
+      minusBtn.addEventListener('click', function () {
+        setScore(Math.max(0, getScore() - 1));
+      });
+    }
+    if (plusBtn) {
+      plusBtn.addEventListener('click', function () {
+        setScore(getScore() + 1);
+      });
+    }
+  }
+
+  // Home score correction
+  wireScoreAdj('home-score-minus', 'home-score-plus',
+    function () { return parseInt(document.getElementById('sb-home-score').textContent) || 0; },
+    function (v) {
+      homeScore = v;
+      document.getElementById('sb-home-score').textContent = v;
+      document.getElementById('f-home-score').value = v;
+    }
+  );
+
+  // Away score correction
+  wireScoreAdj('away-score-minus', 'away-score-plus',
+    function () { return parseInt(document.getElementById('sb-away-score').textContent) || 0; },
+    function (v) {
+      awayScore = v;
+      document.getElementById('sb-away-score').textContent = v;
+      document.getElementById('f-away-score').value = v;
+    }
+  );
+})();

@@ -730,6 +730,11 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .lsc-qtr-btn  { width:26px; height:26px; border-radius:6px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s; }
         .lsc-qtr-btn:hover { background:rgba(255,255,255,.22); }
         .lsc-qtr-val  { font-size:20px; font-weight:800; color:#f7c948; min-width:22px; text-align:center; }
+        .lsc-score-ctrl { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:6px; }
+        .lsc-score-adj  { width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.1); color:#fff; font-size:18px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; line-height:1; }
+        .lsc-score-adj:hover { background:rgba(255,255,255,.22); }
+        .lsc-score-adj.minus:hover { background:rgba(255,71,87,.35); border-color:rgba(255,71,87,.5); }
+        .lsc-score-adj.plus:hover  { background:rgba(0,212,170,.25); border-color:rgba(0,212,170,.4); }
 
         /* ── ACTION BAR ─────────────────────────────────────── */
         .lsc-action-bar { display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,.08); }
@@ -862,6 +867,10 @@ router.get('/league/:id/score/:gid', async (req, res) => {
               </div>
               <div class="lsc-team-name">${esc(game.home_name||'Home Team')}</div>
               <div class="lsc-score" id="sb-home-score">${game.home_score||0}</div>
+              <div class="lsc-score-ctrl">
+                <button class="lsc-score-adj minus" id="home-score-minus">−</button>
+                <button class="lsc-score-adj plus"  id="home-score-plus">+</button>
+              </div>
             </div>
 
             <!-- VS / QUARTER -->
@@ -884,6 +893,10 @@ router.get('/league/:id/score/:gid', async (req, res) => {
               </div>
               <div class="lsc-team-name">${esc(game.away_name||'Away Team')}</div>
               <div class="lsc-score" id="sb-away-score">${game.away_score||0}</div>
+              <div class="lsc-score-ctrl">
+                <button class="lsc-score-adj minus" id="away-score-minus">−</button>
+                <button class="lsc-score-adj plus"  id="away-score-plus">+</button>
+              </div>
             </div>
           </div>
 
