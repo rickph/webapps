@@ -827,8 +827,104 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-rp-shot.miss { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.09); }
         .ls-rp-pbp { padding:0 12px 12px; }
         .ls-rp-pbp-title { font-size:11px; font-weight:800; color:rgba(255,255,255,.4); letter-spacing:1px; padding:8px 0 6px; }
-        @media(max-width:820px){ .ls-main{grid-template-columns:200px 1fr 0;} .ls-right{display:none;} .ls-score{font-size:48px;} }
-        @media(max-width:600px){ .ls-main{grid-template-columns:0 1fr;} .ls-left{display:none;} .ls-score{font-size:40px;} }
+
+        /* ── TABLET (820px) ── */
+        @media(max-width:820px){
+          .ls-score { font-size:48px; }
+          .ls-main  { grid-template-columns: 200px 1fr 0; }
+          .ls-right { display:none; }
+        }
+
+        /* ── MOBILE (600px) ── */
+        @media(max-width:600px){
+          /* Stack layout vertically */
+          .ls { overflow-y:auto; height:auto; min-height:100vh; }
+          .ls-main { display:flex; flex-direction:column; overflow:visible; height:auto; }
+
+          /* Scoreboard: compact */
+          .ls-sb { padding:8px 12px; }
+          .ls-sb-inner { gap:8px; }
+          .ls-score { font-size:42px; }
+          .ls-score-sep { font-size:24px; }
+          .ls-score-adj { width:20px; height:20px; font-size:12px; }
+          .ls-logo { width:36px; height:36px; font-size:11px; }
+          .ls-team-name { font-size:11px; }
+          .ls-team-sub { font-size:9px; }
+          .ls-score-block { min-width:160px; }
+          .ls-live-badge { font-size:9px; padding:2px 6px; }
+
+          /* Nav: compact */
+          .ls-nav { padding:0 8px; height:40px; }
+          .ls-nav-tab { padding:0 8px; font-size:11px; }
+          .ls-nav-btn { padding:4px 10px; font-size:11px; }
+
+          /* Left sidebar → horizontal pill strip at top */
+          .ls-left {
+            order: 1;
+            display:flex !important;
+            flex-direction:column;
+            height:auto;
+            border-right:none;
+            border-bottom:1px solid rgba(255,255,255,.07);
+            max-height:none;
+            overflow:visible;
+          }
+          .ls-left-head { padding:8px 12px 4px; }
+          .ls-search { margin:4px 0; }
+
+          /* Player list → horizontal scroll */
+          #homePlayerList,
+          #awayPlayerList { display:flex; flex-direction:row; overflow-x:auto; gap:0;
+                            padding-bottom:6px; scroll-snap-type:x mandatory; }
+          .ls-team-label  { display:none; }
+
+          .lsc-player {
+            flex-direction:column; align-items:center; justify-content:center;
+            min-width:72px; max-width:72px; padding:8px 4px;
+            text-align:center; border-left:none;
+            border-bottom:3px solid transparent;
+            scroll-snap-align:start; flex-shrink:0;
+          }
+          .lsc-player.active { border-bottom-color:var(--pc, #e63329); border-left:none; }
+          .lsc-player-num  { width:32px; height:32px; font-size:13px; }
+          .lsc-player-info { min-width:0; width:100%; }
+          .lsc-player-name { font-size:10px; white-space:nowrap; overflow:hidden;
+                             text-overflow:ellipsis; max-width:64px; }
+          .lsc-player-pos  { font-size:9px; }
+          .lsc-player-pts  { font-size:13px; }
+          .lsc-player-pts-lbl { font-size:8px; }
+
+          /* Team labels shown inline above strip */
+          .ls-team-strip-label { display:block; font-size:9px; font-weight:800;
+                                 letter-spacing:1.5px; padding:4px 12px 0; }
+
+          /* Center panel */
+          .ls-center { order:2; height:auto; overflow:visible; }
+          .ls-tabs { overflow-x:auto; }
+          .ls-tab { padding:8px 12px; font-size:10px; white-space:nowrap; }
+          .ls-tab-content { display:none; flex-direction:column; }
+          .ls-tab-content.active { display:flex; }
+
+          /* Stat panel */
+          .ls-pp-hdr { padding:10px 14px; }
+          .ls-pp-name { font-size:16px; }
+          .ls-pp-pts-big { font-size:32px; }
+          .ls-shots { padding:8px 12px; gap:5px; }
+          .ls-shot  { padding:12px 4px; font-size:12px; }
+          .ls-shot-sub { font-size:9px; }
+          .ls-counters { padding:4px 12px 10px; gap:5px; }
+          .ls-cnt { padding:8px 4px; }
+          .ls-cnt-val { font-size:20px; }
+          .ls-cnt-lbl { font-size:9px; }
+          .ls-cnt-btn { padding:4px 0; font-size:12px; }
+          .ls-fg-row  { padding:4px 12px 6px; font-size:10px; }
+          .ls-undo    { padding:8px; font-size:11px; }
+
+          /* Box score: scrollable */
+          .ls-box { padding:8px; overflow-x:auto; }
+          .ls-box table { font-size:10px; min-width:420px; }
+          .ls-box th, .ls-box td { padding:4px 5px; }
+        }
       </style>
 
       <div class="ls">
@@ -902,9 +998,15 @@ router.get('/league/:id/score/:gid', async (req, res) => {
               </div>
             </div>
             <div class="ls-team-label" style="color:${homeColor}">${esc((game.home_name||'HOME').toUpperCase())}</div>
-            ${homePlayers.length ? homePlayers.map(p=>playerRow(p,'home',homeColor,game.home_name||'Home')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+            <div id="homePlayerList">
+              <div class="ls-team-strip-label" style="color:${homeColor};display:none">${esc((game.home_name||'HOME').toUpperCase())}</div>
+              ${homePlayers.length ? homePlayers.map(p=>playerRow(p,'home',homeColor,game.home_name||'Home')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+            </div>
             <div class="ls-team-label" style="color:${awayColor};margin-top:4px">${esc((game.away_name||'AWAY').toUpperCase())}</div>
-            ${awayPlayers.length ? awayPlayers.map(p=>playerRow(p,'away',awayColor,game.away_name||'Away')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+            <div id="awayPlayerList">
+              <div class="ls-team-strip-label" style="color:${awayColor};display:none">${esc((game.away_name||'AWAY').toUpperCase())}</div>
+              ${awayPlayers.length ? awayPlayers.map(p=>playerRow(p,'away',awayColor,game.away_name||'Away')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+            </div>
           </div>
 
           <!-- CENTER -->
