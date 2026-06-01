@@ -1045,10 +1045,10 @@ router.get('/league/:id/score/:gid', async (req, res) => {
           <!-- CENTER: TABS -->
           <div class="ls-center">
             <div class="ls-tabs">
-              <div class="ls-tab active" onclick="switchCenterTab('live')">LIVE GAME</div>
-              <div class="ls-tab" onclick="switchCenterTab('box')">BOX SCORE</div>
-              <div class="ls-tab" onclick="switchCenterTab('pbp')">PLAY BY PLAY</div>
-              <div class="ls-tab" onclick="switchCenterTab('leaders')">GAME LEADERS</div>
+              <div class="ls-tab active" data-ctab="live">LIVE GAME</div>
+              <div class="ls-tab" data-ctab="box">BOX SCORE</div>
+              <div class="ls-tab" data-ctab="pbp">PLAY BY PLAY</div>
+              <div class="ls-tab" data-ctab="leaders">GAME LEADERS</div>
             </div>
 
             <!-- LIVE GAME TAB -->
@@ -1276,14 +1276,6 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         function switchTab(name) {
           document.querySelectorAll('.ls-nav-tab').forEach(t=>t.classList.remove('active'));
           document.querySelector('[data-tab="'+name+'"]').classList.add('active');
-        }
-
-        function switchCenterTab(name) {
-          document.querySelectorAll('.ls-tab').forEach(t=>t.classList.remove('active'));
-          document.querySelectorAll('.ls-tab-content').forEach(t=>t.classList.remove('active'));
-          event.target.classList.add('active');
-          var el = document.getElementById('ctab-'+name);
-          if(el) el.classList.add('active');
         }
 
         // Player search
