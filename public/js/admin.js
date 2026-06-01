@@ -36,3 +36,23 @@ document.addEventListener('DOMContentLoaded', function () {
       window.print();
     });
   }
+
+// ── DATE PICKER WIRING ────────────────────────────────────────────────────────
+(function() {
+  function wireDatePicker(dateId, timeId, hiddenId) {
+    var d = document.getElementById(dateId) || document.querySelector('[name="game_date"]');
+    var t = document.getElementById(timeId) || document.querySelector('[name="game_time"]');
+    var h = document.getElementById(hiddenId);
+    if (!d || !h) return;
+    function upd() {
+      if (!d.value) return;
+      var dt = new Date(d.value + 'T' + ((t && t.value) || '00:00'));
+      h.value = dt.toLocaleDateString('en-PH', { month:'long', day:'numeric', year:'numeric' }) +
+        ((t && t.value) ? ', ' + dt.toLocaleTimeString('en-PH', { hour:'numeric', minute:'2-digit', hour12:true }) : '');
+    }
+    d.addEventListener('change', upd);
+    if (t) t.addEventListener('change', upd);
+  }
+  wireDatePicker(null, null, 'addGameDate');
+  wireDatePicker('editGameDatePicker', 'editGameTimePicker', 'editGameDate');
+})();

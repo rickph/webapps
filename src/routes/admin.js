@@ -597,21 +597,7 @@ router.get('/league/:id/add-game', async (req, res) => {
           </div>
           <input name="date" type="hidden" id="addGameDate" />
         </div>
-        <script>
-        (function(){
-          var d = document.querySelector('[name="game_date"]');
-          var t = document.querySelector('[name="game_time"]');
-          var h = document.getElementById('addGameDate');
-          function upd(){
-            if(d.value){
-              var dt = new Date(d.value + 'T' + (t.value||'00:00'));
-              h.value = dt.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}) + (t.value ? ', ' + dt.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true}) : '');
-            } else { h.value = ''; }
-          }
-          d.addEventListener('change', upd);
-          t.addEventListener('change', upd);
-        })();
-        </script>
+        <!-- date picker wired in admin.js -->
         <div class="field-group"><label>Venue / Court</label><input name="venue" class="input" placeholder="e.g. Brgy. Court Name" /></div>
         <div class="field-group"><label>Status</label>
           <select name="status" class="input">
@@ -913,11 +899,11 @@ router.get('/league/:id/score/:gid', async (req, res) => {
 
         <!-- ── TOP NAV ────────────────────────────────────── -->
         <nav class="ls-nav">
-          <div class="ls-nav-tab active" data-tab="live" onclick="switchTab('live')">
+          <div class="ls-nav-tab active" data-tab="live">
             <span class="live-dot"></span> LIVE GAME
           </div>
-          <div class="ls-nav-tab" data-tab="box" onclick="switchTab('box')">BOX SCORE</div>
-          <div class="ls-nav-tab" data-tab="pbp" onclick="switchTab('pbp')">PLAY BY PLAY</div>
+          <div class="ls-nav-tab" data-tab="box">BOX SCORE</div>
+          <div class="ls-nav-tab" data-tab="pbp">PLAY BY PLAY</div>
           <div class="ls-nav-spacer"></div>
           <div class="ls-nav-actions">
             <button class="ls-nav-btn" id="btn-save">💾 Save</button>
@@ -1263,30 +1249,14 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         <div id="f-player-fields"></div>
       </form>
 
+      <div id="lsc-data"
+        data-home-team="${esc(game.home_name||'Home')}"
+        data-away-team="${esc(game.away_name||'Away')}"
+        data-home-color="${homeColor}"
+        data-away-color="${awayColor}"
+        data-stats="${esc(JSON.stringify(statMap))}"
+        style="display:none"></div>
       <script src="/js/livescore.js"></script>
-      <script>
-        window.LSC_DATA = {
-          homeTeam: "${esc(game.home_name||'Home')}",
-          awayTeam: "${esc(game.away_name||'Away')}",
-          homeColor: "${homeColor}",
-          awayColor: "${awayColor}",
-          stats: ${JSON.stringify(statMap)}
-        };
-
-        function switchTab(name) {
-          document.querySelectorAll('.ls-nav-tab').forEach(t=>t.classList.remove('active'));
-          document.querySelector('[data-tab="'+name+'"]').classList.add('active');
-        }
-
-        // Player search
-        document.getElementById('playerSearch').addEventListener('input', function(){
-          var q = this.value.toLowerCase();
-          document.querySelectorAll('.lsc-player').forEach(function(el){
-            var name = el.dataset.name.toLowerCase();
-            el.style.display = name.includes(q) ? '' : 'none';
-          });
-        });
-      </script>
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
@@ -1946,21 +1916,7 @@ router.get('/league/:id/edit-game/:gid', async (req, res) => {
             </div>
             <input name="date" type="hidden" id="editGameDate" value="${esc(game.date||'')}" />
           </div>
-          <script>
-          (function(){
-            var d = document.getElementById('editGameDatePicker');
-            var t = document.getElementById('editGameTimePicker');
-            var h = document.getElementById('editGameDate');
-            function upd(){
-              if(d.value){
-                var dt = new Date(d.value + 'T' + (t.value||'00:00'));
-                h.value = dt.toLocaleDateString('en-PH',{month:'long',day:'numeric',year:'numeric'}) + (t.value ? ', ' + dt.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',hour12:true}) : '');
-              }
-            }
-            d.addEventListener('change', upd);
-            t.addEventListener('change', upd);
-          })();
-          </script>
+          <!-- date picker wired in admin.js -->
           <div class="field-group"><label>Venue / Court</label>
             <input name="venue" class="input" value="${esc(game.venue||'')}" placeholder="e.g. Brgy. Court Name" /></div>
           <div class="field-group"><label>Status</label>
