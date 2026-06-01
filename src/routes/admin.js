@@ -1174,7 +1174,7 @@ router.get('/league/:id/pdf', async (req, res) => {
     res.setHeader('Content-Disposition',`attachment; filename="${league.name.replace(/[^a-z0-9]/gi,'_')}_stats.pdf"`);
     doc.pipe(res);
     doc.rect(0,0,595,80).fill('#0f0f1a');
-    doc.fillColor('#ff6b35').fontSize(22).font('Helvetica-Bold').text('PH HOOPS',40,18);
+    doc.fillColor('#f97316').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS Pilipinas',40,18);
     doc.fillColor('#ffffff').fontSize(14).text(league.name,40,44);
     doc.fillColor('#888888').fontSize(10).text(`${league.location} · ${league.season} · ${league.level}`,40,62);
     let y=100;
@@ -1328,7 +1328,7 @@ function adminPage(title, user, content) {
 </head>
 <body class="dark-bg">
 <nav class="topnav">
-  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none">🏀 <span class="brand-text">PH HOOPS</span></a></div>
+  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px"><img src="/icons/icon-192.png?v=3" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
   <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
   <div class="nav-actions">
     <span style="font-size:13px;color:#888">${esc(user.name)}</span>

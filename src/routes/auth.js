@@ -8,7 +8,12 @@ const { esc, page }     = require('../helpers');
 // ── GET /login ────────────────────────────────────────────────────────────────
 router.get('/login', (req, res) => {
   res.send(page('Login | PH Hoops', authCard(`
-    <div class="auth-logo">🏀 PH HOOPS</div>
+    <div class="auth-logo" style="text-align:center;margin-bottom:8px">
+      <img src="/icons/icon-192.png?v=3" alt="HoopStats Pilipinas"
+           style="width:72px;height:72px;border-radius:16px;object-fit:contain;display:block;margin:0 auto 8px">
+      <div style="font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:1.5px;background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">HOOPSTATS</div>
+      <div style="font-size:10px;color:#f97316;letter-spacing:3px;font-weight:700;margin-top:2px">PILIPINAS</div>
+    </div>
     <h2>Commissioner Login</h2>
     <p class="auth-sub">Manage your basketball league</p>
     <form action="/login" method="POST">
@@ -32,7 +37,12 @@ router.post('/login', async (req, res) => {
     );
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.send(page('Login | PH Hoops', authCard(`
-        <div class="auth-logo">🏀 PH HOOPS</div>
+        <div class="auth-logo" style="text-align:center;margin-bottom:8px">
+      <img src="/icons/icon-192.png?v=3" alt="HoopStats Pilipinas"
+           style="width:72px;height:72px;border-radius:16px;object-fit:contain;display:block;margin:0 auto 8px">
+      <div style="font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:1.5px;background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">HOOPSTATS</div>
+      <div style="font-size:10px;color:#f97316;letter-spacing:3px;font-weight:700;margin-top:2px">PILIPINAS</div>
+    </div>
         <h2>Commissioner Login</h2>
         <div class="alert-error">❌ Invalid email or password.</div>
         <form action="/login" method="POST">
@@ -63,7 +73,12 @@ router.get('/register', (req, res) => {
   };
   const errMsg = errMap[req.query.error] || '';
   res.send(page('Register | PH Hoops', authCard(`
-    <div class="auth-logo">🏀 PH HOOPS</div>
+    <div class="auth-logo" style="text-align:center;margin-bottom:8px">
+      <img src="/icons/icon-192.png?v=3" alt="HoopStats Pilipinas"
+           style="width:72px;height:72px;border-radius:16px;object-fit:contain;display:block;margin:0 auto 8px">
+      <div style="font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:1.5px;background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">HOOPSTATS</div>
+      <div style="font-size:10px;color:#f97316;letter-spacing:3px;font-weight:700;margin-top:2px">PILIPINAS</div>
+    </div>
     <h2>Create Account</h2>
     <p class="auth-sub">Start managing your league for free</p>
     ${errMsg ? `<div class="alert-error">${errMsg}</div>` : ''}
