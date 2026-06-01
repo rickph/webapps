@@ -44,7 +44,7 @@ const page = (title, body) => `<!DOCTYPE html>
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title}</title>
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/main.css?v31">
 </head>
 <body class="dark-bg">${body}<script>
 if ('serviceWorker' in navigator) {

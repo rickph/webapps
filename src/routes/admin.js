@@ -335,7 +335,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <script src="/js/admin.js"></script>
+      <script src="/js/admin.js?v31"></script>
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
@@ -1051,7 +1051,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         data-away-color="${awayColor}"
         style="display:none"></div>
 
-      <script src="/js/livescore.js"></script>
+      <script src="/js/livescore.js?v31"></script>
     `));
   } catch (err) { console.error('Live score error:', err); res.status(500).send('Server error'); }
 });
@@ -1260,7 +1260,7 @@ router.get('/league/:id/bracket', async (req, res) => {
         <div class="bracket-info">Single-elimination — top ${teams.slice(0,8).length} teams by standings.</div>
         ${teams.length >= 2 ? bracketHTML : '<div class="empty-state">Need at least 2 teams.</div>'}
       </div>
-      <script src="/js/admin.js"></script>
+      <script src="/js/admin.js?v31"></script>
     `));
   } catch (err) { console.error(err); res.status(500).send('Error'); }
 });
@@ -1336,7 +1336,7 @@ function adminPage(title, user, content) {
   </div>
 </nav>
 <div class="admin-wrap">${content}</div>
-<script src="/js/admin.js"></script>
+<script src="/js/admin.js?v31"></script>
 </body>
 </html>`;
 }
