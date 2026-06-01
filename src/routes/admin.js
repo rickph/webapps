@@ -837,101 +837,100 @@ router.get('/league/:id/score/:gid', async (req, res) => {
 
         /* ── MOBILE (600px) ── */
         @media(max-width:600px){
-          /* Stack layout vertically */
-          .ls { overflow-y:auto; height:auto; min-height:100vh; }
-          .ls-main { display:flex; flex-direction:column; overflow:visible; height:auto; }
+          /* Full page scrolls naturally */
+          body { overflow:auto !important; }
+          .ls  { height:auto; min-height:100vh; overflow:visible; }
+          .ls-main { display:flex; flex-direction:column; overflow:visible; }
 
-          /* Scoreboard: compact */
-          .ls-sb { padding:8px 12px; }
-          .ls-sb-inner { gap:8px; }
-          .ls-score { font-size:42px; }
-          .ls-score-sep { font-size:24px; }
-          .ls-score-adj { width:20px; height:20px; font-size:12px; }
-          .ls-logo { width:36px; height:36px; font-size:11px; }
-          .ls-team-name { font-size:11px; }
-          .ls-team-sub { font-size:9px; }
-          .ls-score-block { min-width:160px; }
-          .ls-live-badge { font-size:9px; padding:2px 6px; }
-
-          /* Nav: compact */
+          /* Compact nav */
           .ls-nav { padding:0 8px; height:40px; }
           .ls-nav-tab { padding:0 8px; font-size:11px; }
           .ls-nav-btn { padding:4px 10px; font-size:11px; }
 
-          /* Left sidebar → horizontal pill strip at top */
+          /* Compact scoreboard */
+          .ls-sb { padding:8px 12px; }
+          .ls-sb-inner { gap:6px; }
+          .ls-score { font-size:40px; }
+          .ls-score-sep { font-size:22px; }
+          .ls-score-adj { width:20px; height:20px; font-size:12px; }
+          .ls-logo { width:34px; height:34px; font-size:11px; }
+          .ls-team-name { font-size:11px; }
+          .ls-team-sub  { font-size:9px; }
+          .ls-score-block { min-width:150px; }
+          .ls-live-badge { font-size:9px; padding:2px 6px; }
+
+          /* LEFT: search bar only — players hidden until search */
           .ls-left {
-            order: 1;
+            order:1;
             display:flex !important;
             flex-direction:column;
             height:auto;
             border-right:none;
-            border-bottom:1px solid rgba(255,255,255,.07);
-            max-height:none;
+            border-bottom:1px solid rgba(255,255,255,.08);
             overflow:visible;
           }
-          .ls-left-head { padding:8px 12px 4px; }
+          .ls-left-head { padding:8px 12px 6px; }
           .ls-search { margin:4px 0; }
 
-          /* Player list → horizontal scroll */
+          /* Team labels & player rows HIDDEN by default on mobile */
+          .ls-team-label { display:none; }
           #homePlayerList,
-          #awayPlayerList { display:flex; flex-direction:row; overflow-x:auto; gap:0;
-                            padding-bottom:6px; scroll-snap-type:x mandatory; }
-          .ls-team-label  { display:none; }
+          #awayPlayerList { display:none; }
+
+          /* Shown when search active (toggled by JS) */
+          #homePlayerList.mobile-visible,
+          #awayPlayerList.mobile-visible {
+            display:flex;
+            flex-direction:row;
+            overflow-x:auto;
+            padding-bottom:6px;
+            scroll-snap-type:x mandatory;
+          }
 
           .lsc-player {
             flex-direction:column; align-items:center; justify-content:center;
-            min-width:72px; max-width:72px; padding:8px 4px;
+            min-width:68px; max-width:68px; padding:8px 4px;
             text-align:center; border-left:none;
             border-bottom:3px solid transparent;
             scroll-snap-align:start; flex-shrink:0;
           }
-          .lsc-player.active { border-bottom-color:var(--pc, #e63329); border-left:none; }
-          .lsc-player-num  { width:32px; height:32px; font-size:13px; }
-          .lsc-player-info { min-width:0; width:100%; }
+          .lsc-player.active { border-bottom-color:var(--pc,#e63329); border-left:none; }
+          .lsc-player-num  { width:30px; height:30px; font-size:12px; }
           .lsc-player-name { font-size:10px; white-space:nowrap; overflow:hidden;
-                             text-overflow:ellipsis; max-width:64px; }
+                             text-overflow:ellipsis; max-width:60px; }
           .lsc-player-pos  { font-size:9px; }
           .lsc-player-pts  { font-size:13px; }
           .lsc-player-pts-lbl { font-size:8px; }
 
-          /* Team labels shown inline above strip */
-          .ls-team-strip-label { display:block; font-size:9px; font-weight:800;
-                                 letter-spacing:1.5px; padding:4px 12px 0; }
-
-          /* Center panel */
-          .ls-center { order:2; height:auto; overflow:visible; display:block; }
-          .ls-tabs { overflow-x:auto; }
-          .ls-tab { padding:8px 12px; font-size:10px; white-space:nowrap; }
-          .ls-tab-content { display:none; flex-direction:column; }
-          .ls-tab-content.active { display:flex; }
+          /* Center: natural height, no overflow clipping */
+          .ls-center { order:2; overflow:visible; display:block; height:auto; }
+          .ls-tabs   { overflow-x:auto; flex-shrink:0; }
+          .ls-tab    { padding:8px 12px; font-size:10px; white-space:nowrap; }
+          .ls-tab-content         { display:none; height:auto; overflow:visible; flex:none; }
+          .ls-tab-content.active  { display:block; }
 
           /* Stat panel */
-          .ls-pp-hdr { padding:10px 14px; }
-          .ls-pp-name { font-size:16px; }
-          .ls-pp-pts-big { font-size:32px; }
-          .ls-shots { padding:8px 12px; gap:5px; }
-          .ls-shot  { padding:12px 4px; font-size:12px; }
+          .ls-pp-hdr   { padding:10px 14px; }
+          .ls-pp-name  { font-size:16px; }
+          .ls-pp-pts-big { font-size:30px; }
+          .ls-shots    { padding:8px 12px; gap:5px; }
+          .ls-shot     { padding:11px 4px; font-size:12px; }
           .ls-shot-sub { font-size:9px; }
           .ls-counters { padding:4px 12px 10px; gap:5px; }
-          .ls-cnt { padding:8px 4px; }
-          .ls-cnt-val { font-size:20px; }
-          .ls-cnt-lbl { font-size:9px; }
-          .ls-cnt-btn { padding:4px 0; font-size:12px; }
-          .ls-fg-row  { padding:4px 12px 6px; font-size:10px; }
-          .ls-undo    { padding:8px; font-size:11px; }
+          .ls-cnt      { padding:8px 4px; }
+          .ls-cnt-val  { font-size:20px; }
+          .ls-cnt-lbl  { font-size:9px; }
+          .ls-cnt-btn  { padding:4px 0; font-size:12px; }
+          .ls-fg-row   { padding:4px 12px 6px; font-size:10px; }
+          .ls-undo     { padding:8px; font-size:11px; }
 
-          /* Box score: scrollable */
-          .ls-box { padding:8px; overflow-x:auto; overflow-y:visible; }
+          /* Box/PBP/Leaders: natural height, horizontal scroll for table */
+          .ls-box { padding:8px; overflow-x:auto; }
           .ls-box table { font-size:10px; min-width:420px; }
           .ls-box th, .ls-box td { padding:4px 5px; }
-          #ctab-box { overflow-y:auto; max-height:60vh; display:none; }
-          #ctab-box.active { display:block; }
-          #ctab-live { overflow-y:auto; max-height:70vh; display:none; }
-          #ctab-live.active { display:block; }
-          #ctab-pbp { overflow-y:auto; max-height:60vh; display:none; }
-          #ctab-pbp.active { display:block; }
-          #ctab-leaders { overflow-y:auto; max-height:60vh; display:none; }
-          #ctab-leaders.active { display:block; }
+
+          /* Hide right panel */
+          .ls-right { display:none !important; }
         }
       </style>
 
