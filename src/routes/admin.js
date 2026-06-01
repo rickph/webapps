@@ -750,7 +750,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.07); background:#0d1225; flex-shrink:0; }
         .ls-tab { padding:10px 16px; font-size:11px; font-weight:700; letter-spacing:.5px; color:rgba(255,255,255,.35); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
         .ls-tab.active { color:#fff; border-bottom-color:#e63329; background:rgba(255,255,255,.03); }
-        .ls-tab-content { flex:1; overflow-y:auto; display:none; flex-direction:column; }
+        .ls-tab-content { flex:1; overflow-y:auto; overflow-x:hidden; display:none; flex-direction:column; min-height:0; }
         .ls-tab-content.active { display:flex; }
         .ls-pp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:rgba(255,255,255,.2); gap:10px; font-size:13px; flex:1; }
         .ls-pp-hdr { background:#131d38; padding:14px 20px 12px; border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
@@ -779,7 +779,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-cnt-btn.plus:hover  { background:rgba(34,197,94,.3); }
         .ls-undo { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; color:rgba(255,255,255,.3); font-size:12px; font-weight:700; cursor:pointer; border-top:1px solid rgba(255,255,255,.06); flex-shrink:0; transition:color .15s; }
         .ls-undo:hover { color:rgba(255,255,255,.6); }
-        .ls-box { padding:12px 16px; overflow-y:auto; }
+        .ls-box { padding:12px 16px; overflow-x:auto; }
         .ls-box table { width:100%; border-collapse:collapse; font-size:11px; }
         .ls-box th { padding:5px 6px; text-align:center; color:rgba(255,255,255,.35); font-weight:700; letter-spacing:.5px; font-size:10px; border-bottom:1px solid rgba(255,255,255,.08); }
         .ls-box th:first-child { text-align:left; }
@@ -899,7 +899,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
                                  letter-spacing:1.5px; padding:4px 12px 0; }
 
           /* Center panel */
-          .ls-center { order:2; height:auto; overflow:visible; }
+          .ls-center { order:2; height:auto; overflow:visible; display:block; }
           .ls-tabs { overflow-x:auto; }
           .ls-tab { padding:8px 12px; font-size:10px; white-space:nowrap; }
           .ls-tab-content { display:none; flex-direction:column; }
@@ -921,9 +921,17 @@ router.get('/league/:id/score/:gid', async (req, res) => {
           .ls-undo    { padding:8px; font-size:11px; }
 
           /* Box score: scrollable */
-          .ls-box { padding:8px; overflow-x:auto; }
+          .ls-box { padding:8px; overflow-x:auto; overflow-y:visible; }
           .ls-box table { font-size:10px; min-width:420px; }
           .ls-box th, .ls-box td { padding:4px 5px; }
+          #ctab-box { overflow-y:auto; max-height:60vh; display:none; }
+          #ctab-box.active { display:block; }
+          #ctab-live { overflow-y:auto; max-height:70vh; display:none; }
+          #ctab-live.active { display:block; }
+          #ctab-pbp { overflow-y:auto; max-height:60vh; display:none; }
+          #ctab-pbp.active { display:block; }
+          #ctab-leaders { overflow-y:auto; max-height:60vh; display:none; }
+          #ctab-leaders.active { display:block; }
         }
       </style>
 
