@@ -278,16 +278,40 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // ── PLAYER SEARCH ────────────────────────────────────────────────────────────
+  // ── PLAYER SEARCH (shows player list on mobile when typing) ─────────────────
   var si = $('playerSearch');
   if (si) {
+    function isMobile() { return window.innerWidth <= 600; }
+
+    function showMobilePlayers(show) {
+      var home = $('homePlayerList');
+      var away = $('awayPlayerList');
+      if (!isMobile()) return;
+      if (home) home.classList.toggle('mobile-visible', show);
+      if (away) away.classList.toggle('mobile-visible', show);
+    }
+
+    si.addEventListener('focus', function() {
+      showMobilePlayers(true);
+    });
+
+    si.addEventListener('blur', function() {
+      // Delay so player tap registers before hiding
+      setTimeout(function() {
+        if (!si.value.trim()) showMobilePlayers(false);
+      }, 300);
+    });
+
     si.addEventListener('input', function() {
       var q = this.value.toLowerCase().trim();
+      showMobilePlayers(true);
       document.querySelectorAll('.lsc-player').forEach(function(el) {
         var n = (el.getAttribute('data-name')   ||'').toLowerCase();
         var j = (el.getAttribute('data-jersey') ||'').toLowerCase();
         el.style.display = (!q || n.includes(q) || j.includes(q)) ? '' : 'none';
       });
+      // If search cleared, hide on mobile
+      if (!q) showMobilePlayers(false);
     });
   }
 
