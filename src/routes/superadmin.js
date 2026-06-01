@@ -518,11 +518,7 @@ function superPage(title, user, content, req = {}) {
   ⚡ SUPER ADMIN MODE — You have full access to all data
 </div>
 <div class="admin-wrap">${content}</div>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-</script>
+<!-- SW registered in /js/admin.js -->
 </body>
 </html>`;
 }

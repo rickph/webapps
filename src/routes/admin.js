@@ -649,59 +649,57 @@ router.get('/league/:id/score/:gid', async (req, res) => {
       WHERE g.id=$1`, [req.params.gid]);
     if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
 
-    const homePlayers = game.htid ? await db.query(
-      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
-    const awayPlayers = game.atid ? await db.query(
-      'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
-
+    const homePlayers = game.htid ? await db.query('SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
+    const awayPlayers = game.atid ? await db.query('SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
     const existingStats = await db.query('SELECT * FROM game_stats WHERE game_id=$1', [game.id]);
     const statMap = {};
     existingStats.forEach(s => { statMap[s.player_id] = s; });
 
-    const allPlayers = [...homePlayers, ...awayPlayers];
-    const allPlayerIds = allPlayers.map(p => p.id).join(',');
-
-    const homeColor = game.home_color || '#e63946';
+    const allPlayerIds = [...homePlayers, ...awayPlayers].map(p => p.id).join(',');
+    const homeColor = game.home_color || '#e63329';
     const awayColor = game.away_color || '#457b9d';
 
-    // Build player list sidebar
-    const playerListHTML = `
-      <div class="lsc-section-label" style="color:${homeColor}">${esc(game.home_name||'Home')}</div>
-      ${homePlayers.map(p => {
-        const s = statMap[p.id] || {};
-        return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos}" data-jersey="${p.jersey||''}" data-team="${esc(game.home_name||'Home')}" data-color="${homeColor}"
-          data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}" data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}" data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
-          <span class="lsc-player-pos">${p.pos}</span>
-          <span class="lsc-player-name">${esc(p.name)}</span>
-          <span class="lsc-player-pts">${s.pts||0}</span>
-        </div>`;
-      }).join('')}
-      <div class="lsc-section-label" style="color:${awayColor};margin-top:12px">${esc(game.away_name||'Away')}</div>
-      ${awayPlayers.map(p => {
-        const s = statMap[p.id] || {};
-        return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos}" data-jersey="${p.jersey||''}" data-team="${esc(game.away_name||'Away')}" data-color="${awayColor}"
-          data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}" data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}" data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
-          <span class="lsc-player-pos">${p.pos}</span>
-          <span class="lsc-player-name">${esc(p.name)}</span>
-          <span class="lsc-player-pts">${s.pts||0}</span>
-        </div>`;
-      }).join('')}
-    `;
-
+    // Helper to build player row HTML — used for both sides
+    function playerRow(p, side, color, teamName) {
+      const s = statMap[p.id] || {};
+      // Compute pts from raw shot stats (game_stats has fg2m/fg3m/ftm, not pts)
+      const pts = ((s.fg2m||0)*2) + ((s.fg3m||0)*3) + (s.ftm||0);
+      return `<div class="lsc-player"
+        data-pid="${p.id}"
+        data-name="${esc(p.name)}"
+        data-pos="${p.pos||''}"
+        data-jersey="${p.jersey||'?'}"
+        data-team="${esc(teamName)}"
+        data-color="${color}"
+        data-side="${side}"
+        data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}"
+        data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}"
+        data-ftm="${s.ftm||0}"  data-fta="${s.fta||0}"
+        data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}"
+        data-ast="${s.ast||0}"  data-stl="${s.stl||0}"
+        data-blk="${s.blk||0}"  data-to="${s.to_val||0}"
+        data-foul="${s.foul||0}">
+        <div class="lsc-player-num" style="background:${color}99">${p.jersey||'?'}</div>
+        <div class="lsc-player-info">
+          <div class="lsc-player-name">${esc(p.name)}</div>
+          <div class="lsc-player-pos">${p.pos||''}</div>
+        </div>
+        <div>
+          <div class="lsc-player-pts" id="row-pts-${p.id}">${pts}</div>
+          <div class="lsc-player-pts-lbl">PTS</div>
+        </div>
+      </div>`;
+    }
 
     res.send(adminPage('Live Score', req.user, `
       <style>
         body { overflow:hidden; margin:0; }
         *{ box-sizing:border-box; }
-
-        /* ── ROOT LAYOUT ─── */
         .ls { display:flex; flex-direction:column; height:100vh; margin:-24px; background:#0b0f1e; color:#e8eaf0; font-family:'Outfit',sans-serif; }
-
-        /* ── TOP NAV ─── */
         .ls-nav { display:flex; align-items:center; gap:0; background:#0d1225; border-bottom:1px solid rgba(255,255,255,.07); height:44px; flex-shrink:0; padding:0 12px; }
         .ls-nav-tab { padding:0 16px; height:100%; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.5px; color:rgba(255,255,255,.4); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
         .ls-nav-tab.active { color:#fff; border-bottom-color:#e63329; }
-        .ls-nav-tab .live-dot { width:7px; height:7px; border-radius:50%; background:#e63329; animation:pulse 1.5s infinite; flex-shrink:0; }
+        .live-dot { width:7px; height:7px; border-radius:50%; background:#e63329; animation:pulse 1.5s infinite; flex-shrink:0; display:inline-block; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .ls-nav-spacer { flex:1; }
         .ls-nav-actions { display:flex; gap:8px; }
@@ -709,36 +707,29 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-nav-btn:hover { background:rgba(255,255,255,.12); }
         .ls-nav-btn.end { background:#e63329; border-color:#e63329; color:#fff; }
         .ls-nav-btn.end:hover { background:#c72820; }
-
-        /* ── SCOREBOARD ─── */
         .ls-sb { background:linear-gradient(180deg,#1b2748 0%,#111930 100%); border-bottom:1px solid rgba(255,255,255,.08); padding:10px 20px; flex-shrink:0; }
         .ls-sb-inner { display:flex; align-items:center; justify-content:space-between; max-width:900px; margin:0 auto; gap:12px; }
         .ls-team-block { flex:1; display:flex; align-items:center; gap:10px; }
         .ls-team-block.away { flex-direction:row-reverse; text-align:right; }
         .ls-logo { width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Russo One',sans-serif; font-size:14px; font-weight:900; color:#fff; flex-shrink:0; }
-        .ls-team-info { flex:1; }
-        .ls-team-name { font-size:13px; font-weight:800; color:#fff; line-height:1.2; text-transform:uppercase; letter-spacing:.5px; }
+        .ls-team-name { font-size:13px; font-weight:800; color:#fff; text-transform:uppercase; letter-spacing:.5px; }
         .ls-team-sub { font-size:10px; color:rgba(255,255,255,.35); margin-top:2px; display:flex; align-items:center; gap:8px; }
         .ls-team-sub.right { justify-content:flex-end; }
         .ls-score-block { text-align:center; flex-shrink:0; min-width:220px; }
-        .ls-score-nums { display:flex; align-items:center; justify-content:center; gap:14px; }
+        .ls-score-nums { display:flex; align-items:center; justify-content:center; gap:10px; }
         .ls-score { font-size:62px; font-weight:900; color:#fff; line-height:1; font-family:'Russo One',sans-serif; }
         .ls-score-adj-col { display:flex; flex-direction:column; gap:4px; }
-        .ls-score-adj { width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; line-height:1; }
-        .ls-score-adj:hover { background:rgba(255,255,255,.18); }
-        .ls-score-sep { font-size:36px; font-weight:900; color:rgba(255,255,255,.2); line-height:1; }
-        .ls-qtr-block { display:flex; flex-direction:column; align-items:center; gap:3px; }
+        .ls-score-adj { width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+        .ls-score-adj:hover { background:rgba(255,255,255,.22); }
+        .ls-score-sep { font-size:36px; font-weight:900; color:rgba(255,255,255,.2); }
+        .ls-qtr-block { display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:4px; }
         .ls-qtr-label { font-size:10px; color:rgba(255,255,255,.4); font-weight:700; letter-spacing:1px; }
-        .ls-qtr-val { font-size:22px; font-weight:900; color:#f7c948; line-height:1; }
-        .ls-qtr-ctrl { display:flex; gap:4px; }
-        .ls-qtr-btn { width:20px; height:20px; border-radius:4px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .ls-qtr-val { font-size:20px; font-weight:900; color:#f7c948; }
+        .ls-qtr-ctrl { display:flex; gap:4px; align-items:center; }
+        .ls-qtr-btn { width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .ls-qtr-btn:hover { background:rgba(255,255,255,.18); }
         .ls-live-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(230,51,41,.2); border:1px solid rgba(230,51,41,.4); color:#ff6b6b; font-size:10px; font-weight:800; padding:2px 8px; border-radius:20px; letter-spacing:1px; margin-top:4px; }
-
-        /* ── MAIN 3-COL ─── */
-        .ls-main { display:grid; grid-template-columns:240px 1fr 260px; flex:1; overflow:hidden; gap:0; }
-
-        /* ── LEFT SIDEBAR: PLAYER LIST ─── */
+        .ls-main { display:grid; grid-template-columns:240px 1fr 260px; flex:1; overflow:hidden; }
         .ls-left { background:#0d1225; border-right:1px solid rgba(255,255,255,.06); overflow-y:auto; display:flex; flex-direction:column; }
         .ls-left-head { padding:10px 14px 6px; flex-shrink:0; }
         .ls-left-title { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.35); }
@@ -746,54 +737,38 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-search input { background:none; border:none; outline:none; color:#e8eaf0; font-size:12px; width:100%; font-family:'Outfit',sans-serif; }
         .ls-search input::placeholder { color:rgba(255,255,255,.25); }
         .ls-team-label { font-size:10px; font-weight:800; letter-spacing:1.5px; padding:8px 14px 4px; }
-        .lsc-player { display:flex; align-items:center; gap:8px; padding:8px 14px; cursor:pointer; transition:background .12s; border-left:3px solid transparent; position:relative; }
+        .lsc-player { display:flex; align-items:center; gap:8px; padding:8px 14px; cursor:pointer; transition:background .12s; border-left:3px solid transparent; }
         .lsc-player:hover { background:rgba(255,255,255,.04); }
-        .lsc-player.active { background:rgba(255,255,255,.07); }
+        .lsc-player.active { background:rgba(255,255,255,.07); border-left-color:var(--pc,#e63329); }
         .lsc-player-num { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; flex-shrink:0; }
         .lsc-player-info { flex:1; min-width:0; }
         .lsc-player-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .lsc-player-pos  { font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
-        .lsc-player-pts  { font-size:14px; font-weight:800; color:#f97316; flex-shrink:0; min-width:24px; text-align:right; }
-        .lsc-player-pts-lbl { font-size:9px; color:rgba(255,255,255,.3); text-align:right; }
-        .ls-add-player { margin:8px 14px; padding:9px; border:1px dashed rgba(255,255,255,.15); border-radius:8px; color:rgba(255,255,255,.35); font-size:12px; font-weight:700; text-align:center; cursor:default; }
-
-        /* ── CENTER PANEL ─── */
+        .lsc-player-pos { font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
+        .lsc-player-pts { font-size:14px; font-weight:800; color:#f97316; }
+        .lsc-player-pts-lbl { font-size:9px; color:rgba(255,255,255,.3); }
         .ls-center { display:flex; flex-direction:column; overflow:hidden; background:#0b0f1e; }
         .ls-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.07); background:#0d1225; flex-shrink:0; }
         .ls-tab { padding:10px 16px; font-size:11px; font-weight:700; letter-spacing:.5px; color:rgba(255,255,255,.35); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
         .ls-tab.active { color:#fff; border-bottom-color:#e63329; background:rgba(255,255,255,.03); }
-
-        /* LIVE GAME TAB */
-        .ls-tab-content { flex:1; overflow-y:auto; display:none; }
-        .ls-tab-content.active { display:block; }
-
-        /* Player stat panel */
-        .ls-pp { padding:0; }
-        .ls-pp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:rgba(255,255,255,.2); gap:10px; font-size:13px; }
-        .ls-pp-hdr { background:#131d38; padding:14px 20px 12px; border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:center; justify-content:space-between; }
+        .ls-tab-content { flex:1; overflow-y:auto; display:none; flex-direction:column; }
+        .ls-tab-content.active { display:flex; }
+        .ls-pp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:rgba(255,255,255,.2); gap:10px; font-size:13px; flex:1; }
+        .ls-pp-hdr { background:#131d38; padding:14px 20px 12px; border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
         .ls-pp-name { font-size:20px; font-weight:900; color:#fff; font-family:'Russo One',sans-serif; }
         .ls-pp-role { font-size:12px; color:rgba(255,255,255,.4); margin-top:2px; }
         .ls-pp-pts-big { font-size:40px; font-weight:900; color:#f97316; line-height:1; }
         .ls-pp-pts-lbl { font-size:10px; color:rgba(255,255,255,.3); text-align:right; letter-spacing:1px; }
-        .ls-rec-label { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.25); padding:8px 20px 4px; }
-
-        /* Shot buttons grid */
-        .ls-shots { padding:8px 20px 6px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; }
+        .ls-rec-label { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.25); padding:8px 20px 4px; flex-shrink:0; }
+        .ls-shots { padding:8px 20px 6px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; flex-shrink:0; }
         .ls-shot { padding:14px 8px; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; transition:all .12s; font-family:'Outfit',sans-serif; }
-        .ls-shot:hover { transform:scale(1.03); }
         .ls-shot:active { transform:scale(.97); }
-        .ls-shot-icon { font-size:18px; }
-        .ls-shot.make-2  { background:#e63329; color:#fff; }
-        .ls-shot.make-ft { background:#e63329; color:#fff; }
-        .ls-shot.make-3  { background:#2563eb; color:#fff; }
-        .ls-shot.miss    { background:rgba(255,255,255,.07); color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.1); }
-        .ls-shot.miss:hover { background:rgba(255,255,255,.12); }
+        .ls-shot.make-2,.ls-shot.make-ft { background:#e63329; color:#fff; }
+        .ls-shot.make-3 { background:#2563eb; color:#fff; }
+        .ls-shot.miss { background:rgba(255,255,255,.07); color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.1); }
         .ls-shot-sub { font-size:10px; font-weight:700; letter-spacing:.5px; opacity:.8; }
-
-        /* Stat counter grid */
-        .ls-counters { padding:6px 20px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; }
+        .ls-fg-row { font-size:11px; color:rgba(255,255,255,.4); text-align:center; padding:4px 20px 8px; flex-shrink:0; }
+        .ls-counters { padding:6px 20px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; flex-shrink:0; }
         .ls-cnt { background:#111829; border:1px solid rgba(255,255,255,.08); border-radius:9px; padding:10px 8px; text-align:center; }
-        .ls-cnt.foul-box { border-color:rgba(255,71,87,.25); }
         .ls-cnt-lbl { font-size:10px; font-weight:800; letter-spacing:1px; color:rgba(255,255,255,.35); margin-bottom:5px; }
         .ls-cnt-val { font-size:24px; font-weight:900; color:#fff; line-height:1; margin-bottom:6px; }
         .ls-cnt-btns { display:flex; gap:5px; justify-content:center; }
@@ -802,36 +777,24 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-cnt-btn.minus:hover { background:rgba(255,71,87,.3); }
         .ls-cnt-btn.plus  { background:rgba(34,197,94,.15); color:#22c55e; }
         .ls-cnt-btn.plus:hover  { background:rgba(34,197,94,.3); }
-
-        .ls-undo { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; color:rgba(255,255,255,.3); font-size:12px; font-weight:700; cursor:pointer; border-top:1px solid rgba(255,255,255,.06); transition:color .15s; }
+        .ls-undo { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; color:rgba(255,255,255,.3); font-size:12px; font-weight:700; cursor:pointer; border-top:1px solid rgba(255,255,255,.06); flex-shrink:0; transition:color .15s; }
         .ls-undo:hover { color:rgba(255,255,255,.6); }
-
-        .ls-fg-row { padding:4px 20px 8px; font-size:11px; color:rgba(255,255,255,.3); text-align:center; background:rgba(255,255,255,.02); margin:0 20px 6px; border-radius:6px; }
-
-        /* BOX SCORE TAB */
-        .ls-box { padding:12px 16px; }
+        .ls-box { padding:12px 16px; overflow-y:auto; }
         .ls-box table { width:100%; border-collapse:collapse; font-size:11px; }
         .ls-box th { padding:5px 6px; text-align:center; color:rgba(255,255,255,.35); font-weight:700; letter-spacing:.5px; font-size:10px; border-bottom:1px solid rgba(255,255,255,.08); }
         .ls-box th:first-child { text-align:left; }
         .ls-box td { padding:6px; text-align:center; border-bottom:1px solid rgba(255,255,255,.04); color:rgba(255,255,255,.8); }
-        .ls-box td:first-child { text-align:left; font-weight:700; color:#e8eaf0; }
+        .ls-box td:first-child { text-align:left; font-weight:600; }
         .ls-box .pts-cell { color:#f97316; font-weight:800; }
-        .ls-box-team-hdr { font-size:10px; font-weight:800; letter-spacing:2px; padding:10px 6px 5px; color:rgba(255,255,255,.35); }
-
-        /* PLAY BY PLAY TAB */
-        .ls-pbp { padding:0; }
-        .ls-pbp-filter { display:flex; gap:5px; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,.06); }
-        .ls-pbp-btn { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,.12); background:transparent; color:rgba(255,255,255,.4); font-family:'Outfit',sans-serif; transition:all .15s; }
-        .ls-pbp-btn.active { background:rgba(255,255,255,.1); color:#fff; border-color:rgba(255,255,255,.25); }
-        .ls-pbp-entry { display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,.04); }
-        .ls-pbp-time { font-size:11px; color:rgba(255,255,255,.3); font-weight:700; min-width:36px; }
+        .ls-box-team-hdr { font-size:10px; font-weight:800; letter-spacing:2px; padding:10px 6px 5px; }
+        .ls-pbp { display:flex; flex-direction:column; overflow:hidden; }
+        .ls-pbp-entry { display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,.04); flex-shrink:0; }
+        .ls-pbp-time { font-size:11px; color:rgba(255,255,255,.3); font-weight:700; min-width:28px; }
         .ls-pbp-num { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; flex-shrink:0; }
         .ls-pbp-text { flex:1; font-size:12px; color:rgba(255,255,255,.7); }
         .ls-pbp-badge { font-size:11px; font-weight:800; padding:2px 8px; border-radius:20px; flex-shrink:0; }
         .ls-pbp-badge.pos { background:rgba(34,197,94,.15); color:#22c55e; }
         .ls-pbp-badge.neg { background:rgba(255,71,87,.12); color:#ff4757; }
-
-        /* GAME LEADERS */
         .ls-leaders { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; }
         .ls-leader-card { background:#111829; border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
         .ls-leader-avatar { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#fff; flex-shrink:0; }
@@ -840,19 +803,13 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-leader-team { font-size:10px; color:rgba(255,255,255,.3); }
         .ls-leader-stat { font-size:22px; font-weight:900; color:#f97316; line-height:1; }
         .ls-leader-stat-lbl { font-size:9px; color:rgba(255,255,255,.3); }
-
-        /* ── RIGHT PANEL ─── */
         .ls-right { background:#0d1225; border-left:1px solid rgba(255,255,255,.06); overflow-y:auto; display:flex; flex-direction:column; }
         .ls-right-hdr { padding:12px 14px 8px; border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0; }
-        .ls-right-title { font-size:12px; font-weight:800; color:#e8eaf0; }
+        .ls-right-title { font-size:12px; font-weight:800; }
         .ls-mini-sb { background:#131d38; border-radius:9px; margin:10px 12px; padding:10px 12px; }
         .ls-mini-row { display:flex; align-items:center; justify-content:space-between; }
         .ls-mini-score { font-size:24px; font-weight:900; color:#fff; }
-        .ls-mini-team { font-size:10px; color:rgba(255,255,255,.4); font-weight:700; }
         .ls-mini-badge { font-size:9px; background:rgba(230,51,41,.2); color:#ff6b6b; border:1px solid rgba(230,51,41,.3); padding:2px 7px; border-radius:20px; font-weight:800; letter-spacing:1px; }
-        .ls-mini-divider { text-align:center; color:rgba(255,255,255,.2); font-size:11px; padding:4px 0; }
-
-        /* Right: current player mini panel */
         .ls-rp { padding:10px 12px; }
         .ls-rp-hdr { background:#111829; border-radius:9px; padding:10px 12px; margin-bottom:8px; }
         .ls-rp-name { font-size:14px; font-weight:800; color:#fff; }
@@ -863,47 +820,22 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         .ls-rp-stat { background:#0d1225; border-radius:6px; padding:4px 8px; text-align:center; flex:1; min-width:40px; }
         .ls-rp-stat-v { font-size:14px; font-weight:800; color:#e8eaf0; }
         .ls-rp-stat-l { font-size:9px; color:rgba(255,255,255,.3); }
-
-        /* Mini shot buttons for right panel */
         .ls-rp-shots { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:8px; }
         .ls-rp-shot { padding:10px 4px; border-radius:7px; font-size:11px; font-weight:800; cursor:pointer; border:none; text-align:center; font-family:'Outfit',sans-serif; transition:all .12s; }
-        .ls-rp-shot.make-2  { background:#e63329; color:#fff; }
-        .ls-rp-shot.make-ft { background:#e63329; color:#fff; }
-        .ls-rp-shot.make-3  { background:#2563eb; color:#fff; }
-        .ls-rp-shot.miss    { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.09); }
-
-        /* Play by play mini */
+        .ls-rp-shot.make-2,.ls-rp-shot.make-ft { background:#e63329; color:#fff; }
+        .ls-rp-shot.make-3 { background:#2563eb; color:#fff; }
+        .ls-rp-shot.miss { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.09); }
         .ls-rp-pbp { padding:0 12px 12px; }
-        .ls-rp-pbp-title { font-size:11px; font-weight:800; color:rgba(255,255,255,.4); letter-spacing:1px; padding:8px 0 6px; display:flex; justify-content:space-between; align-items:center; }
-        .ls-rp-pbp-view { font-size:10px; color:rgba(255,255,255,.3); cursor:pointer; }
-
-        /* ── RESPONSIVE ─── */
-        @media(max-width:1024px){
-          .ls-main { grid-template-columns:200px 1fr 220px; }
-        }
-        @media(max-width:820px){
-          .ls-main { grid-template-columns:170px 1fr 0; }
-          .ls-right { display:none; }
-          .ls-score { font-size:48px; }
-        }
-        @media(max-width:600px){
-          .ls-main { grid-template-columns:0 1fr; }
-          .ls-left { display:none; }
-          .ls-score { font-size:44px; }
-          .ls-pp-name { font-size:16px; }
-          .ls-nav-tab span { display:none; }
-        }
+        .ls-rp-pbp-title { font-size:11px; font-weight:800; color:rgba(255,255,255,.4); letter-spacing:1px; padding:8px 0 6px; }
+        @media(max-width:820px){ .ls-main{grid-template-columns:200px 1fr 0;} .ls-right{display:none;} .ls-score{font-size:48px;} }
+        @media(max-width:600px){ .ls-main{grid-template-columns:0 1fr;} .ls-left{display:none;} .ls-score{font-size:40px;} }
       </style>
 
       <div class="ls">
 
-        <!-- ── TOP NAV ────────────────────────────────────── -->
         <nav class="ls-nav">
-          <div class="ls-nav-tab active" data-tab="live">
-            <span class="live-dot"></span> LIVE GAME
-          </div>
+          <div class="ls-nav-tab active" data-tab="live"><span class="live-dot"></span> LIVE GAME</div>
           <div class="ls-nav-tab" data-tab="box">BOX SCORE</div>
-          <div class="ls-nav-tab" data-tab="pbp">PLAY BY PLAY</div>
           <div class="ls-nav-spacer"></div>
           <div class="ls-nav-actions">
             <button class="ls-nav-btn" id="btn-save">💾 Save</button>
@@ -911,25 +843,18 @@ router.get('/league/:id/score/:gid', async (req, res) => {
           </div>
         </nav>
 
-        <!-- ── SCOREBOARD ────────────────────────────────── -->
         <div class="ls-sb">
           <div class="ls-sb-inner">
-            <!-- HOME -->
             <div class="ls-team-block">
               <div class="ls-logo" style="background:${homeColor}">${esc((game.home_name||'H').substring(0,3).toUpperCase())}</div>
-              <div class="ls-team-info">
+              <div>
                 <div class="ls-team-name">${esc(game.home_name||'Home')}</div>
-                <div class="ls-team-sub">
-                  <span>FOULS <span id="home-fouls">0</span></span>
-                  <span>TO: <span id="home-to">0</span></span>
-                </div>
+                <div class="ls-team-sub">FOULS <span id="home-fouls">0</span> &nbsp;|&nbsp; TO: <span id="home-to">0</span></div>
               </div>
             </div>
 
-            <!-- SCORES + CLOCK -->
             <div class="ls-score-block">
               <div class="ls-score-nums">
-                <!-- Home score adj -->
                 <div class="ls-score-adj-col">
                   <button class="ls-score-adj" id="home-score-plus">+</button>
                   <button class="ls-score-adj" id="home-score-minus">−</button>
@@ -937,15 +862,14 @@ router.get('/league/:id/score/:gid', async (req, res) => {
                 <div class="ls-score" id="sb-home-score">${game.home_score||0}</div>
                 <div class="ls-score-sep">:</div>
                 <div class="ls-score" id="sb-away-score">${game.away_score||0}</div>
-                <!-- Away score adj -->
                 <div class="ls-score-adj-col">
                   <button class="ls-score-adj" id="away-score-plus">+</button>
                   <button class="ls-score-adj" id="away-score-minus">−</button>
                 </div>
               </div>
-              <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:4px">
+              <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:4px">
                 <div class="ls-qtr-block">
-                  <div class="ls-qtr-label">QUARTER ${game.quarter||1}</div>
+                  <div class="ls-qtr-label">QUARTER</div>
                   <div class="ls-qtr-ctrl">
                     <button class="ls-qtr-btn" id="qtr-minus">−</button>
                     <div class="ls-qtr-val" id="sb-qtr">${game.quarter||1}</div>
@@ -956,180 +880,93 @@ router.get('/league/:id/score/:gid', async (req, res) => {
               </div>
             </div>
 
-            <!-- AWAY -->
             <div class="ls-team-block away">
               <div class="ls-logo" style="background:${awayColor}">${esc((game.away_name||'A').substring(0,3).toUpperCase())}</div>
-              <div class="ls-team-info" style="text-align:right">
+              <div style="text-align:right">
                 <div class="ls-team-name">${esc(game.away_name||'Away')}</div>
-                <div class="ls-team-sub right">
-                  <span>FOULS <span id="away-fouls">0</span></span>
-                  <span>TO: <span id="away-to">0</span></span>
-                </div>
+                <div class="ls-team-sub right">FOULS <span id="away-fouls">0</span> &nbsp;|&nbsp; TO: <span id="away-to">0</span></div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ── MAIN 3-COL ─────────────────────────────────── -->
         <div class="ls-main">
 
-          <!-- LEFT: PLAYERS -->
+          <!-- LEFT: HOME + AWAY PLAYERS -->
           <div class="ls-left">
             <div class="ls-left-head">
               <div class="ls-left-title">SELECT PLAYER</div>
               <div class="ls-search">
-                <span style="font-size:12px;opacity:.4">⌕</span>
-                <input type="text" placeholder="Search player..." id="playerSearch" />
+                <span style="opacity:.4">⌕</span>
+                <input type="text" id="playerSearch" placeholder="Name or jersey #..." />
               </div>
             </div>
-
-            <div id="homePlayerList">
-              <div class="ls-team-label" style="color:${homeColor}">${esc(game.home_name||'HOME').toUpperCase()}</div>
-              ${homePlayers.length > 0 ? homePlayers.map(p => {
-                const s = statMap[p.id] || {};
-                const pts = (s.fg2m||0)*2 + (s.fg3m||0)*3 + (s.ftm||0);
-                return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos||''}" data-jersey="${p.jersey||'?'}" data-team="${esc(game.home_name||'Home')}" data-color="${homeColor}" data-side="home"
-                  data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}"
-                  data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}"
-                  data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
-                  <div class="lsc-player-num" style="background:${homeColor}99">${p.jersey||'?'}</div>
-                  <div class="lsc-player-info">
-                    <div class="lsc-player-name">${esc(p.name)}</div>
-                    <div class="lsc-player-pos">${p.pos||''}</div>
-                  </div>
-                  <div>
-                    <div class="lsc-player-pts" id="row-pts-${p.id}">${pts}</div>
-                    <div class="lsc-player-pts-lbl">PTS</div>
-                  </div>
-                </div>`;
-              }).join('') : '<div style="padding:12px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
-            </div>
-
-            <div id="awayPlayerList" style="margin-top:4px">
-              <div class="ls-team-label" style="color:${awayColor}">${esc(game.away_name||'AWAY').toUpperCase()}</div>
-              ${awayPlayers.length > 0 ? awayPlayers.map(p => {
-                const s = statMap[p.id] || {};
-                const pts = (s.fg2m||0)*2 + (s.fg3m||0)*3 + (s.ftm||0);
-                return `<div class="lsc-player" data-pid="${p.id}" data-name="${esc(p.name)}" data-pos="${p.pos||''}" data-jersey="${p.jersey||'?'}" data-team="${esc(game.away_name||'Away')}" data-color="${awayColor}" data-side="away"
-                  data-fg2m="${s.fg2m||0}" data-fg2a="${s.fg2a||0}" data-fg3m="${s.fg3m||0}" data-fg3a="${s.fg3a||0}"
-                  data-ftm="${s.ftm||0}" data-fta="${s.fta||0}" data-oreb="${s.oreb||0}" data-dreb="${s.dreb||0}"
-                  data-ast="${s.ast||0}" data-stl="${s.stl||0}" data-blk="${s.blk||0}" data-to="${s.to_val||0}" data-foul="${s.foul||0}">
-                  <div class="lsc-player-num" style="background:${awayColor}99">${p.jersey||'?'}</div>
-                  <div class="lsc-player-info">
-                    <div class="lsc-player-name">${esc(p.name)}</div>
-                    <div class="lsc-player-pos">${p.pos||''}</div>
-                  </div>
-                  <div>
-                    <div class="lsc-player-pts" id="row-pts-${p.id}">${pts}</div>
-                    <div class="lsc-player-pts-lbl">PTS</div>
-                  </div>
-                </div>`;
-              }).join('') : '<div style="padding:12px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
-            </div>
+            <div class="ls-team-label" style="color:${homeColor}">${esc((game.home_name||'HOME').toUpperCase())}</div>
+            ${homePlayers.length ? homePlayers.map(p=>playerRow(p,'home',homeColor,game.home_name||'Home')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+            <div class="ls-team-label" style="color:${awayColor};margin-top:4px">${esc((game.away_name||'AWAY').toUpperCase())}</div>
+            ${awayPlayers.length ? awayPlayers.map(p=>playerRow(p,'away',awayColor,game.away_name||'Away')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
           </div>
 
-          <!-- CENTER: TABS -->
+          <!-- CENTER -->
           <div class="ls-center">
             <div class="ls-tabs">
               <div class="ls-tab active" data-ctab="live">LIVE GAME</div>
               <div class="ls-tab" data-ctab="box">BOX SCORE</div>
               <div class="ls-tab" data-ctab="pbp">PLAY BY PLAY</div>
-              <div class="ls-tab" data-ctab="leaders">GAME LEADERS</div>
+              <div class="ls-tab" data-ctab="leaders">LEADERS</div>
             </div>
 
-            <!-- LIVE GAME TAB -->
+            <!-- LIVE TAB -->
             <div class="ls-tab-content active" id="ctab-live">
-              <div class="ls-pp" id="statPanel">
-                <div class="ls-pp-empty" id="noPlayerMsg">
-                  <div style="font-size:40px">👆</div>
-                  <div>Select a player from the sidebar to record stats</div>
+              <div class="ls-pp-empty" id="noPlayerMsg">
+                <div style="font-size:36px">👆</div>
+                <div>Select a player to record stats</div>
+              </div>
+              <div id="playerPanel" style="display:none;flex-direction:column;flex:1;overflow-y:auto">
+                <div class="ls-pp-hdr">
+                  <div>
+                    <div class="ls-pp-name" id="pp-name">—</div>
+                    <div class="ls-pp-role" id="pp-sub">—</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div class="ls-pp-pts-big" id="pp-pts">0</div>
+                    <div class="ls-pp-pts-lbl">PTS</div>
+                  </div>
                 </div>
-                <div id="playerPanel" style="display:none">
-                  <div class="ls-pp-hdr">
-                    <div>
-                      <div class="ls-pp-name" id="pp-name">—</div>
-                      <div class="ls-pp-role" id="pp-sub">—</div>
-                    </div>
-                    <div style="text-align:right">
-                      <div class="ls-pp-pts-big" id="pp-pts">0</div>
-                      <div class="ls-pp-pts-lbl">PTS</div>
-                    </div>
-                  </div>
-
-                  <div class="ls-rec-label">RECORDING: <span id="pp-recording"></span></div>
-
-                  <!-- Shot buttons: 3x3 grid matching reference -->
-                  <div class="ls-shots">
-                    <button class="ls-shot make-ft" id="btn-ft">
-                      <span class="ls-shot-icon">+1</span>
-                      <span class="ls-shot-sub">FREE THROW</span>
-                    </button>
-                    <button class="ls-shot make-2" id="btn-2pt">
-                      <span class="ls-shot-icon">+2</span>
-                      <span class="ls-shot-sub">2 POINTS</span>
-                    </button>
-                    <button class="ls-shot make-3" id="btn-3pt">
-                      <span class="ls-shot-icon">+3</span>
-                      <span class="ls-shot-sub">3 POINTS</span>
-                    </button>
-
-                    <button class="ls-shot miss" id="btn-missft">
-                      <span>✕</span>
-                      <span class="ls-shot-sub">MISS FT</span>
-                    </button>
-                    <button class="ls-shot miss" id="btn-miss2">
-                      <span>✕</span>
-                      <span class="ls-shot-sub">MISS 2PT</span>
-                    </button>
-                    <button class="ls-shot miss" id="btn-miss3">
-                      <span>✕</span>
-                      <span class="ls-shot-sub">MISS 3PT</span>
-                    </button>
-                  </div>
-
-                  <!-- Undo row -->
-                  <div class="ls-fg-row" id="pp-fg-line">0/0 2PT · 0/0 3PT · 0/0 FT</div>
-
-                  <!-- Counting stat grid: OREB / DREB / AST / STEAL / BLOCK / TO / FOUL -->
-                  <div class="ls-counters">
-                    ${[
-                      {k:'oreb',l:'OFF REB',  icon:'○', color:''},
-                      {k:'dreb',l:'DEF REB',  icon:'●', color:''},
-                      {k:'ast', l:'ASSIST',   icon:'↗', color:''},
-                      {k:'stl', l:'STEAL',    icon:'✋', color:''},
-                      {k:'blk', l:'BLOCK',    icon:'□', color:''},
-                      {k:'to',  l:'TURNOVER', icon:'↩', color:''},
-                    ].map(s => `
-                    <div class="ls-cnt">
-                      <div class="ls-cnt-lbl">${s.l}</div>
-                      <div class="ls-cnt-val" id="pp-${s.k}">0</div>
-                      <div class="ls-cnt-btns">
-                        <button class="ls-cnt-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
-                        <button class="ls-cnt-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
-                      </div>
-                    </div>`).join('')}
-                    <div class="ls-cnt foul-box">
-                      <div class="ls-cnt-lbl" style="color:#ff4757">FOUL</div>
-                      <div class="ls-cnt-val" id="pp-foul">0</div>
-                      <div class="ls-cnt-btns">
-                        <button class="ls-cnt-btn minus" data-stat="foul" data-dir="-1">−</button>
-                        <button class="ls-cnt-btn plus"  data-stat="foul" data-dir="1">+</button>
-                      </div>
-                    </div>
-                    <div class="ls-cnt">
-                      <div class="ls-cnt-lbl" style="color:#f97316">EFF</div>
-                      <div class="ls-cnt-val" style="color:#f97316;font-size:20px" id="pp-eff">0</div>
-                      <div style="height:28px"></div>
-                    </div>
-                    <div class="ls-cnt">
-                      <div class="ls-cnt-lbl">FG%</div>
-                      <div class="ls-cnt-val" style="font-size:16px" id="pp-fgp">—</div>
-                      <div style="height:28px"></div>
-                    </div>
-                  </div>
-
-                  <div class="ls-undo" id="btn-undo">↩ UNDO LAST ACTION</div>
+                <div class="ls-rec-label">RECORDING: <span id="pp-recording"></span></div>
+                <div class="ls-shots">
+                  <button class="ls-shot make-ft" id="btn-ft"><span style="font-size:18px">+1</span><span class="ls-shot-sub">FREE THROW</span></button>
+                  <button class="ls-shot make-2"  id="btn-2pt"><span style="font-size:18px">+2</span><span class="ls-shot-sub">2 POINTS</span></button>
+                  <button class="ls-shot make-3"  id="btn-3pt"><span style="font-size:18px">+3</span><span class="ls-shot-sub">3 POINTS</span></button>
+                  <button class="ls-shot miss" id="btn-missft"><span>✕</span><span class="ls-shot-sub">MISS FT</span></button>
+                  <button class="ls-shot miss" id="btn-miss2"><span>✕</span><span class="ls-shot-sub">MISS 2PT</span></button>
+                  <button class="ls-shot miss" id="btn-miss3"><span>✕</span><span class="ls-shot-sub">MISS 3PT</span></button>
                 </div>
+                <div class="ls-fg-row" id="pp-fg-line">0/0 2PT · 0/0 3PT · 0/0 FT</div>
+                <div class="ls-counters">
+                  ${[{k:'oreb',l:'OFF REB'},{k:'dreb',l:'DEF REB'},{k:'ast',l:'ASSIST'},
+                     {k:'stl',l:'STEAL'},{k:'blk',l:'BLOCK'},{k:'to',l:'TURNOVER'},
+                     {k:'foul',l:'FOUL'}].map(s=>`
+                  <div class="ls-cnt" ${s.k==='foul'?'style="border-color:rgba(255,71,87,.25)"':''}>
+                    <div class="ls-cnt-lbl" ${s.k==='foul'?'style="color:#ff4757"':''}>${s.l}</div>
+                    <div class="ls-cnt-val" id="pp-${s.k}">0</div>
+                    <div class="ls-cnt-btns">
+                      <button class="ls-cnt-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
+                      <button class="ls-cnt-btn plus"  data-stat="${s.k}" data-dir="1">+</button>
+                    </div>
+                  </div>`).join('')}
+                  <div class="ls-cnt" style="border-color:rgba(249,115,22,.2)">
+                    <div class="ls-cnt-lbl" style="color:#f97316">EFF</div>
+                    <div class="ls-cnt-val" style="color:#f97316;font-size:20px" id="pp-eff">0</div>
+                    <div style="height:28px"></div>
+                  </div>
+                  <div class="ls-cnt">
+                    <div class="ls-cnt-lbl">FG%</div>
+                    <div class="ls-cnt-val" style="font-size:16px" id="pp-fgp">—</div>
+                    <div style="height:28px"></div>
+                  </div>
+                </div>
+                <div class="ls-undo" id="btn-undo">↩ UNDO LAST ACTION</div>
               </div>
             </div>
 
@@ -1137,108 +974,66 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             <div class="ls-tab-content" id="ctab-box">
               <div class="ls-box">
                 <div class="ls-box-team-hdr" style="color:${homeColor}">${esc(game.home_name||'HOME')}</div>
-                <table id="boxHome">
-                  <thead><tr><th>PLAYER</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3PT</th><th>FT</th></tr></thead>
-                  <tbody id="boxHomeTbody"></tbody>
-                </table>
+                <table><thead><tr><th>PLAYER</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3PT</th><th>FT</th></tr></thead><tbody id="boxHomeTbody"></tbody></table>
                 <div class="ls-box-team-hdr" style="color:${awayColor};margin-top:12px">${esc(game.away_name||'AWAY')}</div>
-                <table id="boxAway">
-                  <thead><tr><th>PLAYER</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3PT</th><th>FT</th></tr></thead>
-                  <tbody id="boxAwayTbody"></tbody>
-                </table>
+                <table><thead><tr><th>PLAYER</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>FG</th><th>3PT</th><th>FT</th></tr></thead><tbody id="boxAwayTbody"></tbody></table>
               </div>
             </div>
 
-            <!-- PLAY BY PLAY TAB -->
+            <!-- PBP TAB -->
             <div class="ls-tab-content" id="ctab-pbp">
-              <div class="ls-pbp">
-                <div class="ls-pbp-filter">
-                  <button class="ls-pbp-btn active">ALL</button>
-                  <button class="ls-pbp-btn">Q1</button>
-                  <button class="ls-pbp-btn">Q2</button>
-                  <button class="ls-pbp-btn">Q3</button>
-                  <button class="ls-pbp-btn">Q4</button>
-                </div>
-                <div id="pbpLog"></div>
+              <div class="ls-pbp" id="pbpLog" style="overflow-y:auto;flex:1">
+                <div style="padding:24px;color:rgba(255,255,255,.25);font-size:13px;text-align:center">No plays yet — select a player and start scoring</div>
               </div>
             </div>
 
             <!-- LEADERS TAB -->
             <div class="ls-tab-content" id="ctab-leaders">
-              <div style="padding:12px 16px;font-size:11px;font-weight:800;letter-spacing:1px;color:rgba(255,255,255,.35)">GAME LEADERS</div>
+              <div style="padding:12px 16px;font-size:10px;font-weight:800;letter-spacing:1px;color:rgba(255,255,255,.35)">GAME LEADERS</div>
               <div class="ls-leaders" id="leadersGrid"></div>
             </div>
-
           </div>
 
-          <!-- RIGHT: MINI PANEL -->
+          <!-- RIGHT -->
           <div class="ls-right">
-            <div class="ls-right-hdr">
-              <div class="ls-right-title">Live Game</div>
-            </div>
-
-            <!-- Mini scoreboard -->
+            <div class="ls-right-hdr"><div class="ls-right-title">Live Game</div></div>
             <div class="ls-mini-sb">
               <div class="ls-mini-row">
-                <div>
-                  <div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.home_name||'HOME').substring(0,3).toUpperCase())}</div>
-                  <div class="ls-mini-score" id="mini-home">${game.home_score||0}</div>
-                </div>
-                <div style="text-align:center">
-                  <div class="ls-mini-badge">● LIVE</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Q<span id="mini-qtr">${game.quarter||1}</span></div>
-                </div>
-                <div style="text-align:right">
-                  <div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.away_name||'AWAY').substring(0,3).toUpperCase())}</div>
-                  <div class="ls-mini-score" id="mini-away">${game.away_score||0}</div>
-                </div>
+                <div><div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.home_name||'HME').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-home">${game.home_score||0}</div></div>
+                <div style="text-align:center"><div class="ls-mini-badge">● LIVE</div><div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Q<span id="mini-qtr">${game.quarter||1}</span></div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.away_name||'AWY').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-away">${game.away_score||0}</div></div>
               </div>
             </div>
-
-            <!-- Current player quick panel -->
             <div class="ls-rp" id="rightPlayerPanel" style="display:none">
               <div class="ls-rp-hdr">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                  <div>
-                    <div class="ls-rp-name" id="rp-name">—</div>
-                    <div class="ls-rp-role" id="rp-role">—</div>
-                  </div>
-                  <div style="text-align:right">
-                    <div class="ls-rp-pts" id="rp-pts">0</div>
-                    <div class="ls-rp-pts-lbl">PTS</div>
-                  </div>
+                  <div><div class="ls-rp-name" id="rp-name">—</div><div class="ls-rp-role" id="rp-role">—</div></div>
+                  <div style="text-align:right"><div class="ls-rp-pts" id="rp-pts">0</div><div class="ls-rp-pts-lbl">PTS</div></div>
                 </div>
                 <div class="ls-rp-stats">
-                  ${[['rp-reb','REB'],['rp-ast','AST'],['rp-stl','STL'],['rp-blk','BLK']].map(([id,l])=>`
-                  <div class="ls-rp-stat"><div class="ls-rp-stat-v" id="${id}">0</div><div class="ls-rp-stat-l">${l}</div></div>`).join('')}
+                  <div class="ls-rp-stat"><div class="ls-rp-stat-v" id="rp-reb">0</div><div class="ls-rp-stat-l">REB</div></div>
+                  <div class="ls-rp-stat"><div class="ls-rp-stat-v" id="rp-ast">0</div><div class="ls-rp-stat-l">AST</div></div>
+                  <div class="ls-rp-stat"><div class="ls-rp-stat-v" id="rp-stl">0</div><div class="ls-rp-stat-l">STL</div></div>
+                  <div class="ls-rp-stat"><div class="ls-rp-stat-v" id="rp-blk">0</div><div class="ls-rp-stat-l">BLK</div></div>
                 </div>
               </div>
-
-              <!-- Mini shot buttons -->
               <div class="ls-rp-shots">
-                <button class="ls-rp-shot make-ft"  data-action="ft">+1 FT</button>
-                <button class="ls-rp-shot make-2"   data-action="2pt">+2 PT</button>
-                <button class="ls-rp-shot make-3"   data-action="3pt">+3 PT</button>
-                <button class="ls-rp-shot miss"     data-action="missft">MISS FT</button>
-                <button class="ls-rp-shot miss"     data-action="miss2">MISS 2PT</button>
-                <button class="ls-rp-shot miss"     data-action="miss3">MISS 3PT</button>
+                <button class="ls-rp-shot make-ft" data-action="ft">+1 FT</button>
+                <button class="ls-rp-shot make-2"  data-action="2pt">+2 PT</button>
+                <button class="ls-rp-shot make-3"  data-action="3pt">+3 PT</button>
+                <button class="ls-rp-shot miss" data-action="missft">MISS FT</button>
+                <button class="ls-rp-shot miss" data-action="miss2">MISS 2</button>
+                <button class="ls-rp-shot miss" data-action="miss3">MISS 3</button>
               </div>
             </div>
-
-            <!-- Mini PBP log -->
             <div class="ls-rp-pbp">
-              <div class="ls-rp-pbp-title">
-                Play by Play
-                <span class="ls-rp-pbp-view">VIEW ALL</span>
-              </div>
+              <div class="ls-rp-pbp-title">Play by Play</div>
               <div id="miniPbpLog"></div>
             </div>
           </div>
+        </div>
+      </div>
 
-        </div><!-- end ls-main -->
-      </div><!-- end ls -->
-
-      <!-- HIDDEN FORM -->
       <form id="scoreForm" action="/admin/league/${league.id}/score/${game.id}" method="POST" style="display:none">
         <input type="hidden" name="player_ids"  id="f-player-ids"  value="${allPlayerIds}" />
         <input type="hidden" name="home_score"  id="f-home-score"  value="${game.home_score||0}" />
@@ -1254,11 +1049,11 @@ router.get('/league/:id/score/:gid', async (req, res) => {
         data-away-team="${esc(game.away_name||'Away')}"
         data-home-color="${homeColor}"
         data-away-color="${awayColor}"
-        data-stats="${esc(JSON.stringify(statMap))}"
         style="display:none"></div>
+
       <script src="/js/livescore.js"></script>
     `));
-  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+  } catch (err) { console.error('Live score error:', err); res.status(500).send('Server error'); }
 });
 
 router.post('/league/:id/score/:gid', async (req, res) => {
