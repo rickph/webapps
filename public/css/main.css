@@ -432,3 +432,21 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover,
 input[type="time"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
+
+/* ─── MOBILE NAV & BACK BUTTONS ─────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Keep nav-actions visible and scrollable on small screens */
+  .topnav { height: auto; min-height: 56px; flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
+  .nav-brand { flex-shrink: 0; }
+  .nav-brand-text .brand-text { font-size: 16px; }
+  .nav-brand-text .brand-sub  { font-size: 8px; }
+  .nav-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
+  .btn-ghost-sm { font-size: 11px; padding: 5px 10px; }
+  .btn-nav      { font-size: 11px; padding: 5px 10px; }
+
+  /* back-link always visible */
+  .back-link { font-size: 12px; display: inline-flex !important; }
+
+  /* Admin header stacks but back-link stays */
+  .admin-header { flex-direction: column; gap: 8px; }
+}
