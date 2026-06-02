@@ -43,67 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var activeTab = urlParams.get('tab');
   if (activeTab) showTab(activeTab);
 
-  // ── SORTABLE PLAYER STATS TABLE ─────────────────────────────────────────────
-  var sortState = { col: 4, dir: -1 };
-
-  function initSort() {
-    var table = document.getElementById('playerStatsTable');
-    if (!table || table._sortInit) return;
-    table._sortInit = true;
-    table.querySelectorAll('.sort-col').forEach(function (th) {
-      th.addEventListener('click', function () {
-        sortTable(parseInt(th.getAttribute('data-col')));
-      });
-    });
-    sortTable(4);
-  }
-
-  function sortTable(colIndex) {
-    var table = document.getElementById('playerStatsTable');
-    var tbody = document.getElementById('playerTableBody');
-    if (!table || !tbody) return;
-    var rows = Array.from(tbody.querySelectorAll('tr'));
-    if (!rows.length) return;
-
-    if (sortState.col === colIndex) { sortState.dir *= -1; }
-    else { sortState.col = colIndex; sortState.dir = -1; }
-
-    rows.sort(function (a, b) {
-      var aCell = a.querySelectorAll('td')[colIndex];
-      var bCell = b.querySelectorAll('td')[colIndex];
-      if (!aCell || !bCell) return 0;
-      var aVal = parseFloat(aCell.getAttribute('data-val'));
-      var bVal = parseFloat(bCell.getAttribute('data-val'));
-      if (!isNaN(aVal) && !isNaN(bVal)) return (aVal - bVal) * sortState.dir;
-      return aCell.textContent.trim().localeCompare(bCell.textContent.trim()) * sortState.dir;
-    });
-
-    rows.forEach(function (row, i) {
-      var td = row.querySelectorAll('td')[0];
-      if (td) td.textContent = i + 1;
-      tbody.appendChild(row);
-    });
-
-    table.querySelectorAll('.sort-col').forEach(function (th) {
-      th.classList.remove('sort-asc', 'sort-desc');
-      var icon = th.querySelector('.sort-icon');
-      if (icon) icon.textContent = '↕';
-    });
-    table.querySelectorAll('.sort-col').forEach(function (th) {
-      if (parseInt(th.getAttribute('data-col')) === colIndex) {
-        th.classList.add(sortState.dir === -1 ? 'sort-desc' : 'sort-asc');
-        var icon = th.querySelector('.sort-icon');
-        if (icon) icon.textContent = sortState.dir === -1 ? '↓' : '↑';
-      }
-    });
-  }
-
-  ptabs.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      if (btn.getAttribute('data-tab') === 'players') initSort();
-    });
-  });
-
-  initSort();
+  // Sorting is server-side via URL params (?sort=pts&dir=desc)
+  // Clicking column headers navigates to new URL — no client-side sort needed
 
 }); // end DOMContentLoaded
