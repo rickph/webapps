@@ -40,16 +40,23 @@ router.get('/league/:id', async (req, res) => {
     const sortDir = req.query.dir  || 'desc';
     const tab     = req.query.tab  || 'standings';
 
-    // Whitelist allowed sort columns to prevent SQL injection
-    const allowed = ['pts','reb','ast','stl','blk','gp','fg','name'];
-    const col = allowed.includes(sortCol) ? sortCol : 'pts';
+    // Whitelist allowed sort columns → map to player_season_stats column
+    const colMap = {
+      pts:'pss.pts', reb:'pss.reb', ast:'pss.ast', stl:'pss.stl',
+      blk:'pss.blk', gp:'pss.gp',  fg:'pss.fgp',  name:'p.name',
+      fg3p:'pss.fg3p', ftp:'pss.ftp', eff:'pss.eff', to:'pss.to_val',
+    };
+    const col = colMap[sortCol] || 'pss.pts';
     const dir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const [teams, players, games, seasonStatsRows] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name,t.color as team_color
-                FROM players p LEFT JOIN teams t ON p.team_id=t.id
-                WHERE p.league_id=$1 ORDER BY p.${col} ${dir}`, [league.id]),
+                FROM players p
+                LEFT JOIN teams t ON p.team_id=t.id
+                LEFT JOIN player_season_stats pss ON pss.player_id=p.id AND pss.league_id=p.league_id
+                WHERE p.league_id=$1
+                ORDER BY COALESCE(${col},0) ${dir}, p.name ASC`, [league.id]),
       db.query(`SELECT g.*,ht.name as home_name,at.name as away_name
                 FROM games g
                 LEFT JOIN teams ht ON g.home_team_id=ht.id
@@ -252,11 +259,11 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             ${sortTh('ast', 'AST', 'Assists Per Game',  sort, league)}
             ${sortTh('stl', 'STL', 'Steals Per Game',   sort, league)}
             ${sortTh('blk', 'BLK', 'Blocks Per Game',   sort, league)}
-            <th title="Turnovers Per Game">TO</th>
-            ${sortTh('fg',  'FG%', 'Field Goal % (FIBA: FGM/FGA)', sort, league)}
-            <th title="3-Point %">3P%</th>
-            <th title="Free Throw %">FT%</th>
-            <th title="FIBA EFF = PTS+REB+AST+STL+BLK-(FGA-FGM)-(FTA-FTM)-TO">EFF</th>
+            ${sortTh('to',  'TO',  'Turnovers Per Game',  sort, league)}
+            ${sortTh('fg',  'FG%', 'Field Goal %',         sort, league)}
+            ${sortTh('fg3p','3P%', '3-Point %',            sort, league)}
+            ${sortTh('ftp', 'FT%', 'Free Throw %',         sort, league)}
+            ${sortTh('eff', 'EFF', 'FIBA Efficiency',      sort, league)}
           </tr></thead>
           <tbody id="playerTableBody">
             ${players.map((p,i) => {
