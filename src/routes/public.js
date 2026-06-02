@@ -162,6 +162,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     <nav class="topnav">
       <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=3" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
+        <a href="/" class="btn-ghost-sm">← Leagues</a>
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
       </div>
     </nav>
