@@ -941,6 +941,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
           <div class="ls-nav-tab" data-tab="box">BOX SCORE</div>
           <div class="ls-nav-spacer"></div>
           <div class="ls-nav-actions">
+            <a href="/admin/league/${league.id}" class="ls-nav-btn" style="text-decoration:none">← League</a>
             <button class="ls-nav-btn" id="btn-save">💾 Save</button>
             <button class="ls-nav-btn end" id="btn-end">⏹ End Game</button>
           </div>
