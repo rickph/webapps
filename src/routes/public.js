@@ -124,13 +124,13 @@ function renderLanding(leagues, stats, user) {
       body{background:#0a0a0a}
       :root{--orange:#f97316;--orange-d:#ea580c;--orange-dim:rgba(249,115,22,.1);--black:#0a0a0a;--d1:#111;--d2:#161616;--d3:#1c1c1c;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13)}
       /* NAV */
-      .lp-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 48px;height:70px;transition:all .3s}
+      .lp-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 40px;height:70px;transition:all .3s;gap:0}
       .lp-nav.scrolled{background:rgba(10,10,10,.99);box-shadow:0 4px 24px rgba(0,0,0,.5)}
-      .lp-logo{display:flex;align-items:center;gap:12px;margin-right:52px;flex-shrink:0;text-decoration:none;color:inherit}
+      .lp-logo{display:flex;align-items:center;gap:12px;margin-right:40px;flex-shrink:0;text-decoration:none;color:inherit}
       .lp-logo img{width:44px;height:44px;border-radius:9px;object-fit:contain}
       .lp-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
       .lp-logo-sub{font-size:9px;color:#f97316;letter-spacing:3.5px;font-weight:700;text-transform:uppercase;opacity:.85}
-      .lp-nav-links{display:flex;align-items:center;gap:0;flex:1}
+      .lp-nav-links{display:flex;align-items:center;gap:0}
       .lp-nav-links a{color:rgba(255,255,255,.42);font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:8px 18px;border-radius:4px;transition:color .15s}
       .lp-nav-links a:hover{color:#fff}
       .lp-nav-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
@@ -141,13 +141,13 @@ function renderLanding(leagues, stats, user) {
       /* HERO */
       .lp-hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--black)}
       .lp-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1600&q=80') right center/cover no-repeat}
-      .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,1) 35%,rgba(10,10,10,.82) 58%,rgba(10,10,10,.25) 100%);z-index:1}
-      .lp-hero-bg::after{content:'';position:absolute;inset:0;background:rgba(10,10,10,.28);z-index:0}
-      .lp-hero-inner{position:relative;z-index:3;padding:80px 48px 100px;max-width:820px}
+      .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,.96) 30%,rgba(10,10,10,.6) 55%,rgba(10,10,10,.1) 100%);z-index:1}
+      .lp-hero-bg::after{content:'';position:absolute;inset:0;background:rgba(10,10,10,.1);z-index:0}
+      .lp-hero-inner{position:relative;z-index:3;padding:80px 40px 100px;max-width:900px}
       .lp-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(249,115,22,.7);border-radius:4px;padding:7px 16px;margin-bottom:36px;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.06)}
       .lp-badge::before{content:'\\25CF';font-size:7px;animation:blink 1.8s infinite}
       @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-      .lp-h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(68px,9.5vw,122px);font-weight:900;line-height:.9;text-transform:uppercase;letter-spacing:-1.5px}
+      .lp-h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(58px,7.5vw,108px);font-weight:900;line-height:.92;text-transform:uppercase;letter-spacing:-1px;white-space:nowrap}
       .lp-h1 .accent{color:#f97316;font-style:italic}
       .lp-h1 .ghost{color:rgba(255,255,255,.18);font-style:italic;display:block;letter-spacing:-2px}
       .lp-hero-sub{font-size:17px;color:rgba(255,255,255,.56);line-height:1.78;max-width:560px;margin:28px 0 40px}
@@ -175,7 +175,7 @@ function renderLanding(leagues, stats, user) {
       .ti::after{content:'\\25C6';margin-left:28px;opacity:.4;font-size:7px}
       @keyframes lpTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       /* SECTION */
-      .lp-section{padding:110px 48px}
+      .lp-section{padding:110px 40px}
       .lp-si{max-width:1260px;margin:0 auto}
       .lp-eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:block}
       /* FEATURES */
@@ -252,7 +252,7 @@ function renderLanding(leagues, stats, user) {
       .lp-csub{font-size:16px;color:rgba(255,255,255,.45);max-width:480px;margin:0 auto 36px;line-height:1.75;position:relative}
       .lp-cbtns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
       /* FOOTER */
-      .lp-footer{background:#080808;border-top:1px solid rgba(255,255,255,.06);padding:64px 48px 40px}
+      .lp-footer{background:#080808;border-top:1px solid rgba(255,255,255,.06);padding:64px 40px 40px}
       .lp-fi{max-width:1260px;margin:0 auto}
       .lp-ftop{display:grid;grid-template-columns:280px 1fr 1fr 1fr;gap:48px;margin-bottom:56px}
       .lp-fbrand img{width:44px;height:44px;border-radius:9px;object-fit:contain;margin-bottom:16px}
@@ -269,7 +269,7 @@ function renderLanding(leagues, stats, user) {
       .lp-anim.visible{opacity:1;transform:none}
       /* RESPONSIVE */
       @media(max-width:960px){
-        .lp-nav{padding:0 24px}
+        .lp-nav{padding:0 28px}
         .lp-nav-links{display:none}
         .lp-fhead{grid-template-columns:1fr;gap:20px}
         .lp-fright p{margin-left:0}
@@ -282,21 +282,21 @@ function renderLanding(leagues, stats, user) {
         .lp-stats{grid-template-columns:repeat(2,1fr)}
         .lp-sc:nth-child(2){border-right:none}
         .lp-sc:nth-child(3){border-top:1px solid var(--border)}
-        .lp-section{padding:80px 32px}
+        .lp-section{padding:80px 32px}.lp-footer{padding:52px 32px 36px}
         .lp-cta-box{padding:60px 40px}
         .lp-footer{padding:52px 32px 36px}
       }
       @media(max-width:640px){
-        .lp-nav{padding:0 18px;height:62px}
+        .lp-nav{padding:0 16px;height:62px}
         .lp-logo img{width:38px;height:38px}
         .lp-logo-name{font-size:18px}
-        .lp-hero-inner{padding:64px 20px 80px}
-        .lp-h1{font-size:clamp(58px,16vw,88px)}
+        .lp-hero-inner{padding:64px 20px 80px;max-width:100%}
+        .lp-h1{font-size:clamp(44px,12vw,72px);white-space:normal}
         .lp-hero-sub{font-size:15px}
         .lp-btn-primary,.lp-btn-ghost{padding:14px 24px;font-size:13px}
         .lp-sn{font-size:44px}
         .lp-sc{padding:24px 14px}
-        .lp-section{padding:60px 20px}
+        .lp-section{padding:60px 20px}.lp-footer{padding:44px 20px 32px}
         .lp-fgrid{grid-template-columns:1fr}
         .lp-fc{padding:30px 24px}
         .lp-sgrid{grid-template-columns:1fr}
