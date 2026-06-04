@@ -530,10 +530,12 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
   return page(`${esc(league.name)} | HoopStats`, `
     <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
+      <div class="topnav-inner">
+      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
       <div class="nav-actions">
         <a href="/" class="btn-ghost-sm">← Leagues</a>
         ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
+      </div>
       </div>
     </nav>
     <div class="league-header">
@@ -574,6 +576,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       </div>
     </div>
 
+    <div style="background:var(--dark-1);border-bottom:1px solid var(--border);padding:16px 0">
     <div class="pub-leaders">
       ${[
         {label:'PTS', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'#ff6b35'},
@@ -590,6 +593,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
           }
         </div>`).join('')}
     </div>
+    </div>
 
     <div class="pub-tabs"><div class="tabs-inner">
       <button class="ptab active" data-tab="standings">🏆 Standings</button>
@@ -599,7 +603,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-content">
       <div id="tab-standings" class="tab-pane">
-        <table class="stats-table">
+        <div class="table-scroll"><table class="stats-table">
           <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th></tr></thead>
           <tbody>
             ${teams.map((t,i)=>`
@@ -618,7 +622,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         <div style="font-size:11px;color:#555;margin-bottom:8px;font-weight:600">
           💡 Click any column header to sort
         </div>
-        <div style="overflow-x:auto">
+        <div class="table-scroll">
         <table class="stats-table" id="playerStatsTable">
           <thead><tr>
             <th>#</th>
