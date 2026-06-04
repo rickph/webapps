@@ -124,9 +124,9 @@ function renderLanding(leagues, stats, user) {
       body{background:#0a0a0a}
       :root{--orange:#f97316;--orange-d:#ea580c;--orange-dim:rgba(249,115,22,.1);--black:#0a0a0a;--d1:#111;--d2:#161616;--d3:#1c1c1c;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13)}
       /* NAV */
-      .lp-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 40px;height:70px;transition:all .3s;gap:0}
+      .lp-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:70px;transition:all .3s;display:flex;align-items:center;justify-content:center}
       .lp-nav.scrolled{background:rgba(10,10,10,.99);box-shadow:0 4px 24px rgba(0,0,0,.5)}
-      .lp-logo{display:flex;align-items:center;gap:12px;margin-right:40px;flex-shrink:0;text-decoration:none;color:inherit}
+      .lp-nav-inner{max-width:1260px;width:100%;margin:0 auto;padding:0 40px;display:flex;align-items:center;gap:0;height:100%}.lp-logo{display:flex;align-items:center;gap:12px;margin-right:40px;flex-shrink:0;text-decoration:none;color:inherit}
       .lp-logo img{width:44px;height:44px;border-radius:9px;object-fit:contain}
       .lp-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
       .lp-logo-sub{font-size:9px;color:#f97316;letter-spacing:3.5px;font-weight:700;text-transform:uppercase;opacity:.85}
@@ -143,8 +143,8 @@ function renderLanding(leagues, stats, user) {
       .lp-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1600&q=80') right center/cover no-repeat}
       .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,.96) 30%,rgba(10,10,10,.6) 55%,rgba(10,10,10,.1) 100%);z-index:1}
       .lp-hero-bg::after{content:'';position:absolute;inset:0;background:rgba(10,10,10,.1);z-index:0}
-      .lp-hero-inner{position:relative;z-index:3;padding:80px 40px 100px;max-width:900px}
-      .lp-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(249,115,22,.7);border-radius:4px;padding:7px 16px;margin-bottom:36px;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.06)}
+      .lp-hero-inner{position:relative;z-index:3;width:100%;display:flex;align-items:center;min-height:100vh}
+      .lp-hero-content{max-width:660px;padding:80px 0 100px}.lp-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(249,115,22,.7);border-radius:4px;padding:7px 16px;margin-bottom:36px;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.06)}
       .lp-badge::before{content:'\\25CF';font-size:7px;animation:blink 1.8s infinite}
       @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
       .lp-h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(58px,7.5vw,108px);font-weight:900;line-height:.92;text-transform:uppercase;letter-spacing:-1px;white-space:nowrap}
@@ -269,7 +269,7 @@ function renderLanding(leagues, stats, user) {
       .lp-anim.visible{opacity:1;transform:none}
       /* RESPONSIVE */
       @media(max-width:960px){
-        .lp-nav{padding:0 28px}
+        .lp-nav-inner{padding:0 28px}
         .lp-nav-links{display:none}
         .lp-fhead{grid-template-columns:1fr;gap:20px}
         .lp-fright p{margin-left:0}
@@ -287,10 +287,10 @@ function renderLanding(leagues, stats, user) {
         .lp-footer{padding:52px 32px 36px}
       }
       @media(max-width:640px){
-        .lp-nav{padding:0 16px;height:62px}
+        .lp-nav{height:62px}.lp-nav-inner{padding:0 16px}
         .lp-logo img{width:38px;height:38px}
         .lp-logo-name{font-size:18px}
-        .lp-hero-inner{padding:64px 20px 80px;max-width:100%}
+        .lp-hero-content{padding:64px 0 80px}
         .lp-h1{font-size:clamp(44px,12vw,72px);white-space:normal}
         .lp-hero-sub{font-size:15px}
         .lp-btn-primary,.lp-btn-ghost{padding:14px 24px;font-size:13px}
@@ -309,20 +309,22 @@ function renderLanding(leagues, stats, user) {
 
     <!-- NAV -->
     <nav class="lp-nav" id="lpNav">
-      <a href="/" class="lp-logo">
-        <img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas">
-        <div><div class="lp-logo-name">HOOPSTATS</div><div class="lp-logo-sub">Pilipinas</div></div>
-      </a>
-      <div class="lp-nav-links">
-        <a href="#features">FEATURES</a>
-        <a href="#how">HOW IT WORKS</a>
-        <a href="#leagues">LEAGUES</a>
-        <a href="/install">INSTALL</a>
-      </div>
-      <div class="lp-nav-actions">
-        ${user
-          ? `<a href="/admin" class="lp-btn-signin">My Dashboard</a><a href="/admin" class="lp-btn-cta">Go to Admin</a>`
-          : `<a href="/login" class="lp-btn-signin">Sign In</a><a href="/register" class="lp-btn-cta">GET STARTED</a>`}
+      <div class="lp-nav-inner">
+        <a href="/" class="lp-logo">
+          <img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas">
+          <div><div class="lp-logo-name">HOOPSTATS</div><div class="lp-logo-sub">Pilipinas</div></div>
+        </a>
+        <div class="lp-nav-links">
+          <a href="#features">FEATURES</a>
+          <a href="#how">HOW IT WORKS</a>
+          <a href="#leagues">LEAGUES</a>
+          <a href="/install">INSTALL</a>
+        </div>
+        <div class="lp-nav-actions">
+          ${user
+            ? `<a href="/admin" class="lp-btn-signin">My Dashboard</a><a href="/admin" class="lp-btn-cta">Go to Admin</a>`
+            : `<a href="/login" class="lp-btn-signin">Sign In</a><a href="/register" class="lp-btn-cta">GET STARTED</a>`}
+        </div>
       </div>
     </nav>
 
@@ -330,16 +332,20 @@ function renderLanding(leagues, stats, user) {
     <section class="lp-hero" id="hero">
       <div class="lp-hero-bg"></div>
       <div class="lp-hero-inner">
-        <div class="lp-badge">Philippine Basketball Stats Platform</div>
-        <h1 class="lp-h1">
-          WHERE <span class="accent">PINOY</span><br>
-          HOOPS GETS<br>
-          <span class="ghost">TRACKED.</span>
-        </h1>
-        <p class="lp-hero-sub">From barangay courts to provincial arenas — HoopStats Pilipinas gives every league the tools to manage games, track every stat, and share results with the community.</p>
-        <div class="lp-hero-btns">
-          <a href="/register" class="lp-btn-primary">START YOUR LEAGUE &rarr;</a>
-          <a href="#features" class="lp-btn-ghost">SEE FEATURES</a>
+        <div class="lp-si" style="width:100%">
+          <div class="lp-hero-content">
+            <div class="lp-badge">Philippine Basketball Stats Platform</div>
+            <h1 class="lp-h1">
+              WHERE <span class="accent">PINOY</span><br>
+              HOOPS GETS<br>
+              <span class="ghost">TRACKED.</span>
+            </h1>
+            <p class="lp-hero-sub">From barangay courts to provincial arenas — HoopStats Pilipinas gives every league the tools to manage games, track every stat, and share results with the community.</p>
+            <div class="lp-hero-btns">
+              <a href="/register" class="lp-btn-primary">START YOUR LEAGUE &rarr;</a>
+              <a href="#features" class="lp-btn-ghost">SEE FEATURES</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
