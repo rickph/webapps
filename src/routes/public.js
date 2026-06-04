@@ -87,63 +87,427 @@ router.post('/league/:id/access', async (req, res) => {
 
 // ── RENDERERS ─────────────────────────────────────────────────────────────────
 function renderLanding(leagues, stats, user) {
-  const leagueCards = leagues.map(l => {
-    const lc = levelColor(l.level);
-    return `
-    <a href="/league/${l.id}" class="league-card">
-      <div class="lc-top">${levelBadge(l.level)} ${statusBadge(l.status)}</div>
-      <div class="lc-name">${esc(l.name)}</div>
-      <div class="lc-loc">📍 ${esc(l.location)} · ${esc(l.season)}</div>
-      <div class="lc-stats">
-        <div class="lcs"><span style="color:#ff6b35">${l.team_count}</span><small>Teams</small></div>
-        <div class="lcs"><span style="color:#00d4aa">${l.game_count}</span><small>Games</small></div>
-        <div class="lcs"><span style="color:#f7c948">${l.player_count}</span><small>Players</small></div>
-      </div>
-    </a>`;
-  }).join('');
+  const tickerBase = [
+    ...leagues.slice(0,5).map(l => l.name.toUpperCase() + ' \u2014 ' + (l.status||'UPCOMING').toUpperCase()),
+    '\uD83C\uDFC0 LIVE FIBA STATS TRACKING',
+    '\u26A1 REAL-TIME LEADERBOARDS',
+    `\uD83D\uDC5F ${stats.players} PLAYERS TRACKED`,
+    '\uD83D\uDCF2 AVAILABLE AS PWA \u2014 INSTALL NOW',
+    '\uD83C\uDFC6 FIBA 2024 STANDARD STATS ENGINE',
+    '\uD83C\uDDF5\uD83C\uDDED BUILT FOR PHILIPPINE BASKETBALL',
+  ];
+  const ticker = [...tickerBase,...tickerBase]
+    .map(t => `<span class="ti">${t}</span>`).join('');
 
-  return page('HoopStats — Philippines Basketball Stats', `
-    <nav class="topnav">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
-      <div class="nav-actions">
+  const leagueRows = leagues.map(l => {
+    const isOngoing = l.status === 'ongoing';
+    const lc = l.level==='Barangay'?'var(--orange)':l.level==='City/Municipal'?'#6b9fff':l.level==='Provincial'?'#00d4aa':'#a78bfa';
+    const statusBadge = isOngoing
+      ? `<span class="son">&#x25CF; ONGOING</span>`
+      : `<span class="sup">${(l.status||'UPCOMING').toUpperCase()}</span>`;
+    return `<a href="/league/${l.id}" class="lrow" data-level="${esc(l.level)}">
+      <div>
+        <div class="lname">${esc(l.name)}</div>
+        <div class="lmeta">
+          <span>&#x1F4CD; ${esc(l.location)}</span>
+          <span>&#x1F465; ${l.team_count} Teams</span>
+          <span>&#x1F4C5; ${esc(l.season)}</span>
+          <span style="color:${lc}">${esc(l.level)}</span>
+        </div>
+      </div>
+      <div class="lright">${statusBadge}<span class="larr">&#x203A;</span></div>
+    </a>`;
+  }).join('') || `<div style="padding:40px;text-align:center;color:rgba(255,255,255,.25);font-size:14px">No public leagues yet. <a href="/register" style="color:var(--orange)">Be the first!</a></div>`;
+
+  return page('HoopStats Pilipinas — Philippine Basketball Stats Platform', `
+    <style>
+      body{background:#0a0a0a}
+      :root{--orange:#f97316;--orange-d:#ea580c;--orange-dim:rgba(249,115,22,.1);--black:#0a0a0a;--d1:#111;--d2:#161616;--d3:#1c1c1c;--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13)}
+      /* NAV */
+      .lp-nav{position:sticky;top:0;z-index:200;background:rgba(10,10,10,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 48px;height:70px;transition:all .3s}
+      .lp-nav.scrolled{background:rgba(10,10,10,.99);box-shadow:0 4px 24px rgba(0,0,0,.5)}
+      .lp-logo{display:flex;align-items:center;gap:12px;margin-right:52px;flex-shrink:0;text-decoration:none;color:inherit}
+      .lp-logo img{width:44px;height:44px;border-radius:9px;object-fit:contain}
+      .lp-logo-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+      .lp-logo-sub{font-size:9px;color:#f97316;letter-spacing:3.5px;font-weight:700;text-transform:uppercase;opacity:.85}
+      .lp-nav-links{display:flex;align-items:center;gap:0;flex:1}
+      .lp-nav-links a{color:rgba(255,255,255,.42);font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:8px 18px;border-radius:4px;transition:color .15s}
+      .lp-nav-links a:hover{color:#fff}
+      .lp-nav-actions{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+      .lp-btn-signin{color:rgba(255,255,255,.55);font-size:13px;font-weight:700;padding:8px 14px;cursor:pointer;background:none;border:none;font-family:'Outfit',sans-serif;transition:color .15s;text-decoration:none}
+      .lp-btn-signin:hover{color:#fff}
+      .lp-btn-cta{background:var(--orange);color:#fff;border:none;border-radius:5px;padding:10px 22px;font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
+      .lp-btn-cta:hover{background:var(--orange-d);transform:translateY(-1px);box-shadow:0 6px 20px rgba(249,115,22,.35);color:#fff}
+      /* HERO */
+      .lp-hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--black)}
+      .lp-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1600&q=80') right center/cover no-repeat}
+      .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,1) 35%,rgba(10,10,10,.82) 58%,rgba(10,10,10,.25) 100%);z-index:1}
+      .lp-hero-bg::after{content:'';position:absolute;inset:0;background:rgba(10,10,10,.28);z-index:0}
+      .lp-hero-inner{position:relative;z-index:3;padding:80px 48px 100px;max-width:820px}
+      .lp-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(249,115,22,.7);border-radius:4px;padding:7px 16px;margin-bottom:36px;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.06)}
+      .lp-badge::before{content:'\\25CF';font-size:7px;animation:blink 1.8s infinite}
+      @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+      .lp-h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(68px,9.5vw,122px);font-weight:900;line-height:.9;text-transform:uppercase;letter-spacing:-1.5px}
+      .lp-h1 .accent{color:#f97316;font-style:italic}
+      .lp-h1 .ghost{color:rgba(255,255,255,.18);font-style:italic;display:block;letter-spacing:-2px}
+      .lp-hero-sub{font-size:17px;color:rgba(255,255,255,.56);line-height:1.78;max-width:560px;margin:28px 0 40px}
+      .lp-hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+      .lp-btn-primary{background:var(--orange);color:#fff;border:none;border-radius:5px;padding:17px 34px;font-size:14px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;display:inline-flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(249,115,22,.3);transition:all .2s;text-decoration:none}
+      .lp-btn-primary:hover{background:var(--orange-d);transform:translateY(-2px);box-shadow:0 12px 40px rgba(249,115,22,.45);color:#fff}
+      .lp-btn-ghost{background:rgba(255,255,255,.04);color:#fff;border:1.5px solid rgba(255,255,255,.22);border-radius:5px;padding:17px 32px;font-size:14px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;font-family:'Outfit',sans-serif;display:inline-flex;align-items:center;gap:8px;transition:all .2s;text-decoration:none}
+      .lp-btn-ghost:hover{border-color:var(--orange);color:var(--orange);background:rgba(249,115,22,.06);text-decoration:none}
+      /* STATS STRIP */
+      .lp-stats{background:var(--d1);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+      .lp-sc{padding:36px 24px;text-align:center;border-right:1px solid var(--border);position:relative;overflow:hidden;transition:background .2s}
+      .lp-sc:last-child{border-right:none}
+      .lp-sc:hover{background:rgba(249,115,22,.04)}
+      .lp-sc::after{content:'';position:absolute;bottom:0;left:50%;right:50%;height:2px;background:var(--orange);transition:all .3s;opacity:0}
+      .lp-sc:hover::after{left:0;right:0;opacity:1}
+      .lp-sn{font-family:'Barlow Condensed',sans-serif;font-size:62px;font-weight:900;color:var(--orange);line-height:1;display:block;letter-spacing:-1px}
+      .lp-sl{font-size:10px;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.32);text-transform:uppercase;margin-top:8px;display:block}
+      /* TICKER */
+      .lp-ticker-wrap{background:var(--orange);overflow:hidden;padding:11px 0;position:relative}
+      .lp-ticker-wrap::before,.lp-ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+      .lp-ticker-wrap::before{left:0;background:linear-gradient(to right,var(--orange),transparent)}
+      .lp-ticker-wrap::after{right:0;background:linear-gradient(to left,var(--orange),transparent)}
+      .lp-ticker{display:flex;animation:lpTick 40s linear infinite;white-space:nowrap}
+      .ti{display:inline-flex;align-items:center;font-size:12px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase;color:#fff;padding:0 28px;flex-shrink:0}
+      .ti::after{content:'\\25C6';margin-left:28px;opacity:.4;font-size:7px}
+      @keyframes lpTick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+      /* SECTION */
+      .lp-section{padding:110px 48px}
+      .lp-si{max-width:1260px;margin:0 auto}
+      .lp-eyebrow{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;display:block}
+      /* FEATURES */
+      .lp-feat-bg{background:var(--d1)}
+      .lp-fhead{display:grid;grid-template-columns:1fr 1.1fr;gap:64px;align-items:flex-end;margin-bottom:72px}
+      .lp-ftitle{font-family:'Barlow Condensed',sans-serif;font-size:clamp(46px,5.5vw,72px);font-weight:900;text-transform:uppercase;line-height:.92;letter-spacing:-1px}
+      .lp-ftitle .ol{color:var(--orange)}
+      .lp-fright p{font-size:16px;color:rgba(255,255,255,.38);line-height:1.85;max-width:440px;margin-left:auto}
+      .lp-fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.09)}
+      .lp-fc{background:var(--d2);padding:40px 36px;position:relative;transition:background .25s;cursor:default}
+      .lp-fc:hover{background:#1e1e1e}
+      .lp-fc:hover .lp-fcg{opacity:1}
+      .lp-fcg{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),transparent);opacity:0;transition:opacity .25s}
+      .lp-ftag{position:absolute;top:24px;right:24px;font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.1);padding:4px 9px;border-radius:3px}
+      .lp-ficon{width:52px;height:52px;border-radius:10px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.15);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:26px;transition:all .2s}
+      .lp-fc:hover .lp-ficon{background:rgba(249,115,22,.2);border-color:rgba(249,115,22,.35)}
+      .lp-fct{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+      .lp-fcd{font-size:13.5px;color:rgba(255,255,255,.36);line-height:1.78}
+      /* HOW */
+      .lp-how-bg{background:var(--black);position:relative;overflow:hidden}
+      .lp-how-bg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+      .lp-hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:64px;position:relative}
+      .lp-hgrid::before{content:'';position:absolute;top:36px;left:calc(16.66% + 20px);right:calc(16.66% + 20px);height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:.35}
+      .lp-hstep{text-align:center}
+      .lp-hnum{width:72px;height:72px;border-radius:50%;border:1px solid rgba(249,115,22,.3);background:rgba(249,115,22,.07);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--orange);margin:0 auto 24px;position:relative;z-index:1;transition:all .3s}
+      .lp-hstep:hover .lp-hnum{background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.6);box-shadow:0 0 32px rgba(249,115,22,.2)}
+      .lp-ht{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+      .lp-hd{font-size:14px;color:rgba(255,255,255,.4);line-height:1.75;max-width:260px;margin:0 auto}
+      /* LEAGUES */
+      .lp-ll{display:grid;grid-template-columns:400px 1fr;gap:96px;align-items:start}
+      .lp-lt{font-family:'Barlow Condensed',sans-serif;font-size:clamp(50px,6.5vw,80px);font-weight:900;text-transform:uppercase;line-height:.9;letter-spacing:-1.5px;margin:14px 0 22px}
+      .lp-lt span{color:var(--orange)}
+      .lp-ld{font-size:14.5px;color:rgba(255,255,255,.38);line-height:1.82;margin-bottom:30px;max-width:380px}
+      .lp-lvl{list-style:none;margin-bottom:36px;display:flex;flex-direction:column;gap:12px}
+      .lp-lvl li{display:flex;align-items:center;gap:12px;font-size:14.5px;font-weight:600;color:rgba(255,255,255,.62)}
+      .lp-lvl li::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0;box-shadow:0 0 8px rgba(249,115,22,.5)}
+      .lp-lphoto{border-radius:10px;overflow:hidden;margin-top:10px;position:relative}
+      .lp-lphoto img{width:100%;height:220px;object-fit:cover;filter:grayscale(20%) brightness(.78);transition:filter .4s;display:block}
+      .lp-lphoto:hover img{filter:grayscale(0%) brightness(.9)}
+      .lp-lphoto-cap{position:absolute;bottom:12px;left:14px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)}
+      .lp-lfilt{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+      .lp-lfbtn{padding:7px 16px;border-radius:4px;font-size:11px;font-weight:800;background:transparent;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.1);cursor:pointer;transition:all .15s;letter-spacing:.8px;text-transform:uppercase;font-family:'Outfit',sans-serif}
+      .lp-lfbtn.active,.lp-lfbtn:hover{background:rgba(249,115,22,.1);color:var(--orange);border-color:rgba(249,115,22,.3)}
+      .lp-llist{display:flex;flex-direction:column;gap:8px}
+      .lrow{background:var(--d2);border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--orange);border-radius:7px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit}
+      .lrow:hover{background:var(--d3);border-color:rgba(249,115,22,.3);transform:translateX(5px);box-shadow:0 4px 24px rgba(0,0,0,.4);text-decoration:none;color:inherit}
+      .lname{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:7px}
+      .lmeta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.38)}
+      .lright{display:flex;align-items:center;gap:12px;flex-shrink:0}
+      .son{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--orange);background:rgba(249,115,22,.1);padding:5px 12px;border-radius:4px;white-space:nowrap}
+      .sup{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:1px;color:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:4px;white-space:nowrap}
+      .larr{color:rgba(255,255,255,.18);font-size:20px;transition:all .2s;line-height:1}
+      .lrow:hover .larr{color:var(--orange);transform:translateX(3px)}
+      .lp-lva{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:18px 24px;margin-top:8px;background:var(--d2);border:1px solid rgba(255,255,255,.06);border-radius:7px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);cursor:pointer;transition:color .15s;text-decoration:none}
+      .lp-lva:hover{color:var(--orange)}
+      /* TESTIMONIALS */
+      .lp-social-bg{background:var(--d1);position:relative;overflow:hidden}
+      .lp-social-bg::after{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.07) 0%,transparent 70%);pointer-events:none}
+      .lp-sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:60px}
+      .lp-scard{background:var(--d3);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:32px;position:relative;overflow:hidden;transition:border-color .2s}
+      .lp-scard:hover{border-color:rgba(249,115,22,.25)}
+      .lp-scard::before{content:'\\275D';position:absolute;top:12px;right:20px;font-size:64px;color:rgba(249,115,22,.05);font-family:serif;line-height:1}
+      .lp-stext{font-size:14.5px;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:24px;font-style:italic}
+      .lp-sauth{display:flex;align-items:center;gap:12px}
+      .lp-savt{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--orange-d));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;flex-shrink:0;font-family:'Barlow Condensed',sans-serif}
+      .lp-sname{font-size:13px;font-weight:700}
+      .lp-srole{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+      .lp-sstars{color:var(--orange);font-size:12px;margin-bottom:16px;letter-spacing:2px}
+      /* CTA */
+      .lp-cta-box{background:linear-gradient(135deg,#1a0f00,#0f0f0f);border:1px solid rgba(249,115,22,.2);border-radius:16px;padding:80px;text-align:center;position:relative;overflow:hidden;max-width:900px;margin:0 auto}
+      .lp-cta-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 0%,rgba(249,115,22,.12) 0%,transparent 70%)}
+      .lp-ctitle{font-family:'Barlow Condensed',sans-serif;font-size:clamp(40px,6vw,72px);font-weight:900;text-transform:uppercase;line-height:.95;letter-spacing:-1px;margin-bottom:20px;position:relative}
+      .lp-ctitle span{color:var(--orange)}
+      .lp-csub{font-size:16px;color:rgba(255,255,255,.45);max-width:480px;margin:0 auto 36px;line-height:1.75;position:relative}
+      .lp-cbtns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
+      /* FOOTER */
+      .lp-footer{background:#080808;border-top:1px solid rgba(255,255,255,.06);padding:64px 48px 40px}
+      .lp-fi{max-width:1260px;margin:0 auto}
+      .lp-ftop{display:grid;grid-template-columns:280px 1fr 1fr 1fr;gap:48px;margin-bottom:56px}
+      .lp-fbrand img{width:44px;height:44px;border-radius:9px;object-fit:contain;margin-bottom:16px}
+      .lp-fbname{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+      .lp-fbdesc{font-size:13px;color:rgba(255,255,255,.28);line-height:1.7;max-width:220px}
+      .lp-fcolt{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:20px}
+      .lp-fcol a{display:block;font-size:13px;color:rgba(255,255,255,.35);margin-bottom:12px;transition:color .15s;cursor:pointer;text-decoration:none}
+      .lp-fcol a:hover{color:var(--orange)}
+      .lp-fbot{display:flex;align-items:center;justify-content:space-between;padding-top:28px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap;gap:12px}
+      .lp-fcopy{font-size:12px;color:rgba(255,255,255,.18)}
+      .lp-fbadge{display:inline-flex;align-items:center;gap:8px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:4px;padding:6px 14px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--orange)}
+      /* SCROLL ANIM */
+      .lp-anim{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+      .lp-anim.visible{opacity:1;transform:none}
+      /* RESPONSIVE */
+      @media(max-width:960px){
+        .lp-nav{padding:0 24px}
+        .lp-nav-links{display:none}
+        .lp-fhead{grid-template-columns:1fr;gap:20px}
+        .lp-fright p{margin-left:0}
+        .lp-fgrid{grid-template-columns:repeat(2,1fr)}
+        .lp-hgrid{grid-template-columns:1fr;gap:32px}
+        .lp-hgrid::before{display:none}
+        .lp-ll{grid-template-columns:1fr;gap:52px}
+        .lp-sgrid{grid-template-columns:repeat(2,1fr)}
+        .lp-ftop{grid-template-columns:1fr 1fr;gap:36px}
+        .lp-stats{grid-template-columns:repeat(2,1fr)}
+        .lp-sc:nth-child(2){border-right:none}
+        .lp-sc:nth-child(3){border-top:1px solid var(--border)}
+        .lp-section{padding:80px 32px}
+        .lp-cta-box{padding:60px 40px}
+        .lp-footer{padding:52px 32px 36px}
+      }
+      @media(max-width:640px){
+        .lp-nav{padding:0 18px;height:62px}
+        .lp-logo img{width:38px;height:38px}
+        .lp-logo-name{font-size:18px}
+        .lp-hero-inner{padding:64px 20px 80px}
+        .lp-h1{font-size:clamp(58px,16vw,88px)}
+        .lp-hero-sub{font-size:15px}
+        .lp-btn-primary,.lp-btn-ghost{padding:14px 24px;font-size:13px}
+        .lp-sn{font-size:44px}
+        .lp-sc{padding:24px 14px}
+        .lp-section{padding:60px 20px}
+        .lp-fgrid{grid-template-columns:1fr}
+        .lp-fc{padding:30px 24px}
+        .lp-sgrid{grid-template-columns:1fr}
+        .lp-cta-box{padding:48px 24px;border-radius:12px}
+        .lp-footer{padding:44px 20px 32px}
+        .lp-ftop{grid-template-columns:1fr}
+        .lp-fbot{flex-direction:column;align-items:flex-start}
+      }
+    </style>
+
+    <!-- NAV -->
+    <nav class="lp-nav" id="lpNav">
+      <a href="/" class="lp-logo">
+        <img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas">
+        <div><div class="lp-logo-name">HOOPSTATS</div><div class="lp-logo-sub">Pilipinas</div></div>
+      </a>
+      <div class="lp-nav-links">
+        <a href="#features">FEATURES</a>
+        <a href="#how">HOW IT WORKS</a>
+        <a href="#leagues">LEAGUES</a>
+        <a href="/install">INSTALL</a>
+      </div>
+      <div class="lp-nav-actions">
         ${user
-          ? `<a href="/admin" class="btn-nav">Admin Panel</a>`
-          : `<a href="/login" class="btn-nav">Login</a><a href="/register" class="btn-primary-sm">Register Free</a>`}
+          ? `<a href="/admin" class="lp-btn-signin">My Dashboard</a><a href="/admin" class="lp-btn-cta">Go to Admin</a>`
+          : `<a href="/login" class="lp-btn-signin">Sign In</a><a href="/register" class="lp-btn-cta">GET STARTED</a>`}
       </div>
     </nav>
-    <div class="hero">
-      <div class="hero-inner">
-        <div class="hero-eyebrow">🇵🇭 Philippine Basketball</div>
-        <h1 class="hero-title">Stats &amp; League<br><span class="accent">Management</span></h1>
-        <p class="hero-sub">From sitio courts to provincial arenas — manage your league, track every stat, share results publicly.</p>
-        <div class="hero-btns">
-          <a href="/register" class="btn-hero-primary">Start Free →</a>
-          <a href="#leagues" class="btn-hero-ghost">View Leagues</a>
-          <a href="/install" class="btn-hero-ghost" style="border-color:rgba(245,200,66,.4);color:var(--gold)">
-            📲 Install App
-          </a>
-        </div>
-        <div class="hero-stats">
-          ${[['Leagues',stats.leagues,'#ff6b35'],['Teams',stats.teams,'#00d4aa'],['Players',stats.players,'#a78bfa'],['Games',stats.games,'#f7c948']]
-            .map(([l,v,c])=>`<div class="hs"><span style="color:${c}">${v}</span><small>${l}</small></div>`).join('')}
+
+    <!-- HERO -->
+    <section class="lp-hero" id="hero">
+      <div class="lp-hero-bg"></div>
+      <div class="lp-hero-inner">
+        <div class="lp-badge">Philippine Basketball Stats Platform</div>
+        <h1 class="lp-h1">
+          WHERE <span class="accent">PINOY</span><br>
+          HOOPS GETS<br>
+          <span class="ghost">TRACKED.</span>
+        </h1>
+        <p class="lp-hero-sub">From barangay courts to provincial arenas — HoopStats Pilipinas gives every league the tools to manage games, track every stat, and share results with the community.</p>
+        <div class="lp-hero-btns">
+          <a href="/register" class="lp-btn-primary">START YOUR LEAGUE &rarr;</a>
+          <a href="#features" class="lp-btn-ghost">SEE FEATURES</a>
         </div>
       </div>
+    </section>
+
+    <!-- STATS STRIP -->
+    <div class="lp-stats">
+      <div class="lp-sc"><span class="lp-sn">${stats.leagues}</span><span class="lp-sl">Active Leagues</span></div>
+      <div class="lp-sc"><span class="lp-sn">${stats.teams}</span><span class="lp-sl">Teams</span></div>
+      <div class="lp-sc"><span class="lp-sn">${stats.players}</span><span class="lp-sl">Players Tracked</span></div>
+      <div class="lp-sc"><span class="lp-sn">${stats.games}</span><span class="lp-sl">Games Recorded</span></div>
     </div>
-    <div class="section" id="leagues">
-      <div class="section-inner">
-        <div class="section-header">
-          <h2>Active Leagues</h2>
-          <div class="level-filters">
-            ${['All','Barangay','City/Municipal','Provincial','Regional']
-              .map(f=>`<button class="level-filter" data-level="${f}">${f}</button>`).join('')}
+
+    <!-- TICKER -->
+    <div class="lp-ticker-wrap">
+      <div class="lp-ticker">${ticker}</div>
+    </div>
+
+    <!-- FEATURES -->
+    <section class="lp-section lp-feat-bg" id="features">
+      <div class="lp-si">
+        <div class="lp-fhead lp-anim">
+          <div>
+            <span class="lp-eyebrow">Platform Features</span>
+            <h2 class="lp-ftitle">EVERYTHING YOUR<br><span class="ol">LEAGUE NEEDS</span></h2>
+          </div>
+          <div class="lp-fright"><p>Built specifically for Philippine basketball culture — from impromptu sitio leagues to organized provincial tournaments. Free to start, powerful to use.</p></div>
+        </div>
+        <div class="lp-fgrid">
+          ${[
+            {icon:'&#x1F3C6;',tag:'CORE',    title:'LEAGUE MANAGEMENT',     desc:'Create and manage leagues from barangay to regional level. Set up brackets, schedules, and standings in minutes.'},
+            {icon:'&#x1F4CA;',tag:'ANALYTICS',title:'LIVE STATS TRACKING',  desc:'Record points, rebounds, assists, steals, blocks per player per game. Real-time leaderboards updated as games progress.'},
+            {icon:'&#x1F517;',tag:'SOCIAL',   title:'PUBLIC RESULTS SHARING',desc:'Share game results and standings with your community instantly. No account needed to view — just a link.'},
+            {icon:'&#x1F4F1;',tag:'MOBILE',   title:'PROGRESSIVE WEB APP',  desc:'Install HoopStats like a native app on any device. Works great on the sidelines with an unstable connection.'},
+            {icon:'&#x1F464;',tag:'PLAYERS',  title:'PLAYER PROFILES',       desc:'Every player gets a full stats history across seasons and leagues. Track improvement over time.'},
+            {icon:'&#x1F6E1;',tag:'PRICING',  title:'FREE TO START',          desc:'Register your league for free. No credit card. No hidden fees. Built for community organizers, not corporations.'},
+          ].map(f=>`
+          <div class="lp-fc lp-anim">
+            <div class="lp-fcg"></div>
+            <span class="lp-ftag">${f.tag}</span>
+            <div class="lp-ficon">${f.icon}</div>
+            <div class="lp-fct">${f.title}</div>
+            <p class="lp-fcd">${f.desc}</p>
+          </div>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="lp-section lp-how-bg" id="how">
+      <div class="lp-si">
+        <div style="text-align:center;max-width:520px;margin:0 auto" class="lp-anim">
+          <span class="lp-eyebrow">How It Works</span>
+          <h2 class="lp-ftitle" style="font-size:clamp(40px,5vw,62px)">UP AND RUNNING<br><span class="ol">IN MINUTES</span></h2>
+        </div>
+        <div class="lp-hgrid">
+          <div class="lp-hstep lp-anim"><div class="lp-hnum">1</div><div class="lp-ht">Create Your League</div><p class="lp-hd">Sign up free and set up your league in minutes. Add teams, players, and schedule your games.</p></div>
+          <div class="lp-hstep lp-anim"><div class="lp-hnum">2</div><div class="lp-ht">Track Every Game</div><p class="lp-hd">Use the live scorer on your phone courtside. Record every basket, rebound, steal and foul in real time.</p></div>
+          <div class="lp-hstep lp-anim"><div class="lp-hnum">3</div><div class="lp-ht">Share With Everyone</div><p class="lp-hd">Your public league page is live instantly. Share the link — fans see standings, stats, and game results.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEAGUES -->
+    <section class="lp-section" style="background:var(--black)" id="leagues">
+      <div class="lp-si">
+        <div class="lp-ll">
+          <div class="lp-anim">
+            <span class="lp-eyebrow">Active Leagues</span>
+            <h2 class="lp-lt">FROM SITIO<br>TO <span>ARENA</span></h2>
+            <p class="lp-ld">HoopStats supports all levels of Philippine basketball administration — from informal barangay pickup games to formal regional competitions.</p>
+            <ul class="lp-lvl">
+              <li>Barangay Level</li>
+              <li>City / Municipal Level</li>
+              <li>Provincial Level</li>
+              <li>Regional Level</li>
+            </ul>
+            <div class="lp-lphoto">
+              <img src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=700&q=70" alt="Philippine basketball court" loading="lazy"/>
+              <span class="lp-lphoto-cap">Barangay Court, Philippines</span>
+            </div>
+          </div>
+          <div>
+            <div class="lp-lfilt" id="lpLeagueFilters">
+              ${['All','Barangay','City/Municipal','Provincial','Regional']
+                .map(f=>`<button class="lp-lfbtn${f==='All'?' active':''}" data-level="${f}">${f}</button>`).join('')}
+            </div>
+            <div class="lp-llist" id="lpLeagueList">${leagueRows}</div>
+            <a href="#" class="lp-lva">VIEW ALL LEAGUES &rsaquo;</a>
           </div>
         </div>
-        <div class="league-grid" id="leagueGrid">
-          ${leagueCards || '<div class="empty-state"><div class="es-icon">🏀</div><div>No public leagues yet.</div></div>'}
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="lp-section lp-social-bg">
+      <div class="lp-si">
+        <div style="text-align:center;max-width:520px;margin:0 auto" class="lp-anim">
+          <span class="lp-eyebrow">From the Community</span>
+          <h2 class="lp-ftitle" style="font-size:clamp(38px,5vw,58px)">TRUSTED BY<br><span class="ol">PINOY COACHES</span></h2>
+        </div>
+        <div class="lp-sgrid">
+          <div class="lp-scard lp-anim"><div class="lp-sstars">&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;</div><p class="lp-stext">"Finally an app that understands Pinoy basketball. Super easy to set up our barangay league. My players love seeing their stats after every game."</p><div class="lp-sauth"><div class="lp-savt">JR</div><div><div class="lp-sname">Jun Rey Santos</div><div class="lp-srole">Commissioner &middot; Brgy. San Roque Basketball Cup</div></div></div></div>
+          <div class="lp-scard lp-anim"><div class="lp-sstars">&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;</div><p class="lp-stext">"Ginamit namin sa aming city league. Ang ganda ng live scorer — real time pa ang stats. Walang issues kahit mabagal ang internet sa court."</p><div class="lp-sauth"><div class="lp-savt">MC</div><div><div class="lp-sname">Mark Corpuz</div><div class="lp-srole">League Director &middot; Marikina City Basketball</div></div></div></div>
+          <div class="lp-scard lp-anim"><div class="lp-sstars">&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;</div><p class="lp-stext">"The player profiles are a game changer. Parents can see their kids' stats after every game. We share the link on our Facebook group and everyone loves it."</p><div class="lp-sauth"><div class="lp-savt">AL</div><div><div class="lp-sname">Armando Lim</div><div class="lp-srole">Coach &middot; Nuvali Canlubang League</div></div></div></div>
         </div>
       </div>
-    </div>
-    <script src="/js/public.js"></script>
+    </section>
+
+    <!-- CTA -->
+    <section class="lp-section" style="background:var(--black)">
+      <div class="lp-si">
+        <div class="lp-cta-box lp-anim">
+          <h2 class="lp-ctitle">READY TO TRACK<br><span>YOUR LEAGUE?</span></h2>
+          <p class="lp-csub">Join Philippine basketball commissioners who track their leagues with HoopStats. Free to start — no credit card needed.</p>
+          <div class="lp-cbtns">
+            <a href="/register" class="lp-btn-primary">START YOUR LEAGUE FREE &rarr;</a>
+            <a href="/install"  class="lp-btn-ghost">&#x1F4F2; Install as App</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="lp-footer">
+      <div class="lp-fi">
+        <div class="lp-ftop">
+          <div class="lp-fbrand">
+            <img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas">
+            <div class="lp-fbname">HOOPSTATS PILIPINAS</div>
+            <p class="lp-fbdesc">Philippine Basketball Stats Platform — From barangay to arena. Built for the community. &#x1F1F5;&#x1F1ED;</p>
+          </div>
+          <div class="lp-fcol"><div class="lp-fcolt">Platform</div><a href="#features">Features</a><a href="#how">How It Works</a><a href="#leagues">View Leagues</a><a href="/install">Install App</a></div>
+          <div class="lp-fcol"><div class="lp-fcolt">Account</div><a href="/login">Sign In</a><a href="/register">Register Free</a><a href="/admin">Admin Panel</a></div>
+          <div class="lp-fcol"><div class="lp-fcolt">Legal</div><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Contact</a></div>
+        </div>
+        <div class="lp-fbot">
+          <div class="lp-fcopy">&copy; ${new Date().getFullYear()} HoopStats Pilipinas. All rights reserved.</div>
+          <div class="lp-fbadge">&#x1F3C0; FIBA 2024 STATS ENGINE</div>
+          <div class="lp-fcopy">Built with &#x2764;&#xFE0F; for Philippine Basketball</div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/public.js?v31"></script>
+    <script>
+      // Nav scroll
+      window.addEventListener('scroll',function(){
+        document.getElementById('lpNav').classList.toggle('scrolled',window.scrollY>40);
+      },{passive:true});
+      // League filter
+      var lpFilters = document.getElementById('lpLeagueFilters');
+      if(lpFilters){
+        lpFilters.addEventListener('click',function(e){
+          var b=e.target.closest('.lp-lfbtn');if(!b)return;
+          document.querySelectorAll('.lp-lfbtn').forEach(function(x){x.classList.remove('active')});
+          b.classList.add('active');
+          var lv=b.getAttribute('data-level');
+          document.querySelectorAll('.lrow').forEach(function(r){
+            r.style.display=(lv==='All'||r.getAttribute('data-level')===lv)?'':'none';
+          });
+        });
+      }
+      // Scroll animation
+      var lpObs=new IntersectionObserver(function(entries){
+        entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible')}});
+      },{threshold:0.08});
+      document.querySelectorAll('.lp-anim').forEach(function(el){lpObs.observe(el)});
+    </script>
   `);
 }
 
