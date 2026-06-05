@@ -615,10 +615,10 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                 <td style="color:var(--gold);font-weight:700">${((t.wins/(t.wins+t.losses||1))*100).toFixed(1)}%</td>
               </tr>`).join('') || '<tr><td colspan="5" class="empty">No teams yet.</td></tr>'}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
-            <div id="tab-players" class="tab-pane hidden">
+      <div id="tab-players" class="tab-pane hidden">
         <div style="font-size:11px;color:#555;margin-bottom:8px;font-weight:600">
           💡 Click any column header to sort
         </div>

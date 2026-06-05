@@ -703,3 +703,105 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .lh-meta { font-size: 12px; }
   .league-header { padding: 0; }
 }
+
+/* ─── MOBILE NAV — hide GET STARTED on small screens ────────────────────────── */
+@media(max-width:640px){
+  /* Hide CTA button in landing page nav on mobile - it covers hamburger */
+  .lp-btn-cta { display: none; }
+
+  /* Fix tabs overlap issue — ensure they sit properly */
+  .pub-tabs {
+    position: sticky;
+    top: 56px;
+    z-index: 100;
+    background: var(--dark-1);
+    border-bottom: 2px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-bottom: 0;
+  }
+  .pub-tabs::-webkit-scrollbar { display: none; }
+
+  .tabs-inner {
+    display: flex;
+    padding: 0 16px;
+    min-width: max-content;
+    width: 100%;
+  }
+
+  .ptab {
+    padding: 12px 16px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Tab panes — full width, proper padding */
+  .tab-pane { display: block; }
+  .tab-pane.hidden { display: none !important; }
+
+  .pub-content {
+    padding: 16px 14px 48px;
+  }
+
+  /* Table scroll on mobile */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+  .table-scroll table,
+  .stats-table {
+    min-width: 320px;
+  }
+
+  /* Player stats table min width */
+  #playerStatsTable { min-width: 640px; }
+
+  /* Pub leaders - always 2 col on mobile */
+  .pub-leaders {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding: 16px 14px;
+    margin-bottom: 0;
+    background: var(--dark-1);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  /* Leader cards tighter on mobile */
+  .leader-card { padding: 12px 14px; }
+  .leader-val  { font-size: 26px; }
+  .leader-label { font-size: 9px; letter-spacing: 1px; }
+  .leader-name, .leader-link { font-size: 11px; }
+
+  /* League header tighter */
+  .lh-inner { padding: 14px 14px 12px; }
+  .lh-inner h1 { font-size: clamp(18px, 5vw, 26px); line-height: 1.2; }
+  .lh-meta { font-size: 12px; }
+  .lh-top { margin-bottom: 8px; }
+
+  /* Nav topnav on public pages */
+  .topnav { height: auto; min-height: 56px; }
+  .topnav-inner {
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    gap: 8px;
+    height: auto;
+    min-height: 56px;
+  }
+  .nav-brand img { width: 36px; height: 36px; }
+  .brand-text { font-size: 16px; }
+  .brand-sub  { font-size: 8px; }
+  .nav-actions { margin-left: auto; gap: 6px; }
+  .btn-ghost-sm { font-size: 11px; padding: 5px 10px; }
+}
+
+/* ─── AUTH PAGE — back button and mobile ─────────────────────────────────────── */
+.auth-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,.4); font-size: 12px; font-weight: 700;
+  margin-bottom: 20px; text-decoration: none; transition: color .15s;
+}
+.auth-back:hover { color: var(--orange); text-decoration: none; }
