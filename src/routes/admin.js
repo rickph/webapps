@@ -239,7 +239,7 @@ router.get('/league/:id', async (req, res) => {
         {title:'ASSISTS',           arr:seasonSorted.ast,  fn:p=>f1(p.ast)},
         {title:'BLOCKS',            arr:seasonSorted.blk,  fn:p=>f1(p.blk)},
         {title:'STEALS',            arr:seasonSorted.stl,  fn:p=>f1(p.stl)},
-        {title:'TURNOVERS',         arr:seasonSorted.to,   fn:p=>f1(p.to)},
+        {title:'TURNOVERS',         arr:seasonSorted.to,   fn:p=>f1(p.to_val)},
         {title:'3-POINTERS MADE',   arr:seasonSorted.fg3m, fn:p=>f1(p.fg3m)},
         {title:'FREE THROWS MADE',  arr:seasonSorted.ftm,  fn:p=>f1(p.ftm)},
       ];
