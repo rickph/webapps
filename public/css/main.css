@@ -805,3 +805,166 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   margin-bottom: 20px; text-decoration: none; transition: color .15s;
 }
 .auth-back:hover { color: var(--orange); text-decoration: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ADMIN PAGES — COMPLETE MOBILE RESPONSIVE FIX
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── ADMIN LEAGUE CARDS (dashboard) ─── */
+.admin-league-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  transition: border-color .15s;
+  margin-bottom: 0;
+}
+.admin-league-card:hover { border-color: rgba(249,115,22,.3); }
+.alc-top  { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.alc-name { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:.5px; color:var(--text); margin-bottom:4px; line-height:1.1; }
+.alc-loc  { font-size:13px; color:var(--text-3); margin-bottom:5px; }
+.alc-meta { font-size:12px; color:var(--text-3); margin-bottom:10px; }
+.alc-meta code { background:var(--dark-3); padding:2px 8px; border-radius:4px; font-size:11px; color:var(--text-2); letter-spacing:.5px; font-family:monospace; }
+.alc-stats { display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap; align-items:center; }
+.alc-stats span { font-size:13px; color:var(--text-2); }
+.alc-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.league-grid-admin { display:flex; flex-direction:column; gap:12px; }
+
+/* ─── MISSING BUTTON STYLES ─── */
+.btn-primary-sm {
+  background: var(--orange);
+  color: #fff; border: none; border-radius: 5px;
+  padding: 8px 16px; font-size: 12px; font-weight: 800;
+  letter-spacing: .5px; text-transform: uppercase;
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  text-decoration: none; display: inline-flex;
+  align-items: center; gap: 4px; transition: all .15s;
+  white-space: nowrap;
+}
+.btn-primary-sm:hover { background: var(--orange-d); color:#fff; text-decoration:none; }
+
+.btn-danger-sm {
+  background: rgba(239,68,68,.1); color: #f87171;
+  border: 1px solid rgba(239,68,68,.2); border-radius: 5px;
+  padding: 8px 12px; font-size: 13px; cursor: pointer;
+  font-family: 'Outfit', sans-serif; text-decoration: none;
+  display: inline-flex; align-items: center; transition: all .15s;
+  white-space: nowrap;
+}
+.btn-danger-sm:hover { background: rgba(239,68,68,.22); }
+
+/* ─── DASH STAT CARDS — fix number+label spacing ─── */
+.ds {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ds span, .ds > *:first-child {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px; font-weight: 900; line-height: 1;
+}
+.ds small {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: var(--text-3); text-transform: uppercase;
+}
+
+/* ─── ADMIN TABS — remove white background, clean dark style ─── */
+.admin-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: transparent;
+  flex-wrap: nowrap;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+
+.atab {
+  padding: 12px 18px;
+  font-size: 12px; font-weight: 800;
+  color: var(--text-3); cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent !important;
+  transition: all .15s;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  letter-spacing: .5px; text-transform: uppercase;
+  font-family: 'Outfit', sans-serif;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+  outline: none;
+}
+.atab:hover { color: var(--text); background: rgba(255,255,255,.03) !important; }
+.atab.active { color: var(--orange) !important; border-bottom-color: var(--orange); background: transparent !important; }
+
+/* ─── ADMIN DETAIL HEADER ─── */
+.admin-detail-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 20px; align-items: center;
+}
+
+/* ─── LANDING PAGE NAV — remove GET STARTED everywhere ─── */
+.lp-btn-cta { display: none !important; }
+
+/* ─── TOPNAV — remove nav-center on admin (already handled but reinforce) ─── */
+.nav-center { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MOBILE OVERRIDES (≤640px)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+@media(max-width:640px) {
+
+  /* Admin wrap */
+  .admin-wrap { padding: 14px 14px 48px; }
+
+  /* Admin header */
+  .admin-header { gap: 10px; align-items: flex-start; }
+  .admin-header h1 { font-size: 20px; }
+  .btn-primary { font-size: 12px; padding: 9px 16px; }
+
+  /* Dash stats — 2 col grid */
+  .dash-stats { grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card .stat-val { font-size: 30px; }
+
+  /* Dash stat items (ds class) */
+  .ds span, .ds > *:first-child { font-size: 32px; }
+
+  /* League cards */
+  .admin-league-card { padding: 14px 16px; }
+  .alc-name { font-size: 18px; }
+  .alc-loc  { font-size: 12px; }
+  .alc-meta { font-size: 11px; }
+  .alc-stats { gap: 12px; margin-bottom: 12px; }
+  .alc-stats span { font-size: 12px; }
+  .alc-actions { gap: 6px; }
+  .btn-primary-sm { font-size: 11px; padding: 7px 12px; }
+  .btn-ghost-sm   { font-size: 11px; padding: 7px 12px; }
+  .btn-danger-sm  { font-size: 12px; padding: 7px 10px; }
+
+  /* Admin tabs */
+  .admin-tabs { flex-wrap: nowrap; margin-bottom: 16px; }
+  .atab { padding: 10px 14px; font-size: 11px; }
+
+  /* Admin detail */
+  .admin-detail-actions { gap: 6px; margin-bottom: 14px; }
+  .admin-detail-actions .btn-ghost-sm { font-size: 11px; padding: 7px 11px; }
+
+  /* Card */
+  .card { padding: 14px; border-radius: 8px; }
+
+  /* Form */
+  .modal-grid { grid-template-columns: 1fr; }
+  .field-group { margin-bottom: 14px; }
+
+  /* Table */
+  .stats-table th { font-size: 10px; padding: 8px 10px; }
+  .stats-table td { font-size: 12px; padding: 10px 10px; }
+
+  /* Game cards */
+  .game-card { padding: 12px 14px; }
+  .game-matchup { flex-direction: column; gap: 4px; }
+  .row-actions { width: 100%; justify-content: flex-start; gap: 6px; margin-top: 8px; }
+  .row-actions .btn-ghost-sm { font-size: 11px; }
+}

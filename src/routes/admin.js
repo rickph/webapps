@@ -96,10 +96,10 @@ router.get('/', async (req, res) => {
         </div>
       </div>
       <div class="dash-stats">
-        <div class="ds"><span style="color:#ff6b35">${leagues.length}</span><small>My Leagues</small></div>
-        <div class="ds"><span style="color:#00d4aa">${totals.teams}</span><small>Teams</small></div>
-        <div class="ds"><span style="color:#a78bfa">${totals.players}</span><small>Players</small></div>
-        <div class="ds"><span style="color:#f7c948">${totals.games}</span><small>Games Played</small></div>
+        <div class="stat-card" style="--c:#f97316"><div class="stat-val">${leagues.length}</div><div class="stat-lbl">My Leagues</div></div>
+        <div class="stat-card" style="--c:#00d4aa"><div class="stat-val">${totals.teams}</div><div class="stat-lbl">Teams</div></div>
+        <div class="stat-card" style="--c:#a78bfa"><div class="stat-val">${totals.players}</div><div class="stat-lbl">Players</div></div>
+        <div class="stat-card" style="--c:#f7c948"><div class="stat-val">${totals.games}</div><div class="stat-lbl">Games Played</div></div>
       </div>
       <div class="league-grid-admin">
         ${leagueCards || '<div class="empty-state"><div class="es-icon">🏆</div><div>No leagues yet. <a href="/admin/new-league" style="color:#ff6b35">Create your first one!</a></div></div>'}
@@ -1438,11 +1438,13 @@ function adminPage(title, user, content) {
 </head>
 <body class="dark-bg">
 <nav class="topnav">
-  <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px"><img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
-  <div class="nav-center" style="font-size:11px;color:#555;letter-spacing:2px;font-weight:700">ADMIN</div>
-  <div class="nav-actions">
-    <span style="font-size:13px;color:#888">${esc(user.name)}</span>
-    <a href="/logout" class="btn-ghost-sm">Logout</a>
+  <div class="topnav-inner">
+    <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas" style="width:38px;height:38px;border-radius:8px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
+    <div style="flex:1"></div>
+    <div class="nav-actions">
+      <span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600">${esc(user.name)}</span>
+      <a href="/logout" class="btn-ghost-sm">Logout</a>
+    </div>
   </div>
 </nav>
 <div class="admin-wrap">${content}</div>
