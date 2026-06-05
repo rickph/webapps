@@ -140,9 +140,9 @@ function renderLanding(leagues, stats, user) {
       .lp-btn-cta:hover{background:var(--orange-d);transform:translateY(-1px);box-shadow:0 6px 20px rgba(249,115,22,.35);color:#fff}
       /* HERO */
       .lp-hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;background:var(--black)}
-      .lp-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1600&q=80') right center/cover no-repeat}
-      .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,.96) 30%,rgba(10,10,10,.6) 55%,rgba(10,10,10,.1) 100%);z-index:1}
-      .lp-hero-bg::after{content:'';position:absolute;inset:0;background:rgba(10,10,10,.1);z-index:0}
+      .lp-hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1600&q=80') right center/cover no-repeat;filter:grayscale(15%) brightness(.75)}
+      .lp-hero-bg::before{content:'';position:absolute;inset:0;background:linear-gradient(105deg,rgba(10,10,10,.92) 25%,rgba(10,10,10,.55) 50%,rgba(10,10,10,.05) 100%);z-index:1}
+      .lp-hero-bg::after{content:'';position:absolute;inset:0;z-index:0}
       .lp-hero-inner{position:relative;z-index:3;width:100%;display:flex;align-items:center;min-height:100vh}
       .lp-hero-content{max-width:660px;padding:80px 0 100px}.lp-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(249,115,22,.7);border-radius:4px;padding:7px 16px;margin-bottom:36px;font-size:11px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:#f97316;background:rgba(249,115,22,.06)}
       .lp-badge::before{content:'\\25CF';font-size:7px;animation:blink 1.8s infinite}

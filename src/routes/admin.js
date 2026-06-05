@@ -4,7 +4,7 @@ const db      = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
 const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 const multer      = require('multer');
-const { importStats, generateTemplate } = require('../import-stats');
+const { importGameStats, generateTemplate } = require('../import-stats');
 
 // Spreadsheet upload (memory storage — no disk write needed)
 const uploadSheet = multer({
@@ -1607,10 +1607,10 @@ router.post('/league/:id/import-stats/:gid', (req, res) => {
 
       if (!req.file) return res.redirect(`/admin/league/${req.params.id}/import-stats/${req.params.gid}`);
 
-      const result = await importStats(req.file.buffer, req.file.mimetype, {
+      const result = await importGameStats(req.file.buffer, {
         leagueId: req.params.id,
         gameId:   req.params.gid,
-        db,
+        db
       });
 
       // Recalculate season averages for imported players
@@ -1649,60 +1649,66 @@ router.post('/league/:id/import-stats/:gid', (req, res) => {
         await recalcStandings(req.params.id, db);
       }
 
-      const user = req.user;
       const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
 
-      res.send(adminPage('Import Results | ' + esc(league.name), user, `
+      res.send(adminPage('Import Results | ' + esc(league.name), req.user, `
         <div class="admin-header"><div>
           <a href="/admin/league/${league.id}" class="back-link">← Back to League</a>
           <h1>📊 Import Results</h1>
         </div></div>
-        <div class="card" style="max-width:600px">
+        <div class="card" style="max-width:640px">
 
-          <!-- SUMMARY -->
-          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
-            <div style="flex:1;min-width:120px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.25);border-radius:10px;padding:14px;text-align:center">
-              <div style="font-size:32px;font-weight:900;color:var(--teal)">${result.imported.length}</div>
-              <div style="font-size:11px;color:var(--teal);font-weight:700;letter-spacing:1px;margin-top:4px">IMPORTED</div>
+          <!-- SUMMARY STRIP -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+            <div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:#00d4aa;line-height:1">${result.imported.length}</div>
+              <div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;margin-top:6px">IMPORTED</div>
             </div>
-            <div style="flex:1;min-width:120px;background:rgba(247,201,72,.08);border:1px solid rgba(247,201,72,.2);border-radius:10px;padding:14px;text-align:center">
-              <div style="font-size:32px;font-weight:900;color:var(--gold)">${result.skipped.length}</div>
-              <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-top:4px">SKIPPED</div>
+            <div style="background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.18);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:#f7c948;line-height:1">${result.skipped.length}</div>
+              <div style="font-size:10px;color:#f7c948;font-weight:800;letter-spacing:1.5px;margin-top:6px">SKIPPED</div>
             </div>
-            <div style="flex:1;min-width:120px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;text-align:center">
-              <div style="font-size:32px;font-weight:900;color:var(--muted)">${result.total}</div>
-              <div style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-top:4px">TOTAL ROWS</div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:rgba(255,255,255,.4);line-height:1">${result.total}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:800;letter-spacing:1.5px;margin-top:6px">TOTAL ROWS</div>
             </div>
           </div>
 
-          <!-- IMPORTED -->
+          <!-- IMPORTED PLAYERS -->
           ${result.imported.length > 0 ? `
-          <div style="margin-bottom:16px">
-            <div style="font-size:12px;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:8px">✅ SUCCESSFULLY IMPORTED</div>
+          <div style="margin-bottom:18px">
+            <div style="font-size:11px;font-weight:800;color:#00d4aa;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+              ✅ SUCCESSFULLY IMPORTED
+            </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
-              ${result.imported.map(n => `<span style="background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--teal)">${esc(n)}</span>`).join('')}
+              ${result.imported.map(n => `<span style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.18);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:#00d4aa">${esc(n)}</span>`).join('')}
             </div>
           </div>` : ''}
 
-          <!-- WARNINGS -->
-          ${result.warnings.length > 0 ? `
-          <div style="margin-bottom:16px">
-            <div style="font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px;margin-bottom:8px">⚠️ WARNINGS</div>
-            <div style="background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.15);border-radius:8px;padding:12px;font-size:12px;line-height:2">
-              ${result.warnings.map(w => `<div>• ${esc(w)}</div>`).join('')}
+          <!-- SKIPPED PLAYERS -->
+          ${result.skipped.length > 0 ? `
+          <div style="margin-bottom:18px">
+            <div style="font-size:11px;font-weight:800;color:#f7c948;letter-spacing:1.5px;margin-bottom:10px">
+              ⚠️ SKIPPED — Name not found in league roster
+            </div>
+            <div style="background:rgba(247,201,72,.04);border:1px solid rgba(247,201,72,.12);border-radius:8px;padding:12px 14px">
+              ${result.skipped.map(n => `<div style="font-size:12px;color:rgba(255,255,255,.5);padding:3px 0">• ${esc(n)}</div>`).join('')}
+            </div>
+            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:8px">
+              💡 Check player name spelling in the spreadsheet matches the roster exactly.
             </div>
           </div>` : ''}
 
           <!-- ERRORS -->
           ${result.errors.length > 0 ? `
-          <div style="margin-bottom:16px">
-            <div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:8px">❌ ERRORS</div>
-            <div style="background:rgba(230,51,41,.06);border:1px solid rgba(230,51,41,.15);border-radius:8px;padding:12px;font-size:12px;line-height:2">
-              ${result.errors.map(e => `<div>• ${esc(e)}</div>`).join('')}
+          <div style="margin-bottom:18px">
+            <div style="font-size:11px;font-weight:800;color:#f87171;letter-spacing:1.5px;margin-bottom:10px">❌ ERRORS</div>
+            <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:12px 14px">
+              ${result.errors.map(e => `<div style="font-size:12px;color:#f87171;padding:3px 0">• ${esc(e)}</div>`).join('')}
             </div>
           </div>` : ''}
 
-          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
             <a href="/admin/league/${league.id}" class="btn-primary">← Back to League</a>
             <a href="/admin/league/${league.id}/import-stats/${req.params.gid}" class="btn-ghost">Import Another File</a>
           </div>
