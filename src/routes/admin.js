@@ -184,10 +184,10 @@ router.get('/league/:id', async (req, res) => {
                 LEFT JOIN teams ht ON g.home_team_id=ht.id
                 LEFT JOIN teams at ON g.away_team_id=at.id
                 WHERE g.league_id=$1 ORDER BY g.id DESC`, [lid]),
-      db.query(`SELECT pss.*,p.name,p.pos,t.name as team_name FROM player_season_stats pss
+      db.query(`SELECT pss.*,p.name,t.name as team_name FROM player_season_stats pss
                 LEFT JOIN players p ON pss.player_id=p.id
                 LEFT JOIN teams t ON p.team_id=t.id
-                WHERE pss.league_id=$1 AND pss.gp>0`, [lid]),
+                WHERE pss.league_id=$1`, [lid]).catch(()=>[]),
     ]);
 
     const topts = teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
@@ -197,11 +197,11 @@ router.get('/league/:id', async (req, res) => {
     // Build daily leaders from last final game
     async function getDailyLeaders(gameId) {
       if (!gameId) return [];
-      return db.query(`SELECT gs.*,p.name,p.pos,t.name as team_name
+      return db.query(`SELECT gs.*,p.name,t.name as team_name
                        FROM game_stats gs
                        LEFT JOIN players p ON gs.player_id=p.id
                        LEFT JOIN teams t ON p.team_id=t.id
-                       WHERE gs.game_id=$1`, [gameId]);
+                       WHERE gs.game_id=$1`, [gameId]).catch(()=>[]);
     }
     const dailyStats = lastGame ? await getDailyLeaders(lastGame.id) : [];
 
@@ -223,36 +223,43 @@ router.get('/league/:id', async (req, res) => {
 
     // Season leaders
     const seasonSorted = {
-      pts:  [...seasonStats].sort((a,b)=>b.pts-a.pts).slice(0,5),
-      reb:  [...seasonStats].sort((a,b)=>b.reb-a.reb).slice(0,5),
-      ast:  [...seasonStats].sort((a,b)=>b.ast-a.ast).slice(0,5),
-      blk:  [...seasonStats].sort((a,b)=>b.blk-a.blk).slice(0,5),
-      stl:  [...seasonStats].sort((a,b)=>b.stl-a.stl).slice(0,5),
-      to:   [...seasonStats].sort((a,b)=>b.to_val-a.to_val).slice(0,5),
-      fg3m: [...seasonStats].sort((a,b)=>b.fg3m-a.fg3m).slice(0,5),
-      ftm:  [...seasonStats].sort((a,b)=>b.ftm-a.ftm).slice(0,5),
+      pts:  [...(seasonStats||[])].sort((a,b)=>(+b.pts||0)-(+a.pts||0)).slice(0,5),
+      reb:  [...(seasonStats||[])].sort((a,b)=>(+b.reb||0)-(+a.reb||0)).slice(0,5),
+      ast:  [...(seasonStats||[])].sort((a,b)=>(+b.ast||0)-(+a.ast||0)).slice(0,5),
+      blk:  [...(seasonStats||[])].sort((a,b)=>(+b.blk||0)-(+a.blk||0)).slice(0,5),
+      stl:  [...(seasonStats||[])].sort((a,b)=>(+b.stl||0)-(+a.stl||0)).slice(0,5),
+      to:   [...(seasonStats||[])].sort((a,b)=>(+b.to_val||0)-(+a.to_val||0)).slice(0,5),
+      fg3m: [...(seasonStats||[])].sort((a,b)=>(+b.fg3m||0)-(+a.fg3m||0)).slice(0,5),
+      ftm:  [...(seasonStats||[])].sort((a,b)=>(+b.ftm||0)-(+a.ftm||0)).slice(0,5),
     };
 
     function leaderRows(arr, valFn) {
-      if (!arr.length) return '<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No data yet</div>';
-      return arr.map((p,i)=>`
+      const valid = (arr||[]).filter(p=>p && p.name);
+      if (!valid.length) return '<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No data yet</div>';
+      return valid.map((p,i)=>{
+        let val;
+        try { val = valFn(p); } catch(e) { val = '—'; }
+        return `
         <div class="tp-row">
           <span class="tp-rank">${i+1}.</span>
-          <span class="tp-name">${esc(p.name)}</span>
+          <span class="tp-name">${esc(p.name||'—')}</span>
           <span class="tp-team">${esc(p.team_name||'')}</span>
-          <span class="tp-val">${valFn(p)}</span>
-        </div>`).join('');
+          <span class="tp-val">${val}</span>
+        </div>`;
+      }).join('');
     }
 
     function buildLeadersSection(sorted, isDailyMode) {
-      const ptsVal  = isDailyMode ? (p=>gamePts(p))          : (p=>p.pts?.toFixed(1)||'0');
-      const rebVal  = isDailyMode ? (p=>p.reb||0)             : (p=>p.reb?.toFixed(1)||'0');
-      const astVal  = isDailyMode ? (p=>p.ast||0)             : (p=>p.ast?.toFixed(1)||'0');
-      const blkVal  = isDailyMode ? (p=>p.blk||0)             : (p=>p.blk?.toFixed(1)||'0');
-      const stlVal  = isDailyMode ? (p=>p.stl||0)             : (p=>p.stl?.toFixed(1)||'0');
-      const toVal   = isDailyMode ? (p=>p.to_val||0)          : (p=>p.to_val?.toFixed(1)||'0');
-      const fg3mVal = isDailyMode ? (p=>p.fg3m||0)            : (p=>p.fg3m?.toFixed(1)||'0');
-      const ftmVal  = isDailyMode ? (p=>p.ftm||0)             : (p=>p.ftm?.toFixed(1)||'0');
+      const n = v => parseFloat(v)||0;
+      const f1 = v => (parseFloat(v)||0).toFixed(1);
+      const ptsVal  = isDailyMode ? (p=>gamePts(p))    : (p=>f1(p.pts));
+      const rebVal  = isDailyMode ? (p=>n(p.reb)||n(p.oreb)+n(p.dreb)) : (p=>f1(p.reb));
+      const astVal  = isDailyMode ? (p=>n(p.ast))      : (p=>f1(p.ast));
+      const blkVal  = isDailyMode ? (p=>n(p.blk))      : (p=>f1(p.blk));
+      const stlVal  = isDailyMode ? (p=>n(p.stl))      : (p=>f1(p.stl));
+      const toVal   = isDailyMode ? (p=>n(p.to_val))   : (p=>f1(p.to_val));
+      const fg3mVal = isDailyMode ? (p=>n(p.fg3m))     : (p=>f1(p.fg3m));
+      const ftmVal  = isDailyMode ? (p=>n(p.ftm))      : (p=>f1(p.ftm));
       return `
         <div class="tp-grid">
           <div class="tp-col">
@@ -457,7 +464,7 @@ router.get('/league/:id', async (req, res) => {
 
       <script src="/js/admin.js?v31"></script>
     `));
-  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+  } catch (err) { console.error('League page error:', err); res.status(500).send(`<pre style='color:red;padding:20px'>Error: ${err.message}</pre>`); }
 });
 
 // ── ADD/EDIT TEAM ─────────────────────────────────────────────────────────────
