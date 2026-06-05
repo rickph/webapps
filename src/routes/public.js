@@ -522,11 +522,15 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     reb: [...players].sort((a,b)=>b.reb-a.reb),
     ast: [...players].sort((a,b)=>b.ast-a.ast),
     stl: [...players].sort((a,b)=>b.stl-a.stl),
+    blk: [...players].sort((a,b)=>b.blk-a.blk),
+    fg:  [...players].filter(p=>p.gp>0).sort((a,b)=>b.fg-a.fg),
   };
   const ptsLeader = players[0];
   const rebLeader = sorted.reb[0];
   const astLeader = sorted.ast[0];
   const stlLeader = sorted.stl[0];
+  const blkLeader = sorted.blk[0];
+  const fgLeader  = sorted.fg[0];
 
   return page(`${esc(league.name)} | HoopStats`, `
     <nav class="topnav">
@@ -586,10 +590,12 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-leaders">
       ${[
-        {label:'PTS', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'#ff6b35'},
-        {label:'REB', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'#00d4aa'},
-        {label:'AST', val:astLeader?.ast, name:astLeader?.name, id:astLeader?.id, c:'#a78bfa'},
-        {label:'STL', val:stlLeader?.stl, name:stlLeader?.name, id:stlLeader?.id, c:'#f7c948'},
+        {label:'PTS', key:'pts', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'var(--orange)'},
+        {label:'REB', key:'reb', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'#00d4aa'},
+        {label:'AST', key:'ast', val:astLeader?.ast, name:astLeader?.name, id:astLeader?.id, c:'#a78bfa'},
+        {label:'STL', key:'stl', val:stlLeader?.stl, name:stlLeader?.name, id:stlLeader?.id, c:'#f7c948'},
+        {label:'BLK', key:'blk', val:blkLeader?.blk, name:blkLeader?.name, id:blkLeader?.id, c:'#60a5fa'},
+        {label:'FG%', key:'fg',  val:fgLeader?.fg != null ? fgLeader.fg+'%' : null, name:fgLeader?.name, id:fgLeader?.id, c:'#34d399'},
       ].map(s=>`
         <div class="leader-card">
           <div class="leader-label">${s.label} LEADER</div>
