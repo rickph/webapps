@@ -489,7 +489,7 @@ function renderLanding(leagues, stats, user) {
       </div>
     </footer>
 
-    <script src="/js/public.js?v32"></script>
+    <script src="/js/public.js?v33"></script>
     <script>
       // Nav scroll
       window.addEventListener('scroll',function(){
@@ -609,11 +609,51 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
     <div class="pub-tabs"><div class="tabs-inner">
       <button class="ptab active" data-tab="standings">🏆 Standings</button>
+      <button class="ptab" data-tab="leaderboard">📊 Leader Board</button>
       <button class="ptab" data-tab="players">👤 Player Stats</button>
       <button class="ptab" data-tab="schedule">📅 Schedule</button>
     </div></div>
 
     <div class="pub-content">
+
+      <div id="tab-leaderboard" class="tab-pane hidden">
+        ${(()=>{
+          const f1 = v => (parseFloat(v)||0).toFixed(1);
+          function abbr(n){ return (n||'').split(/\s+/).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,4); }
+          const ss = seasonStatsRows;
+          function top(field,n){ return ss.slice().filter(function(p){return p&&p.name;}).sort(function(a,b){return (parseFloat(b[field])||0)-(parseFloat(a[field])||0);}).slice(0,n||5); }
+          const cats = [
+            {title:'POINTS',          rows:top('pts'),    fn:function(p){return f1(p.pts);}},
+            {title:'REBOUNDS',        rows:top('reb'),    fn:function(p){return f1(p.reb);}},
+            {title:'ASSISTS',         rows:top('ast'),    fn:function(p){return f1(p.ast);}},
+            {title:'BLOCKS',          rows:top('blk'),    fn:function(p){return f1(p.blk);}},
+            {title:'STEALS',          rows:top('stl'),    fn:function(p){return f1(p.stl);}},
+            {title:'TURNOVERS',       rows:top('to_val'), fn:function(p){return f1(p.to_val);}},
+            {title:'3-POINTERS MADE', rows:top('fg3m'),   fn:function(p){return f1(p.fg3m);}},
+            {title:'FREE THROWS MADE',rows:top('ftm'),    fn:function(p){return f1(p.ftm);}},
+          ];
+          function renderCat(cat){
+            const rows = cat.rows.length
+              ? cat.rows.map(function(p,i){
+                  let val; try{val=cat.fn(p);}catch(e){val='—';}
+                  return '<tr class="lb-row'+(i===0?' lb-first':'')+'">'+
+                    '<td class="lb-rank">'+(i+1)+'.</td>'+
+                    '<td class="lb-name">'+esc(p.name||'')+'</td>'+
+                    '<td class="lb-team">'+abbr(p.team_name)+'</td>'+
+                    '<td class="lb-val">'+val+'</td>'+
+                  '</tr>';
+                }).join('')
+              : '<tr><td colspan="4" class="lb-empty">No stats yet</td></tr>';
+            return '<div class="lb-cat">'+
+              '<div class="lb-cat-title">'+cat.title+'</div>'+
+              '<table class="lb-table">'+rows+'</table>'+
+            '</div>';
+          }
+          return '<div class="lb-wrap">'+
+            '<div class="lb-grid">'+cats.map(renderCat).join('')+'</div>'+
+          '</div>';
+        })()}
+      </div>
       <div id="tab-standings" class="tab-pane">
         <div class="table-scroll"><table class="stats-table">
           <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th></tr></thead>

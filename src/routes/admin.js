@@ -175,7 +175,7 @@ router.get('/league/:id', async (req, res) => {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [lid]);
     if (!league || !await ownsLeague(lid, req.user.id)) return res.redirect('/admin');
 
-    const [teams, players, games, seasonStats] = await Promise.all([
+    const [teams, players, games] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [lid]),
       db.query(`SELECT p.*,t.name as team_name FROM players p
                 LEFT JOIN teams t ON p.team_id=t.id
@@ -184,73 +184,12 @@ router.get('/league/:id', async (req, res) => {
                 LEFT JOIN teams ht ON g.home_team_id=ht.id
                 LEFT JOIN teams at ON g.away_team_id=at.id
                 WHERE g.league_id=$1 ORDER BY g.id DESC`, [lid]),
-      db.query(`SELECT pss.*,p.name,t.name as team_name FROM player_season_stats pss
-                LEFT JOIN players p ON pss.player_id=p.id
-                LEFT JOIN teams t ON p.team_id=t.id
-                WHERE pss.league_id=$1`, [lid]).catch(()=>[]),
     ]);
 
     const topts = teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
     const upcomingGames = games.filter(g=>g.status!=='final');
 
-    // ── SEASON LEADERS ────────────────────────────────────────────────────────
-    const f1  = v => (parseFloat(v)||0).toFixed(1);
-    const top = (field, n=5) => [...(seasonStats||[])]
-      .filter(p=>p && p.name)
-      .sort((a,b)=>(parseFloat(b[field])||0)-(parseFloat(a[field])||0))
-      .slice(0,n);
-
-    const seasonSorted = {
-      pts:  top('pts'),
-      reb:  top('reb'),
-      ast:  top('ast'),
-      blk:  top('blk'),
-      stl:  top('stl'),
-      to:   top('to_val'),
-      fg3m: top('fg3m'),
-      ftm:  top('ftm'),
-    };
-
-    // Abbreviate team name: "Avida Settings Nuvali" → "ASN"
-    function abbr(name) {
-      if (!name) return '';
-      return name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,4);
-    }
-
-    function leaderRows(arr, valFn) {
-      const valid = (arr||[]).filter(p=>p && p.name);
-      if (!valid.length) return `<div class="tp-empty-cat">No stats yet</div>`;
-      return valid.map((p,i) => {
-        let val; try { val = valFn(p); } catch(e) { val = '—'; }
-        const isFirst = i === 0;
-        return `<div class="tp-row${isFirst?' tp-row-top':''}">
-          <span class="tp-rank">${i+1}.</span>
-          <span class="tp-name">${esc(p.name)}</span>
-          <span class="tp-team">${abbr(p.team_name)}</span>
-          <span class="tp-val">${val}</span>
-        </div>`;
-      }).join('');
-    }
-
-    function buildSeasonLeaders() {
-      const cats = [
-        {title:'POINTS',            arr:seasonSorted.pts,  fn:p=>f1(p.pts)},
-        {title:'REBOUNDS',          arr:seasonSorted.reb,  fn:p=>f1(p.reb)},
-        {title:'ASSISTS',           arr:seasonSorted.ast,  fn:p=>f1(p.ast)},
-        {title:'BLOCKS',            arr:seasonSorted.blk,  fn:p=>f1(p.blk)},
-        {title:'STEALS',            arr:seasonSorted.stl,  fn:p=>f1(p.stl)},
-        {title:'TURNOVERS',         arr:seasonSorted.to,   fn:p=>f1(p.to_val)},
-        {title:'3-POINTERS MADE',   arr:seasonSorted.fg3m, fn:p=>f1(p.fg3m)},
-        {title:'FREE THROWS MADE',  arr:seasonSorted.ftm,  fn:p=>f1(p.ftm)},
-      ];
-      return `<div class="sl-grid">
-        ${cats.map(c=>`
-        <div class="sl-col">
-          <div class="sl-col-title">${c.title}</div>
-          ${leaderRows(c.arr, c.fn)}
-        </div>`).join('')}
-      </div>`;
-    }
+    // Season leaders moved to public view
 
     res.send(adminPage(esc(league.name), req.user, `
       <div class="admin-header">
@@ -286,16 +225,7 @@ router.get('/league/:id', async (req, res) => {
              {v:upcomingGames.length,l:'Upcoming',c:'#f7c948'}]
             .map(s=>`<div class="ms"><div style="font-size:36px;font-weight:800;color:${s.c}">${s.v}</div><div class="ms-label">${s.l}</div></div>`).join('')}
         </div>
-        <!-- SEASON LEADERS -->
-        <div class="sl-wrap">
-          <div class="sl-header">
-            <span class="sl-title">🏆 Season Leaders</span>
-            <span class="sl-sub">Per game averages</span>
-          </div>
-          ${seasonStats.length
-            ? buildSeasonLeaders()
-            : '<div class="sl-empty">No season stats yet — stats appear after games are completed and saved.</div>'}
-        </div>
+
       </div>
 
       <!-- TEAMS TAB -->
@@ -395,7 +325,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
       </div>
 
-      <script src="/js/admin.js?v32"></script>
+      <script src="/js/admin.js?v33"></script>
     `));
   } catch (err) { console.error('League page error:', err); res.status(500).send(`<pre style='color:red;padding:20px'>Error: ${err.message}</pre>`); }
 });
@@ -1430,7 +1360,7 @@ router.get('/league/:id/bracket', async (req, res) => {
         <div class="bracket-info">Single-elimination — top ${teams.slice(0,8).length} teams by standings.</div>
         ${teams.length >= 2 ? bracketHTML : '<div class="empty-state">Need at least 2 teams.</div>'}
       </div>
-      <script src="/js/admin.js?v32"></script>
+      <script src="/js/admin.js?v33"></script>
     `));
   } catch (err) { console.error(err); res.status(500).send('Error'); }
 });
@@ -1508,7 +1438,7 @@ function adminPage(title, user, content) {
   </div>
 </nav>
 <div class="admin-wrap">${content}</div>
-<script src="/js/admin.js?v32"></script>
+<script src="/js/admin.js?v33"></script>
 </body>
 </html>`;
 }
