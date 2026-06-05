@@ -192,109 +192,64 @@ router.get('/league/:id', async (req, res) => {
 
     const topts = teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
     const upcomingGames = games.filter(g=>g.status!=='final');
-    const lastGame = games.find(g=>g.status==='final');
 
-    // Build daily leaders from last final game
-    async function getDailyLeaders(gameId) {
-      if (!gameId) return [];
-      return db.query(`SELECT gs.*,p.name,t.name as team_name
-                       FROM game_stats gs
-                       LEFT JOIN players p ON gs.player_id=p.id
-                       LEFT JOIN teams t ON p.team_id=t.id
-                       WHERE gs.game_id=$1`, [gameId]).catch(()=>[]);
-    }
-    const dailyStats = lastGame ? await getDailyLeaders(lastGame.id) : [];
+    // ── SEASON LEADERS ────────────────────────────────────────────────────────
+    const f1  = v => (parseFloat(v)||0).toFixed(1);
+    const top = (field, n=5) => [...(seasonStats||[])]
+      .filter(p=>p && p.name)
+      .sort((a,b)=>(parseFloat(b[field])||0)-(parseFloat(a[field])||0))
+      .slice(0,n);
 
-    // Compute game totals for daily leaders
-    function gameTotal(stats, field) {
-      return [...stats].sort((a,b)=>(b[field]||0)-(a[field]||0)).slice(0,5);
-    }
-    function gamePts(s) { return (s.fg2m||0)*2+(s.fg3m||0)*3+(s.ftm||0); }
-    const dailySorted = {
-      pts:  [...dailyStats].sort((a,b)=>gamePts(b)-gamePts(a)).slice(0,5),
-      reb:  gameTotal(dailyStats,'oreb').map((s,i,arr)=>({...s,reb:(s.oreb||0)+(s.dreb||0)})).sort((a,b)=>b.reb-a.reb).slice(0,5),
-      ast:  gameTotal(dailyStats,'ast'),
-      blk:  gameTotal(dailyStats,'blk'),
-      stl:  gameTotal(dailyStats,'stl'),
-      to:   gameTotal(dailyStats,'to_val'),
-      fg3m: gameTotal(dailyStats,'fg3m'),
-      ftm:  gameTotal(dailyStats,'ftm'),
-    };
-
-    // Season leaders
     const seasonSorted = {
-      pts:  [...(seasonStats||[])].sort((a,b)=>(+b.pts||0)-(+a.pts||0)).slice(0,5),
-      reb:  [...(seasonStats||[])].sort((a,b)=>(+b.reb||0)-(+a.reb||0)).slice(0,5),
-      ast:  [...(seasonStats||[])].sort((a,b)=>(+b.ast||0)-(+a.ast||0)).slice(0,5),
-      blk:  [...(seasonStats||[])].sort((a,b)=>(+b.blk||0)-(+a.blk||0)).slice(0,5),
-      stl:  [...(seasonStats||[])].sort((a,b)=>(+b.stl||0)-(+a.stl||0)).slice(0,5),
-      to:   [...(seasonStats||[])].sort((a,b)=>(+b.to_val||0)-(+a.to_val||0)).slice(0,5),
-      fg3m: [...(seasonStats||[])].sort((a,b)=>(+b.fg3m||0)-(+a.fg3m||0)).slice(0,5),
-      ftm:  [...(seasonStats||[])].sort((a,b)=>(+b.ftm||0)-(+a.ftm||0)).slice(0,5),
+      pts:  top('pts'),
+      reb:  top('reb'),
+      ast:  top('ast'),
+      blk:  top('blk'),
+      stl:  top('stl'),
+      to:   top('to_val'),
+      fg3m: top('fg3m'),
+      ftm:  top('ftm'),
     };
+
+    // Abbreviate team name: "Avida Settings Nuvali" → "ASN"
+    function abbr(name) {
+      if (!name) return '';
+      return name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,4);
+    }
 
     function leaderRows(arr, valFn) {
       const valid = (arr||[]).filter(p=>p && p.name);
-      if (!valid.length) return '<div style="font-size:12px;color:rgba(255,255,255,.25);padding:8px 0">No data yet</div>';
-      return valid.map((p,i)=>{
-        let val;
-        try { val = valFn(p); } catch(e) { val = '—'; }
-        return `
-        <div class="tp-row">
+      if (!valid.length) return `<div class="tp-empty-cat">No stats yet</div>`;
+      return valid.map((p,i) => {
+        let val; try { val = valFn(p); } catch(e) { val = '—'; }
+        const isFirst = i === 0;
+        return `<div class="tp-row${isFirst?' tp-row-top':''}">
           <span class="tp-rank">${i+1}.</span>
-          <span class="tp-name">${esc(p.name||'—')}</span>
-          <span class="tp-team">${esc(p.team_name||'')}</span>
+          <span class="tp-name">${esc(p.name)}</span>
+          <span class="tp-team">${abbr(p.team_name)}</span>
           <span class="tp-val">${val}</span>
         </div>`;
       }).join('');
     }
 
-    function buildLeadersSection(sorted, isDailyMode) {
-      const n = v => parseFloat(v)||0;
-      const f1 = v => (parseFloat(v)||0).toFixed(1);
-      const ptsVal  = isDailyMode ? (p=>gamePts(p))    : (p=>f1(p.pts));
-      const rebVal  = isDailyMode ? (p=>n(p.reb)||n(p.oreb)+n(p.dreb)) : (p=>f1(p.reb));
-      const astVal  = isDailyMode ? (p=>n(p.ast))      : (p=>f1(p.ast));
-      const blkVal  = isDailyMode ? (p=>n(p.blk))      : (p=>f1(p.blk));
-      const stlVal  = isDailyMode ? (p=>n(p.stl))      : (p=>f1(p.stl));
-      const toVal   = isDailyMode ? (p=>n(p.to_val))   : (p=>f1(p.to_val));
-      const fg3mVal = isDailyMode ? (p=>n(p.fg3m))     : (p=>f1(p.fg3m));
-      const ftmVal  = isDailyMode ? (p=>n(p.ftm))      : (p=>f1(p.ftm));
-      return `
-        <div class="tp-grid">
-          <div class="tp-col">
-            <div class="tp-col-title">POINTS</div>
-            ${leaderRows(sorted.pts, ptsVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">REBOUNDS</div>
-            ${leaderRows(sorted.reb, rebVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">ASSISTS</div>
-            ${leaderRows(sorted.ast, astVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">BLOCKS</div>
-            ${leaderRows(sorted.blk, blkVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">STEALS</div>
-            ${leaderRows(sorted.stl, stlVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">TURNOVERS</div>
-            ${leaderRows(sorted.to, toVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">THREE POINTERS MADE</div>
-            ${leaderRows(sorted.fg3m, fg3mVal)}
-          </div>
-          <div class="tp-col">
-            <div class="tp-col-title">FREE THROWS MADE</div>
-            ${leaderRows(sorted.ftm, ftmVal)}
-          </div>
-        </div>`;
+    function buildSeasonLeaders() {
+      const cats = [
+        {title:'POINTS',            arr:seasonSorted.pts,  fn:p=>f1(p.pts)},
+        {title:'REBOUNDS',          arr:seasonSorted.reb,  fn:p=>f1(p.reb)},
+        {title:'ASSISTS',           arr:seasonSorted.ast,  fn:p=>f1(p.ast)},
+        {title:'BLOCKS',            arr:seasonSorted.blk,  fn:p=>f1(p.blk)},
+        {title:'STEALS',            arr:seasonSorted.stl,  fn:p=>f1(p.stl)},
+        {title:'TURNOVERS',         arr:seasonSorted.to,   fn:p=>f1(p.to)},
+        {title:'3-POINTERS MADE',   arr:seasonSorted.fg3m, fn:p=>f1(p.fg3m)},
+        {title:'FREE THROWS MADE',  arr:seasonSorted.ftm,  fn:p=>f1(p.ftm)},
+      ];
+      return `<div class="sl-grid">
+        ${cats.map(c=>`
+        <div class="sl-col">
+          <div class="sl-col-title">${c.title}</div>
+          ${leaderRows(c.arr, c.fn)}
+        </div>`).join('')}
+      </div>`;
     }
 
     res.send(adminPage(esc(league.name), req.user, `
@@ -331,38 +286,16 @@ router.get('/league/:id', async (req, res) => {
              {v:upcomingGames.length,l:'Upcoming',c:'#f7c948'}]
             .map(s=>`<div class="ms"><div style="font-size:36px;font-weight:800;color:${s.c}">${s.v}</div><div class="ms-label">${s.l}</div></div>`).join('')}
         </div>
-        <!-- TOP PERFORMERS — Daily Leaders / Season Leaders -->
-        <div class="tp-wrap">
-          <!-- Tab switcher -->
-          <div class="tp-tabs">
-            <button class="tp-tab active" onclick="switchTpTab(this,'tp-daily')">
-              📊 Daily Leaders ${lastGame ? `<span class="tp-game-label">${esc(lastGame.home_name||'')} vs ${esc(lastGame.away_name||'')}</span>` : ''}
-            </button>
-            <button class="tp-tab" onclick="switchTpTab(this,'tp-season')">
-              🏆 Season Leaders
-            </button>
+        <!-- SEASON LEADERS -->
+        <div class="sl-wrap">
+          <div class="sl-header">
+            <span class="sl-title">🏆 Season Leaders</span>
+            <span class="sl-sub">Per game averages</span>
           </div>
-          <!-- Daily -->
-          <div id="tp-daily" class="tp-pane">
-            ${dailyStats.length
-              ? (lastGame ? `<div class="tp-date">${esc(lastGame.date||'')}</div>` : '') + buildLeadersSection(dailySorted, true)
-              : '<div class="tp-empty">No completed games yet. Stats will appear here after the first game is finalized.</div>'}
-          </div>
-          <!-- Season -->
-          <div id="tp-season" class="tp-pane" style="display:none">
-            ${seasonStats.length
-              ? buildLeadersSection(seasonSorted, false)
-              : '<div class="tp-empty">No season stats yet. Stats appear after games are completed.</div>'}
-          </div>
+          ${seasonStats.length
+            ? buildSeasonLeaders()
+            : '<div class="sl-empty">No season stats yet — stats appear after games are completed and saved.</div>'}
         </div>
-        <script>
-        function switchTpTab(btn,paneId){
-          document.querySelectorAll('.tp-tab').forEach(function(b){b.classList.remove('active')});
-          document.querySelectorAll('.tp-pane').forEach(function(p){p.style.display='none'});
-          btn.classList.add('active');
-          document.getElementById(paneId).style.display='block';
-        }
-        </script>
       </div>
 
       <!-- TEAMS TAB -->
