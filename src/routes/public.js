@@ -489,7 +489,7 @@ function renderLanding(leagues, stats, user) {
       </div>
     </footer>
 
-    <script src="/js/public.js?v31"></script>
+    <script src="/js/public.js?v32"></script>
     <script>
       // Nav scroll
       window.addEventListener('scroll',function(){
