@@ -38,9 +38,9 @@
 }
 
 html { scroll-behavior: smooth; }
-body {
+body, .dark-bg {
   font-family: 'Outfit', sans-serif;
-  background: var(--black);
+  background: #0a0a0a;
   color: var(--text);
   min-height: 100vh;
   font-size: 14px;
@@ -438,30 +438,30 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .stat-card .stat-lbl { font-size:10px; font-weight:800; color:var(--text-3); letter-spacing:1px; text-transform:uppercase; }
 
 /* ─── LEADER CARDS ─── */
-/* pub-leaders — see mobile responsive section below */
-.leader-card { background:var(--dark-2); border:1px solid var(--border); border-radius:6px; padding:18px 20px; position:relative; overflow:hidden; transition:border-color .15s; }
-.leader-card::before { content:''; position:absolute; bottom:0;left:0;right:0;height:2px; background:var(--orange); opacity:0; transition:opacity .2s; }
-.leader-card:hover { border-color:rgba(249,115,22,.3); }
-.leader-card:hover::before { opacity:1; }
+/* removed */
+/* removed */
+/* removed */
+/* removed */
+/* removed */
 .leader-label { font-size:9px; font-weight:800; letter-spacing:2px; color:var(--text-3); text-transform:uppercase; margin-bottom:8px; }
 .leader-val { font-family:'Barlow Condensed',sans-serif; font-size:40px; font-weight:900; line-height:1; margin-bottom:6px; }
 .leader-name, .leader-link { font-size:12px; font-weight:600; color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; transition:color .15s; }
 .leader-link:hover { color:var(--orange); }
 
 /* ─── PUB TABS ─── */
-/* pub-tabs — see mobile responsive section below */
-/* ptab — see mobile responsive section below */
-.ptab:hover { color:var(--text); }
-.ptab.active { color:var(--orange); border-bottom-color:var(--orange); }
+/* removed */
+/* removed */
+/* removed */
+/* removed */
 .hidden { display:none !important; }
 .tab-pane { }
 
 /* ─── LEAGUE HEADER ─── */
-.league-header { background:var(--dark-1); border-bottom:1px solid var(--border); padding:28px 24px; }
-.lh-inner { max-width:900px; margin:0 auto; }
-.lh-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+/* removed */
+/* removed */
+/* removed */
 .league-header h1 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(24px,4vw,38px); font-weight:900; text-transform:uppercase; letter-spacing:-.5px; margin-bottom:6px; line-height:1.1; }
-.lh-meta { font-size:13px; color:var(--text-3); }
+/* removed */
 
 /* ─── MINI STATS ─── */
 .mini-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
@@ -538,7 +538,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 
 /* ─── TABLET ─── */
 @media(max-width:900px){
-  /* pub-leaders handled in mobile section */
+  /* removed */
   .mini-stats { grid-template-columns:repeat(2,1fr); }
   .dash-stats { grid-template-columns:repeat(2,1fr); }
   .leagues-layout { grid-template-columns:1fr; gap:40px; }
@@ -571,7 +571,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .hero-stat-val { font-size:36px; }
   .section { padding:60px 20px; }
   .section-sm { padding:40px 20px; }
-  /* pub-leaders handled in mobile section */
+  /* removed */
   .dash-stats { grid-template-columns:repeat(2,1fr); }
   .mini-stats { grid-template-columns:repeat(2,1fr); gap:8px; }
   .stats-table th,.stats-table td { padding:8px 10px; font-size:12px; }
@@ -579,8 +579,8 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .row-actions { width:100%; justify-content:flex-end; }
   .profile-card { padding:18px; }
   .profile-avatar,.profile-avatar-placeholder { width:72px; height:72px; font-size:26px; }
-  /* pub-tabs and ptab handled in mobile section */
-  .league-header { padding:18px 14px; }
+  /* removed */
+  /* removed */
   .live-score { font-size:52px; }
   .live-scoreboard { flex-direction:column; gap:12px; }
   .bracket-rounds { flex-direction:column; }
@@ -591,8 +591,6 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .section-title { font-size:clamp(32px,10vw,48px); }
 }
 
-/* ─── PUBLIC LEAGUE PAGE — MOBILE RESPONSIVE ────────────────────────────────── */
-
 /* Page wrapper — consistent max-width and padding */
 .pub-page-wrap {
   max-width: 960px;
@@ -602,59 +600,20 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 }
 
 /* League header — consistent padding */
-.league-header { background: var(--dark-1); border-bottom: 1px solid var(--border); }
-.lh-inner { max-width: 960px; margin: 0 auto; padding: 24px 24px 20px; }
+/* removed */
+/* removed */
 
 /* Stat leader cards — always 2 columns on mobile */
-.pub-leaders {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
-  max-width: 960px;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0 24px;
-}
+/* removed */
 
 /* Tabs — sticky, scrollable, no overflow cut-off */
-.pub-tabs {
-  position: sticky;
-  top: 64px;
-  z-index: 100;
-  background: var(--dark-1);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.pub-tabs::-webkit-scrollbar { display: none; }
-.tabs-inner {
-  display: flex;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 24px;
-  min-width: max-content;
-}
-.ptab {
-  padding: 14px 20px;
-  font-size: 12px; font-weight: 800;
-  color: var(--text-3); cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all .15s;
-  display: flex; align-items: center; gap: 6px;
-  white-space: nowrap; letter-spacing: .5px;
-  text-transform: uppercase; background: none; border-top: none;
-  border-left: none; border-right: none; font-family: 'Outfit', sans-serif;
-}
+/* removed */
+/* removed */
+/* removed */
+/* removed */
 
 /* Tab content wrapper */
-.pub-content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 20px 24px 60px;
-}
+/* removed */
 
 /* Table scroll containers */
 .table-scroll {
@@ -679,71 +638,44 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 
 /* ─── RESPONSIVE ─────────────────────────────────────────────────────────────── */
 @media (max-width: 760px) {
-  .pub-leaders { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 16px; margin-bottom: 0; }
-  .lh-inner { padding: 16px 16px 14px; }
+  /* removed */
+  /* removed */
   .pub-page-wrap { padding: 0 16px; }
-  .tabs-inner { padding: 0 16px; }
-  .pub-content { padding: 16px 16px 48px; }
-  .pub-tabs { top: 56px; }
+  /* removed */
+  /* removed */
+  /* removed */
 }
 
 @media (max-width: 480px) {
-  .pub-leaders { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px 16px; margin-bottom: 0; }
-  .leader-card { padding: 12px 14px; border-radius: 8px; }
+  /* removed */
+  /* removed */
   .leader-val { font-size: 28px; }
   .leader-label { font-size: 9px; letter-spacing: 1.5px; }
   .leader-name, .leader-link { font-size: 11px; }
-  .ptab { padding: 12px 16px; font-size: 11px; }
+  /* removed */
   .stats-table th { padding: 8px 10px; font-size: 10px; letter-spacing: .5px; }
   .stats-table td { padding: 10px 10px; font-size: 12px; }
   .table-scroll .stats-table { min-width: 360px; }
   .game-card { padding: 12px 14px; gap: 10px; }
   .game-team { font-size: 12px; }
-  .lh-inner h1 { font-size: 20px; }
-  .lh-meta { font-size: 12px; }
-  .league-header { padding: 0; }
+  /* removed */
+  /* removed */
+  /* removed */
 }
 
-/* ─── MOBILE NAV — hide GET STARTED on small screens ────────────────────────── */
-@media(max-width:640px){
-  /* Hide CTA button in landing page nav on mobile - it covers hamburger */
-  .lp-btn-cta { display: none; }
-
   /* Fix tabs overlap issue — ensure they sit properly */
-  .pub-tabs {
-    position: sticky;
-    top: 56px;
-    z-index: 100;
-    background: var(--dark-1);
-    border-bottom: 2px solid var(--border);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    margin-bottom: 0;
-  }
-  .pub-tabs::-webkit-scrollbar { display: none; }
+  /* removed */
+  /* removed */
 
-  .tabs-inner {
-    display: flex;
-    padding: 0 16px;
-    min-width: max-content;
-    width: 100%;
-  }
+  /* removed */
 
-  .ptab {
-    padding: 12px 16px;
-    font-size: 12px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
+  /* removed */
 
   /* Tab panes — full width, proper padding */
   .tab-pane { display: block; }
   .tab-pane.hidden { display: none !important; }
 
-  .pub-content {
-    padding: 16px 14px 48px;
-  }
+  /* removed */
 
   /* Table scroll on mobile */
   .table-scroll {
@@ -761,26 +693,19 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   #playerStatsTable { min-width: 640px; }
 
   /* Pub leaders - always 2 col on mobile */
-  .pub-leaders {
-    grid-template-columns: repeat(2, 1fr) !important;
-    padding: 16px 14px;
-    margin-bottom: 0;
-    background: var(--dark-1);
-    border-bottom: 1px solid var(--border);
-    gap: 8px;
-  }
+  /* removed */
 
   /* Leader cards tighter on mobile */
-  .leader-card { padding: 12px 14px; }
+  /* removed */
   .leader-val  { font-size: 26px; }
   .leader-label { font-size: 9px; letter-spacing: 1px; }
   .leader-name, .leader-link { font-size: 11px; }
 
   /* League header tighter */
-  .lh-inner { padding: 14px 14px 12px; }
-  .lh-inner h1 { font-size: clamp(18px, 5vw, 26px); line-height: 1.2; }
-  .lh-meta { font-size: 12px; }
-  .lh-top { margin-bottom: 8px; }
+  /* removed */
+  /* removed */
+  /* removed */
+  /* removed */
 
   /* Nav topnav on public pages */
   .topnav { height: auto; min-height: 56px; }
@@ -797,14 +722,6 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .nav-actions { margin-left: auto; gap: 6px; }
   .btn-ghost-sm { font-size: 11px; padding: 5px 10px; }
 }
-
-/* ─── AUTH PAGE — back button and mobile ─────────────────────────────────────── */
-.auth-back {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: rgba(255,255,255,.4); font-size: 12px; font-weight: 700;
-  margin-bottom: 20px; text-decoration: none; transition: color .15s;
-}
-.auth-back:hover { color: var(--orange); text-decoration: none; }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    ADMIN PAGES — COMPLETE MOBILE RESPONSIVE FIX
@@ -967,4 +884,334 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .game-matchup { flex-direction: column; gap: 4px; }
   .row-actions { width: 100%; justify-content: flex-start; gap: 6px; margin-top: 8px; }
   .row-actions .btn-ghost-sm { font-size: 11px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PUBLIC LEAGUE PAGE — DEFINITIVE STYLES (single source of truth)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Body / page background — pure black always */
+body, .dark-bg { background: #0a0a0a; }
+
+/* ── NAV ── */
+.topnav {
+  background: rgba(10,10,10,.98) !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  position: sticky; top: 0; z-index: 200;
+}
+.topnav-inner {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Orange nav buttons — ← Leagues, Login, Admin Panel */
+.nav-btn-orange {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 16px;
+  background: rgba(249,115,22,.08);
+  color: var(--orange) !important;
+  border: 1px solid rgba(249,115,22,.3);
+  border-radius: 6px;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: .3px;
+  text-decoration: none;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.nav-btn-orange:hover {
+  background: var(--orange);
+  color: #fff !important;
+  border-color: var(--orange);
+  text-decoration: none;
+}
+
+/* ── LEAGUE HEADER ── */
+.league-header {
+  background: #0f0f0f;
+  border-bottom: 1px solid rgba(249,115,22,.12);
+  padding: 0;
+}
+.lh-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 32px;
+}
+.lh-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.lh-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -.5px;
+  line-height: 1.05;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.lh-meta {
+  font-size: 14px;
+  color: rgba(255,255,255,.45);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── LEADER CARDS ── */
+.pub-leaders {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 24px 24px;
+  background: #0a0a0a;
+}
+.leader-card {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,.08);
+  border-top: 2px solid rgba(249,115,22,.4);
+  border-radius: 8px;
+  padding: 18px 20px;
+  transition: border-color .15s, transform .15s;
+}
+.leader-card:hover {
+  border-color: rgba(249,115,22,.5);
+  border-top-color: var(--orange);
+  transform: translateY(-2px);
+}
+.leader-label {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 2px; color: rgba(255,255,255,.35);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.leader-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px; font-weight: 900; line-height: 1;
+  margin-bottom: 8px;
+}
+.leader-name, .leader-link {
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,.55);
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; display: block;
+  text-decoration: none; transition: color .15s;
+}
+.leader-link:hover { color: var(--orange); }
+
+/* ── TABS ── */
+.pub-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-top: 4px;
+  margin: 0;
+}
+.pub-tabs::-webkit-scrollbar { display: none; }
+.tabs-inner {
+  display: flex;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+  min-width: max-content;
+}
+.ptab {
+  padding: 14px 22px;
+  font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,.4);
+  cursor: pointer; border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  transition: all .15s;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  letter-spacing: .3px;
+  font-family: 'Outfit', sans-serif;
+  flex-shrink: 0;
+  -webkit-appearance: none;
+}
+.ptab:hover { color: rgba(255,255,255,.75); }
+.ptab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+/* ── TAB CONTENT ── */
+.pub-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+  background: #0a0a0a;
+}
+.hidden { display: none !important; }
+.tab-pane { display: block; }
+.tab-pane.hidden { display: none !important; }
+
+/* ── TABLE SCROLL ── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+.table-scroll .stats-table { min-width: 320px; }
+#playerStatsTable { min-width: 640px; }
+
+/* ── ADMIN ACCESS DETAILS ── */
+.admin-access {
+  margin-top: 16px;
+  font-size: 13px; color: rgba(255,255,255,.4);
+  cursor: pointer;
+}
+.admin-access summary { 
+  list-style: none; display: flex; align-items: center; gap: 6px;
+  font-weight: 600; user-select: none;
+}
+.admin-access summary::-webkit-details-marker { display: none; }
+
+/* ── MOBILE ≤ 760px ── */
+@media(max-width:760px) {
+  .topnav { height: auto; min-height: 56px; }
+  .topnav-inner { flex-wrap: wrap; padding: 8px 16px; gap: 8px; height: auto; min-height: 56px; }
+  .nav-btn-orange { font-size: 12px; padding: 6px 12px; }
+  .brand-text { font-size: 16px; }
+  .brand-sub  { font-size: 8px; }
+  .nav-brand img { width: 34px; height: 34px; }
+
+  .lh-inner { padding: 24px 16px 20px; }
+  .lh-title { font-size: clamp(22px, 6vw, 32px); }
+  .lh-meta  { font-size: 13px; }
+  .lh-top   { margin-bottom: 12px; }
+
+  .pub-leaders { grid-template-columns: repeat(2,1fr); padding: 16px 16px 12px; gap: 10px; }
+  .leader-val  { font-size: 32px; }
+  .leader-card { padding: 14px 16px; }
+  .leader-name, .leader-link { font-size: 12px; }
+
+  .pub-tabs { top: 56px; }
+  .tabs-inner { padding: 0 16px; }
+  .ptab { padding: 12px 16px; font-size: 12px; }
+
+  .pub-content { padding: 18px 16px 60px; }
+}
+
+/* ── MOBILE ≤ 480px ── */
+@media(max-width:480px) {
+  .lh-inner { padding: 18px 14px 16px; }
+  .lh-title { font-size: 20px; }
+  .lh-top   { margin-bottom: 10px; gap: 6px; }
+
+  .pub-leaders { grid-template-columns: repeat(2,1fr); padding: 12px 14px 10px; gap: 8px; }
+  .leader-val  { font-size: 28px; }
+  .leader-card { padding: 12px 12px; }
+  .leader-label { font-size: 9px; letter-spacing: 1px; }
+  .leader-name, .leader-link { font-size: 11px; }
+
+  .ptab { padding: 11px 14px; font-size: 11px; }
+  .pub-content { padding: 14px 14px 48px; }
+  .topnav-inner { padding: 8px 14px; }
+  .nav-btn-orange { font-size: 11px; padding: 5px 10px; }
+}
+
+/* ── GET STARTED — hidden everywhere ── */
+.lp-btn-cta { display: none !important; }
+
+/* ── AUTH BACK BUTTON ── */
+.auth-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--orange); font-size: 12px; font-weight: 700;
+  margin-bottom: 20px; text-decoration: none; transition: opacity .15s;
+}
+.auth-back:hover { opacity: .8; text-decoration: none; }
+
+/* ── ADMIN LEAGUE CARDS ── */
+.admin-league-card {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 20px 22px;
+  transition: border-color .15s;
+}
+.admin-league-card:hover { border-color: rgba(249,115,22,.3); }
+.alc-top  { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.alc-name { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; text-transform:uppercase; letter-spacing:.5px; color:#fff; margin-bottom:5px; line-height:1.1; }
+.alc-loc  { font-size:13px; color:rgba(255,255,255,.4); margin-bottom:5px; }
+.alc-meta { font-size:12px; color:rgba(255,255,255,.35); margin-bottom:12px; }
+.alc-meta code { background:#222; padding:2px 8px; border-radius:4px; font-size:11px; color:rgba(255,255,255,.6); font-family:monospace; }
+.alc-stats { display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap; }
+.alc-stats span { font-size:13px; color:rgba(255,255,255,.6); }
+.alc-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.league-grid-admin { display:flex; flex-direction:column; gap:12px; }
+
+/* ── ADMIN BUTTON SIZES ── */
+.btn-primary-sm {
+  background: var(--orange); color: #fff; border: none; border-radius: 5px;
+  padding: 8px 16px; font-size: 12px; font-weight: 800;
+  letter-spacing: .5px; text-transform: uppercase;
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  text-decoration: none; display: inline-flex; align-items: center;
+  gap: 4px; transition: all .15s; white-space: nowrap;
+}
+.btn-primary-sm:hover { background: var(--orange-d); color:#fff; text-decoration:none; }
+.btn-danger-sm {
+  background: rgba(239,68,68,.1); color: #f87171;
+  border: 1px solid rgba(239,68,68,.2); border-radius: 5px;
+  padding: 8px 12px; font-size: 13px; cursor: pointer;
+  font-family: 'Outfit', sans-serif; text-decoration: none;
+  display: inline-flex; align-items: center; transition: all .15s;
+}
+.btn-danger-sm:hover { background: rgba(239,68,68,.22); }
+
+/* ── ADMIN TABS — no white background ── */
+.admin-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 24px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; background: transparent; flex-wrap: nowrap;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.atab {
+  padding: 12px 18px; font-size: 12px; font-weight: 800;
+  color: rgba(255,255,255,.38); cursor: pointer;
+  border: none; border-bottom: 2px solid transparent;
+  background: transparent !important;
+  transition: all .15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  letter-spacing: .5px; text-transform: uppercase;
+  font-family: 'Outfit', sans-serif; flex-shrink: 0;
+  -webkit-appearance: none; outline: none;
+}
+.atab:hover { color: rgba(255,255,255,.75); background: rgba(255,255,255,.03) !important; }
+.atab.active { color: var(--orange) !important; border-bottom-color: var(--orange); background: transparent !important; }
+
+@media(max-width:640px) {
+  .admin-wrap { padding: 14px 14px 48px; }
+  .admin-header h1 { font-size: 20px; }
+  .dash-stats { grid-template-columns: repeat(2,1fr); gap:10px; margin-bottom:20px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card .stat-val { font-size: 30px; }
+  .admin-league-card { padding: 14px 16px; }
+  .alc-name { font-size: 18px; }
+  .alc-actions { gap: 6px; }
+  .btn-primary-sm, .btn-ghost-sm { font-size: 11px; padding: 7px 12px; }
+  .btn-danger-sm { font-size: 12px; padding: 7px 10px; }
+  .admin-tabs { margin-bottom: 16px; }
+  .atab { padding: 10px 14px; font-size: 11px; }
 }

@@ -531,17 +531,25 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
   return page(`${esc(league.name)} | HoopStats`, `
     <nav class="topnav">
       <div class="topnav-inner">
-      <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
-      <div class="nav-actions">
-        <a href="/" class="btn-ghost-sm">← Leagues</a>
-        ${user ? `<a href="/admin" class="btn-nav">Admin Panel</a>` : `<a href="/login" class="btn-nav">Login</a>`}
-      </div>
+        <div class="nav-brand">
+          <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
+            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;display:block;flex-shrink:0">
+            <div class="nav-brand-text">
+              <div class="brand-text">HOOPSTATS</div>
+              <div class="brand-sub">Pilipinas</div>
+            </div>
+          </a>
+        </div>
+        <div class="nav-actions">
+          <a href="/" class="nav-btn-orange">← Leagues</a>
+          ${user ? `<a href="/admin" class="nav-btn-orange">Admin Panel</a>` : `<a href="/login" class="nav-btn-orange">Login</a>`}
+        </div>
       </div>
     </nav>
     <div class="league-header">
       <div class="lh-inner">
         <div class="lh-top">${levelBadge(league.level)} ${statusBadge(league.status)}</div>
-        <h1>${esc(league.name)}</h1>
+        <h1 class="lh-title">${esc(league.name)}</h1>
         <div class="lh-meta">📍 ${esc(league.location)} &nbsp;·&nbsp; ${esc(league.season)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
           ${league.facebook_url ? `
@@ -576,7 +584,6 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       </div>
     </div>
 
-    <div style="background:var(--dark-1);border-bottom:1px solid var(--border);padding:16px 0">
     <div class="pub-leaders">
       ${[
         {label:'PTS', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'#ff6b35'},
@@ -592,7 +599,6 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             : `<div class="leader-name">${esc(s.name ?? 'N/A')}</div>`
           }
         </div>`).join('')}
-    </div>
     </div>
 
     <div class="pub-tabs"><div class="tabs-inner">
