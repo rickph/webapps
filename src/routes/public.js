@@ -620,7 +620,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         ${(()=>{
           const f1 = v => (parseFloat(v)||0).toFixed(1);
           function abbr(n){ return (n||'').split(/\s+/).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,4); }
-          const ss = seasonStatsRows;
+          const ss = Object.values(seasonStats);
           function top(field,n){ return ss.slice().filter(function(p){return p&&p.name;}).sort(function(a,b){return (parseFloat(b[field])||0)-(parseFloat(a[field])||0);}).slice(0,n||5); }
           const cats = [
             {title:'POINTS',          rows:top('pts'),    fn:function(p){return f1(p.pts);}},
