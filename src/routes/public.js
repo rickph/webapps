@@ -1154,9 +1154,12 @@ router.get('/league/:id/player/:pid', async (req, res) => {
     const gp   = ss?.gp   ?? player.gp   ?? 0;
 
     function statBox(label, value, color='var(--text)') {
-      return `<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;flex:1;min-width:80px">
-        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:6px">${label}</div>
-        <div style="font-size:28px;font-weight:900;color:${color};line-height:1">${value}</div>
+      // Shrink font for long values like "100.0%"
+      const valStr = String(value);
+      const fontSize = valStr.length >= 6 ? '20px' : valStr.length >= 5 ? '22px' : '28px';
+      return `<div class="ps-stat-box">
+        <div class="ps-stat-lbl">${label}</div>
+        <div class="ps-stat-val" style="color:${color};font-size:${fontSize}">${value}</div>
       </div>`;
     }
 
@@ -1211,16 +1214,14 @@ router.get('/league/:id/player/:pid', async (req, res) => {
 
         <!-- KEY STATS -->
         <h2 style="font-family:'Russo One',sans-serif;font-size:17px;margin-bottom:12px;letter-spacing:.5px">📊 Season Averages</h2>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-          ${statBox('PTS', pts, 'var(--red)')}
-          ${statBox('REB', reb, 'var(--teal)')}
-          ${statBox('AST', ast, 'var(--purple)')}
-          ${statBox('STL', stl, 'var(--gold)')}
-          ${statBox('BLK', blk, 'var(--text)')}
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px">
-          ${statBox('GP',  gp,  'var(--muted)')}
-          ${statBox('FG%', fgp+'%', 'var(--teal)')}
+        <div class="ps-stats-grid">
+          ${statBox('PTS', pts,      'var(--red)')}
+          ${statBox('REB', reb,      'var(--teal)')}
+          ${statBox('AST', ast,      'var(--purple)')}
+          ${statBox('STL', stl,      'var(--gold)')}
+          ${statBox('BLK', blk,      '#60a5fa')}
+          ${statBox('GP',  gp,       'var(--muted)')}
+          ${statBox('FG%', fgp+'%',  'var(--teal)')}
           ${fg3p!=null ? statBox('3P%', fg3p+'%', 'var(--purple)') : ''}
           ${ftp!=null  ? statBox('FT%', ftp+'%',  'var(--gold)') : ''}
           ${eff!=null  ? statBox('EFF', eff,       'var(--gold)') : ''}

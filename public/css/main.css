@@ -1499,3 +1499,56 @@ body, .dark-bg { background: #0a0a0a; }
   .lb-name { font-size: 12px; }
   .lb-val  { font-size: 13px; }
 }
+
+/* ── PLAYER PROFILE STAT BOXES ── */
+.ps-stats-grid {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.ps-stat-box {
+  background: #181818;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 14px 10px;
+  text-align: center;
+  /* exactly 5 per row on desktop, auto-wrap on mobile */
+  -webkit-flex: 1 1 calc(20% - 8px);
+  flex: 1 1 calc(20% - 8px);
+  min-width: 64px;
+  max-width: calc(20% - 8px);
+  box-sizing: border-box;
+}
+.ps-stat-lbl {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.38);
+  margin-bottom: 6px;
+}
+.ps-stat-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  line-height: 1;
+  font-size: 28px; /* overridden inline for long values */
+}
+
+/* Mobile — 5 per row still, smaller padding */
+@media(max-width:640px) {
+  .ps-stats-grid { gap: 6px; margin-bottom: 20px; }
+  .ps-stat-box {
+    -webkit-flex: 1 1 calc(20% - 6px);
+    flex: 1 1 calc(20% - 6px);
+    min-width: 56px;
+    max-width: calc(20% - 6px);
+    padding: 11px 6px;
+    border-radius: 8px;
+  }
+  .ps-stat-lbl { font-size: 9px; letter-spacing: 1px; }
+}
