@@ -620,8 +620,23 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         ${(()=>{
           const f1 = v => (parseFloat(v)||0).toFixed(1);
           function abbr(n){ return (n||'').split(/\s+/).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,4); }
-          const ss = Object.values(seasonStats);
-          function top(field,n){ return ss.slice().filter(function(p){return p&&p.name;}).sort(function(a,b){return (parseFloat(b[field])||0)-(parseFloat(a[field])||0);}).slice(0,n||5); }
+          // Use players array — already has name, team_name, pts, reb, ast, stl, blk, fg3m, ftm
+          // Merge with seasonStats for per-game averages
+          const allP = players.map(function(p){
+            var ss = seasonStats[p.id] || {};
+            return {
+              name: p.name, team_name: p.team_name||'',
+              pts:   parseFloat(ss.pts  || p.pts  || 0),
+              reb:   parseFloat(ss.reb  || p.reb  || 0),
+              ast:   parseFloat(ss.ast  || p.ast  || 0),
+              blk:   parseFloat(ss.blk  || p.blk  || 0),
+              stl:   parseFloat(ss.stl  || p.stl  || 0),
+              to_val:parseFloat(ss.to_val|| 0),
+              fg3m:  parseFloat(ss.fg3m || 0),
+              ftm:   parseFloat(ss.ftm  || 0),
+            };
+          });
+          function top(field){ return allP.slice().filter(function(p){return p.name;}).sort(function(a,b){return (b[field]||0)-(a[field]||0);}).slice(0,10); }
           const cats = [
             {title:'POINTS',          rows:top('pts'),    fn:function(p){return f1(p.pts);}},
             {title:'REBOUNDS',        rows:top('reb'),    fn:function(p){return f1(p.reb);}},
@@ -633,13 +648,14 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             {title:'FREE THROWS MADE',rows:top('ftm'),    fn:function(p){return f1(p.ftm);}},
           ];
           function renderCat(cat){
-            const rows = cat.rows.length
+            var hasData = cat.rows.some(function(p){return (p[Object.keys(p).find(function(k){return cat.fn({[k]:1})==='1.0';})]);});
+            var rows = cat.rows.length
               ? cat.rows.map(function(p,i){
-                  let val; try{val=cat.fn(p);}catch(e){val='—';}
+                  var val; try{val=cat.fn(p);}catch(e){val='0.0';}
                   return '<tr class="lb-row'+(i===0?' lb-first':'')+'">'+
                     '<td class="lb-rank">'+(i+1)+'.</td>'+
-                    '<td class="lb-name">'+esc(p.name||'')+'</td>'+
-                    '<td class="lb-team">'+abbr(p.team_name)+'</td>'+
+                    '<td class="lb-name">'+esc(p.name)+'</td>'+
+                    '<td class="lb-team">'+esc(abbr(p.team_name))+'</td>'+
                     '<td class="lb-val">'+val+'</td>'+
                   '</tr>';
                 }).join('')
@@ -649,9 +665,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               '<table class="lb-table">'+rows+'</table>'+
             '</div>';
           }
-          return '<div class="lb-wrap">'+
-            '<div class="lb-grid">'+cats.map(renderCat).join('')+'</div>'+
-          '</div>';
+          return '<div class="lb-wrap"><div class="lb-grid">'+cats.map(renderCat).join('')+'</div></div>';
         })()}
       </div>
       <div id="tab-standings" class="tab-pane">
