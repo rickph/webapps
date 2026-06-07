@@ -499,7 +499,7 @@ function renderLanding(leagues, stats, user) {
           </div>
           <div class="lp-fcol"><div class="lp-fcolt">Platform</div><a href="#features">Features</a><a href="#how">How It Works</a><a href="#leagues">View Leagues</a><a href="/install">Install App</a></div>
           <div class="lp-fcol"><div class="lp-fcolt">Account</div><a href="/login">Sign In</a><a href="/register">Register Free</a><a href="/admin">Admin Panel</a></div>
-          <div class="lp-fcol"><div class="lp-fcolt">Legal</div><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Contact</a></div>
+          <div class="lp-fcol"><div class="lp-fcolt">Legal</div><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Use</a><a href="mailto:hoopstatspilipinas@gmail.com">Contact</a></div>
         </div>
         <div class="lp-fbot">
           <div class="lp-fcopy">&copy; ${new Date().getFullYear()} HoopStats Pilipinas. All rights reserved.</div>
@@ -1271,4 +1271,231 @@ router.get('/league/:id/player/:pid', async (req, res) => {
       </div>
     `));
   } catch(err) { console.error('Player profile error:', err); res.redirect('/'); }
+});
+
+// ── TERMS OF USE ──────────────────────────────────────────────────────────────
+router.get('/terms', (req, res) => {
+  res.send(page('Terms of Use | HoopStats Pilipinas', `
+    <nav class="topnav">
+      <div class="topnav-inner">
+        <div class="nav-brand">
+          <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
+            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+            <div class="nav-brand-text">
+              <div class="brand-text">HOOPSTATS</div>
+              <div class="brand-sub">Pilipinas</div>
+            </div>
+          </a>
+        </div>
+        <div class="nav-actions">
+          <a href="/" class="nav-btn-orange">← Home</a>
+        </div>
+      </div>
+    </nav>
+    <div style="max-width:800px;margin:0 auto;padding:48px 24px 80px">
+      <div style="margin-bottom:32px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px">Legal</div>
+        <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:8px">Terms of Use</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,.35)">Last updated: June 2025 &nbsp;·&nbsp; Effective immediately upon use</p>
+      </div>
+
+      <div style="background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 32px;margin-bottom:16px">
+        <p style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.8">
+          Welcome to <strong style="color:#fff">HoopStats Pilipinas</strong> ("HoopStats," "we," "our," or "us"). By accessing or using our platform at hoopstats-ph.up.railway.app or any associated mobile application (collectively, the "Service"), you agree to be bound by these Terms of Use. If you do not agree, please discontinue use immediately.
+        </p>
+      </div>
+
+      ${[
+        {
+          num:'1', title:'Acceptance of Terms',
+          body:`By registering an account or using any part of the Service, you confirm that you are at least 13 years of age and have the legal capacity to enter into these Terms. Use of the Service by minors under 13 is prohibited without verifiable parental consent.`
+        },
+        {
+          num:'2', title:'Description of Service',
+          body:`HoopStats Pilipinas is a basketball league management platform designed for Philippine basketball communities. It allows commissioners to create and manage leagues, track player statistics using FIBA 2024 standards, operate live scoring, and share results publicly. The Service is provided on a free-to-start basis with potential premium features in the future.`
+        },
+        {
+          num:'3', title:'User Accounts',
+          body:`You are responsible for maintaining the confidentiality of your account credentials. You agree to (a) provide accurate and complete registration information; (b) notify us immediately of any unauthorized use of your account; (c) not share your login credentials with others; and (d) not create multiple accounts to circumvent restrictions. HoopStats reserves the right to suspend or terminate accounts that violate these Terms.`
+        },
+        {
+          num:'4', title:'Commissioner Responsibilities',
+          body:`As a league commissioner, you are solely responsible for: (a) the accuracy of all player information, statistics, and game records entered into the platform; (b) obtaining consent from players and team members before adding their personal information; (c) ensuring that your league operations comply with applicable laws and regulations; and (d) the conduct of all users under your league's admin code.`
+        },
+        {
+          num:'5', title:'Player Data and Consent',
+          body:`Commissioners who add player profiles must ensure they have obtained appropriate consent from players or their legal guardians (for minors) before entering personal data such as names, positions, jersey numbers, photos, and statistics. Players or their guardians may request removal of their data at any time by contacting the league commissioner or HoopStats directly.`
+        },
+        {
+          num:'6', title:'Prohibited Conduct',
+          body:`You agree not to: (a) use the Service for any unlawful purpose; (b) upload false, misleading, or defamatory content; (c) impersonate any person or entity; (d) attempt to gain unauthorized access to any part of the Service or its infrastructure; (e) use automated tools to scrape, crawl, or harvest data without permission; (f) interfere with or disrupt the Service's servers or networks; or (g) use the platform to promote gambling, betting, or match-fixing activities.`
+        },
+        {
+          num:'7', title:'Intellectual Property',
+          body:`All content, features, and functionality of the Service — including but not limited to text, graphics, logos, icons, and software — are the exclusive property of HoopStats Pilipinas and are protected by applicable intellectual property laws. You are granted a limited, non-exclusive, non-transferable license to use the Service solely for its intended purpose. You may not copy, modify, distribute, or create derivative works without our express written permission.`
+        },
+        {
+          num:'8', title:'User-Generated Content',
+          body:`By uploading content (including player photos, team logos, and other media) to the Service, you grant HoopStats a non-exclusive, worldwide, royalty-free license to use, display, and distribute that content in connection with operating and improving the Service. You represent that you own or have the necessary rights to such content and that it does not infringe any third-party rights.`
+        },
+        {
+          num:'9', title:'Public League Pages',
+          body:`Leagues marked as "public" will be accessible to anyone with the link, including non-registered users. Commissioners should carefully consider what information is made public. HoopStats is not responsible for how publicly accessible data is used by third parties.`
+        },
+        {
+          num:'10', title:'Disclaimer of Warranties',
+          body:`THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. HOOPSTATS DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR COMPLETELY SECURE. USE OF THE SERVICE IS AT YOUR SOLE RISK.`
+        },
+        {
+          num:'11', title:'Limitation of Liability',
+          body:`TO THE MAXIMUM EXTENT PERMITTED BY LAW, HOOPSTATS PILIPINAS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF OR INABILITY TO USE THE SERVICE, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.`
+        },
+        {
+          num:'12', title:'Modifications to the Service and Terms',
+          body:`HoopStats reserves the right to modify, suspend, or discontinue the Service (or any part thereof) at any time without prior notice. We may also update these Terms from time to time. Continued use of the Service after any changes constitutes your acceptance of the revised Terms. We will make reasonable efforts to notify registered users of material changes via email or in-app notification.`
+        },
+        {
+          num:'13', title:'Governing Law',
+          body:`These Terms shall be governed by and construed in accordance with the laws of the Republic of the Philippines, without regard to its conflict of law provisions. Any dispute arising under these Terms shall be subject to the exclusive jurisdiction of the courts of the Philippines.`
+        },
+        {
+          num:'14', title:'Contact Us',
+          body:`If you have questions about these Terms, please contact us through the platform's public channels or by emailing the league administrator. We will do our best to respond within a reasonable timeframe.`
+        },
+      ].map(s => `
+        <div style="margin-bottom:16px;padding:24px 32px;background:#111;border:1px solid rgba(255,255,255,.07);border-radius:10px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--orange);flex-shrink:0">${s.num}</div>
+            <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.3px">${s.title}</h2>
+          </div>
+          <p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85;margin-left:40px">${s.body}</p>
+        </div>
+      `).join('')}
+
+      <div style="margin-top:32px;padding:20px 32px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;text-align:center">
+        <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+          By using HoopStats Pilipinas, you acknowledge that you have read, understood, and agree to these Terms of Use.<br>
+          <a href="/privacy" style="color:var(--orange);font-weight:700">Privacy Policy</a> &nbsp;·&nbsp;
+          <a href="/" style="color:var(--orange);font-weight:700">Back to Home</a>
+        </p>
+      </div>
+    </div>
+  `));
+});
+
+// ── PRIVACY POLICY ────────────────────────────────────────────────────────────
+router.get('/privacy', (req, res) => {
+  res.send(page('Privacy Policy | HoopStats Pilipinas', `
+    <nav class="topnav">
+      <div class="topnav-inner">
+        <div class="nav-brand">
+          <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
+            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+            <div class="nav-brand-text">
+              <div class="brand-text">HOOPSTATS</div>
+              <div class="brand-sub">Pilipinas</div>
+            </div>
+          </a>
+        </div>
+        <div class="nav-actions">
+          <a href="/" class="nav-btn-orange">← Home</a>
+        </div>
+      </div>
+    </nav>
+    <div style="max-width:800px;margin:0 auto;padding:48px 24px 80px">
+      <div style="margin-bottom:32px">
+        <div style="font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px">Legal</div>
+        <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:8px">Privacy Policy</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,.35)">Last updated: June 2025 &nbsp;·&nbsp; Applies to all users of HoopStats Pilipinas</p>
+      </div>
+
+      <div style="background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 32px;margin-bottom:16px">
+        <p style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.8">
+          HoopStats Pilipinas ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our basketball league management platform. We comply with the <strong style="color:#fff">Republic Act No. 10173</strong> — the Data Privacy Act of 2012 of the Philippines — and applicable international privacy standards.
+        </p>
+      </div>
+
+      ${[
+        {
+          num:'1', title:'Information We Collect',
+          subsections:[
+            {sub:'Account Information', text:'When you register, we collect your name, email address, and password (stored as a bcrypt hash). We never store your password in plain text.'},
+            {sub:'League & Player Data', text:'Commissioners may enter player names, jersey numbers, positions, photos, and game statistics. This data is provided voluntarily by the commissioner who is responsible for obtaining player consent.'},
+            {sub:'Usage Data', text:'We automatically collect information about how you interact with the Service, including IP addresses, browser type, pages visited, time spent, and device information. This helps us improve the platform.'},
+            {sub:'Uploaded Media', text:'Profile photos and team logos uploaded to the platform are stored securely on our servers.'},
+          ]
+        },
+        {
+          num:'2', title:'How We Use Your Information',
+          subsections:[
+            {sub:'Service Operation', text:'To create and manage your account, display league data, process live scores, and generate standings and statistics.'},
+            {sub:'Communication', text:'To send important account notifications, service updates, and respond to your inquiries. We do not send marketing emails without your explicit consent.'},
+            {sub:'Platform Improvement', text:'To analyze usage patterns, diagnose technical issues, and improve the features and performance of the Service.'},
+            {sub:'Legal Compliance', text:'To comply with applicable laws, respond to lawful requests, and protect the rights and safety of our users and the public.'},
+          ]
+        },
+        {
+          num:'3', title:'Public Information',
+          body:`Leagues set to "public" by the commissioner will have their standings, player statistics, game results, and schedules visible to anyone with the league link — no account required. Commissioners are responsible for ensuring appropriate consent before making player data publicly accessible. Players or their guardians may request their data be made private at any time.`
+        },
+        {
+          num:'4', title:'Data Sharing and Disclosure',
+          body:`We do not sell, trade, or rent your personal information to third parties. We may share data only in the following circumstances: (a) with service providers who assist in operating the platform (e.g., Railway for hosting, database providers) under strict confidentiality obligations; (b) when required by law, court order, or government authority; (c) to protect the rights, property, or safety of HoopStats, our users, or the public; or (d) in connection with a business transfer, merger, or acquisition, with appropriate notice to users.`
+        },
+        {
+          num:'5', title:'Data Security',
+          body:`We implement industry-standard security measures including: (a) bcrypt hashing for all passwords; (b) HTTPS/TLS encryption for all data in transit; (c) JWT-based authentication with secure session management; (d) database access restricted to authorized services only; and (e) regular security reviews. However, no method of transmission or storage is 100% secure. We encourage you to use strong, unique passwords and report any suspected security issues immediately.`
+        },
+        {
+          num:'6', title:'Your Rights Under the Data Privacy Act (RA 10173)',
+          body:`As a data subject, you have the following rights: (a) <strong>Right to be Informed</strong> — know how your data is collected and used; (b) <strong>Right to Access</strong> — request a copy of your personal data we hold; (c) <strong>Right to Rectification</strong> — request correction of inaccurate data; (d) <strong>Right to Erasure</strong> — request deletion of your personal data, subject to legal retention requirements; (e) <strong>Right to Object</strong> — object to processing of your data for specific purposes; (f) <strong>Right to Data Portability</strong> — receive your data in a structured, machine-readable format; and (g) <strong>Right to Lodge a Complaint</strong> — file a complaint with the National Privacy Commission (NPC) of the Philippines.`
+        },
+        {
+          num:'7', title:'Children\'s Privacy',
+          body:`The Service is not directed to children under 13. We do not knowingly collect personal information from children under 13 without verifiable parental consent. If you believe a child under 13 has provided personal information through our platform without consent, please contact us immediately and we will take steps to remove such information.`
+        },
+        {
+          num:'8', title:'Cookies and Tracking',
+          body:`We use session cookies essential for authentication and platform functionality. We do not use advertising cookies or third-party tracking pixels. You may disable cookies in your browser settings, but this may affect platform functionality, particularly the ability to stay logged in.`
+        },
+        {
+          num:'9', title:'Data Retention',
+          body:`We retain your account data for as long as your account is active. League and player data is retained for the duration of the league season and may be archived for historical records. You may request deletion of your account and associated data at any time. Certain data may be retained for legal compliance purposes even after account deletion.`
+        },
+        {
+          num:'10', title:'Third-Party Services',
+          body:`Our platform is hosted on Railway (railway.app). Your data is stored on servers they provide. We encourage you to review Railway's privacy policy. We use Google Fonts for typography (loaded from Google's servers). No other third-party services have access to your personal data.`
+        },
+        {
+          num:'11', title:'Changes to This Policy',
+          body:`We may update this Privacy Policy periodically. We will notify registered users of significant changes via email or in-app notification. The "Last updated" date at the top of this page reflects the most recent revision. Continued use of the Service after changes constitutes acceptance of the updated policy.`
+        },
+        {
+          num:'12', title:'Contact & Data Privacy Officer',
+          body:`For privacy-related concerns, requests to exercise your rights, or to report a data breach, please contact the HoopStats Pilipinas Data Privacy Officer through the platform. We will respond to all verifiable requests within 30 days in accordance with RA 10173. You also have the right to lodge a complaint with the National Privacy Commission (NPC) at www.privacy.gov.ph.`
+        },
+      ].map(s => `
+        <div style="margin-bottom:16px;padding:24px 32px;background:#111;border:1px solid rgba(255,255,255,.07);border-radius:10px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:${s.subsections ? 16 : 12}px">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--orange);flex-shrink:0">${s.num}</div>
+            <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.3px">${s.title}</h2>
+          </div>
+          ${s.subsections ? s.subsections.map(ss => `
+            <div style="margin-left:40px;margin-bottom:14px">
+              <div style="font-size:12px;font-weight:800;color:var(--orange);letter-spacing:.5px;margin-bottom:4px">${ss.sub}</div>
+              <p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85">${ss.text}</p>
+            </div>
+          `).join('') : `<p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85;margin-left:40px">${s.body}</p>`}
+        </div>
+      `).join('')}
+
+      <div style="margin-top:32px;padding:20px 32px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;text-align:center">
+        <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+          Your privacy matters to us. We are committed to transparent, responsible data practices.<br>
+          <a href="/terms" style="color:var(--orange);font-weight:700">Terms of Use</a> &nbsp;·&nbsp;
+          <a href="/" style="color:var(--orange);font-weight:700">Back to Home</a>
+        </p>
+      </div>
+    </div>
+  `));
 });
