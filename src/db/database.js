@@ -105,9 +105,14 @@ async function initSchema() {
       name        TEXT NOT NULL,
       color       TEXT NOT NULL DEFAULT '#e63946',
       wins        INTEGER NOT NULL DEFAULT 0,
-      losses      INTEGER NOT NULL DEFAULT 0
+      losses      INTEGER NOT NULL DEFAULT 0,
+      pts_for     INTEGER NOT NULL DEFAULT 0,
+      pts_against INTEGER NOT NULL DEFAULT 0
     )
   `);
+  // Migration: add pts_for/pts_against if upgrading from older schema
+  await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS pts_for     INTEGER NOT NULL DEFAULT 0`).catch(()=>{});
+  await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS pts_against INTEGER NOT NULL DEFAULT 0`).catch(()=>{});
 
   await run(`
     CREATE TABLE IF NOT EXISTS players (
@@ -178,10 +183,6 @@ async function initSchema() {
     await run("UPDATE users SET role='superadmin', plan='pro' WHERE email='superadmin@phhoops.com' AND role='commissioner'");
   } catch(e) {}
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS facebook_url TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE teams ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE teams ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE players ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT NULL'); } catch(e) {}
-  try { await run('ALTER TABLE players ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT NULL'); } catch(e) {}
 
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 
@@ -227,7 +228,7 @@ async function initSchema() {
 // ─── SEED DATA ────────────────────────────────────────────────────────────────
 
 async function seedData() {
-  const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@hoopstatspilipinas.com']);
+  const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@phhoops.com']);
   const bcrypt = require('bcryptjs');
 
   // Always ensure super admin exists
@@ -248,7 +249,7 @@ async function seedData() {
     // Demo commissioner
     const { rows: [user] } = await client.query(
       `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-      ['demo@hoopstatspilipinas.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
+      ['demo@phhoops.com', hash, 'Demo Commissioner', 'pro', 'commissioner']
     );
 
     // League 1 — Barangay
@@ -346,4 +347,3 @@ async function initDb() {
 }
 
 module.exports = { query, queryOne, run, transaction, initDb, getPool };
-
