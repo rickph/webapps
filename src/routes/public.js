@@ -685,7 +685,75 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               '<table class="lb-table">'+rows+'</table>'+
             '</div>';
           }
-          return '<div class="lb-wrap"><div class="lb-grid">'+cats.map(renderCat).join('')+'</div></div>';
+          // ── FIBA EFF MVP RACE ──────────────────────────────────────────────
+          // EFF = PTS + REB + AST + STL + BLK - (FGA-FGM) - (FTA-FTM) - TO
+          // Source: FIBA Statisticians' Manual 2024
+          const mvpPlayers = players.map(function(p){
+            var ss = seasonStats[p.id] || {};
+            var pts  = parseFloat(ss.pts   || p.pts  || 0);
+            var reb  = parseFloat(ss.reb   || p.reb  || 0);
+            var ast  = parseFloat(ss.ast   || p.ast  || 0);
+            var stl  = parseFloat(ss.stl   || p.stl  || 0);
+            var blk  = parseFloat(ss.blk   || p.blk  || 0);
+            var to   = parseFloat(ss.to_val|| 0);
+            var fgm  = parseFloat(ss.fgm   || 0);
+            var fga  = parseFloat(ss.fga   || 0);
+            var ftm  = parseFloat(ss.ftm   || 0);
+            var fta  = parseFloat(ss.fta   || 0);
+            var gp   = parseFloat(ss.gp    || p.gp   || 0);
+            // Per-game EFF average
+            var eff  = gp > 0
+              ? ((pts + reb + ast + stl + blk - (fga - fgm) - (fta - ftm) - to) / gp)
+              : (pts + reb + ast + stl + blk - (fga - fgm) - (fta - ftm) - to);
+            return {
+              name: p.name, team_name: p.team_name||'',
+              pts:pts, reb:reb, ast:ast, stl:stl, blk:blk, to:to, gp:gp, eff:eff
+            };
+          }).filter(function(p){ return p.name && p.gp > 0; })
+            .sort(function(a,b){ return b.eff - a.eff; })
+            .slice(0, 10);
+
+          function renderMVP(){
+            if (!mvpPlayers.length) {
+              return '<div class="lb-mvp-empty">No qualifying players yet. Players must have at least 1 game played.</div>';
+            }
+            var medals = ['🥇','🥈','🥉'];
+            return mvpPlayers.map(function(p, i){
+              var medal   = medals[i] || '';
+              var isTop3  = i < 3;
+              var effDisp = (p.eff >= 0 ? '+' : '') + p.eff.toFixed(1);
+              return '<div class="lb-mvp-row'+(i===0?' lb-mvp-top':'')+'">'+
+                '<div class="lb-mvp-left">'+
+                  '<div class="lb-mvp-rank">'+(medal || (i+1)+'.')+'</div>'+
+                  '<div class="lb-mvp-info">'+
+                    '<div class="lb-mvp-name">'+esc(p.name)+'</div>'+
+                    '<div class="lb-mvp-team">'+esc(abbr(p.team_name))+'  ·  '+p.gp+' GP</div>'+
+                  '</div>'+
+                '</div>'+
+                '<div class="lb-mvp-right">'+
+                  '<div class="lb-mvp-eff'+(i===0?' lb-mvp-eff-top':'')+'">'+effDisp+'</div>'+
+                  '<div class="lb-mvp-efflbl">EFF</div>'+
+                '</div>'+
+                '<div class="lb-mvp-bars">'+
+                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">PTS</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.pts/30)*100)+'%;background:#f97316"></div></div><span class="lb-mvp-bar-val">'+p.pts.toFixed(1)+'</span></div>'+
+                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">REB</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.reb/15)*100)+'%;background:#00d4aa"></div></div><span class="lb-mvp-bar-val">'+p.reb.toFixed(1)+'</span></div>'+
+                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">AST</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.ast/10)*100)+'%;background:#a78bfa"></div></div><span class="lb-mvp-bar-val">'+p.ast.toFixed(1)+'</span></div>'+
+                '</div>'+
+              '</div>';
+            }).join('');
+          }
+
+          var mvpSection = '<div class="lb-mvp-wrap">'+
+            '<div class="lb-mvp-header">'+
+              '<div>'+
+                '<div class="lb-mvp-title">🏆 MVP RACE</div>'+
+                '<div class="lb-mvp-sub">Based on official FIBA Efficiency Rating · EFF = PTS+REB+AST+STL+BLK−Missed FG−Missed FT−TO</div>'+
+              '</div>'+
+            '</div>'+
+            '<div class="lb-mvp-list">'+renderMVP()+'</div>'+
+          '</div>';
+
+          return mvpSection + '<div class="lb-wrap"><div class="lb-grid">'+cats.map(renderCat).join('')+'</div></div>';
         })()}
       </div>
       <div id="tab-standings" class="tab-pane">
