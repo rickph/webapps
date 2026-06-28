@@ -631,6 +631,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       <button class="ptab active" data-tab="standings">🏆 Standings</button>
       <button class="ptab" data-tab="leaderboard">📊 Leader Board</button>
       <button class="ptab" data-tab="players">👤 Player Stats</button>
+      <button class="ptab" data-tab="games">🏀 Games</button>
       <button class="ptab" data-tab="schedule">📅 Schedule</button>
     </div></div>
 
@@ -882,6 +883,48 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         </table>
         </div>
 
+      </div>
+
+      <div id="tab-games" class="tab-pane hidden">
+        ${(()=>{
+          const finalGames  = games.filter(function(g){ return g.status==='final'; });
+          if (!finalGames.length) {
+            return '<div class="empty-state"><div class="es-icon">🏀</div><div>No completed games yet.</div></div>';
+          }
+          return finalGames.map(function(g){
+            const homeWin   = (g.home_score||0) > (g.away_score||0);
+            const homeCls   = homeWin  ? 'color:#00d4aa;font-weight:900' : 'color:rgba(255,255,255,.55);font-weight:700';
+            const awayCls   = !homeWin ? 'color:#00d4aa;font-weight:900' : 'color:rgba(255,255,255,.55);font-weight:700';
+            return '<a href="/league/'+league.id+'/game/'+g.id+'" style="display:block;text-decoration:none;color:inherit">'
+              + '<div class="game-row game-row-clickable" style="cursor:pointer">'
+              +   '<div style="display:table;width:100%">'
+                  // Home team
+              +     '<div style="display:table-cell;width:38%;vertical-align:middle;padding-right:10px">'
+              +       '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.home_name||'Home')+'</div>'
+              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(homeWin?'rgba(0,212,170,.12)':'rgba(255,255,255,.04)')+';color:'+(homeWin?'#00d4aa':'rgba(255,255,255,.3)')+'">'+( homeWin?'WIN':'LOSS')+'</div>'
+              +     '</div>'
+                  // Score
+              +     '<div style="display:table-cell;width:24%;vertical-align:middle;text-align:center">'
+              +       '<div style="display:flex;align-items:center;justify-content:center;gap:8px">'
+              +         '<span style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;'+homeCls+'">'+g.home_score+'</span>'
+              +         '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.2)">—</span>'
+              +         '<span style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;'+awayCls+'">'+g.away_score+'</span>'
+              +       '</div>'
+              +       '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.2);text-transform:uppercase;margin-top:2px">FINAL</div>'
+              +     '</div>'
+                  // Away team
+              +     '<div style="display:table-cell;width:38%;vertical-align:middle;padding-left:10px;text-align:right">'
+              +       '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.away_name||'Away')+'</div>'
+              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(!homeWin?'rgba(0,212,170,.12)':'rgba(255,255,255,.04)')+';color:'+(!homeWin?'#00d4aa':'rgba(255,255,255,.3)')+'">'+(!homeWin?'WIN':'LOSS')+'</div>'
+              +     '</div>'
+              +   '</div>'
+              +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">'
+              +     '<span style="font-size:11px;color:rgba(255,255,255,.3)">📍 '+esc(g.venue||'TBD')+' · '+esc(g.date||'TBD')+'</span>'
+              +     '<span style="font-size:11px;font-weight:800;color:rgba(249,115,22,.8);letter-spacing:.5px">BOX SCORE →</span>'
+              +   '</div>'
+              + '</div></a>';
+          }).join('');
+        })()}
       </div>
 
       <div id="tab-schedule" class="tab-pane hidden">
