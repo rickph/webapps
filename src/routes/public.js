@@ -689,23 +689,27 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
           // EFF = PTS + REB + AST + STL + BLK - (FGA-FGM) - (FTA-FTM) - TO
           const mvpPlayers = players.map(function(p){
             var ss  = seasonStats[p.id] || {};
-            var pts = parseFloat(ss.pts    || p.pts  || 0);
-            var reb = parseFloat(ss.reb    || p.reb  || 0);
-            var ast = parseFloat(ss.ast    || p.ast  || 0);
-            var stl = parseFloat(ss.stl    || p.stl  || 0);
-            var blk = parseFloat(ss.blk    || p.blk  || 0);
-            var to  = parseFloat(ss.to_val || 0);
-            var fgm = parseFloat(ss.fgm    || 0);
-            var fga = parseFloat(ss.fga    || 0);
+            var gp  = parseFloat(ss.gp     || p.gp   || 0);
+            if (!gp) return null;
+            // Use per-game averages already stored in player_season_stats
+            // eff column is the FIBA EFF already computed by the server on save
+            var pts = parseFloat(ss.pts    || 0);
+            var reb = parseFloat(ss.reb    || 0);
+            var ast = parseFloat(ss.ast    || 0);
+            var stl = parseFloat(ss.stl    || 0);
+            var blk = parseFloat(ss.blk    || 0);
+            // Recompute EFF accurately using stored totals (per-game averages)
+            var fgm = parseFloat(ss.fg2m||0) + parseFloat(ss.fg3m||0);
+            var fga = parseFloat(ss.fg2a||0) + parseFloat(ss.fg3a||0);
             var ftm = parseFloat(ss.ftm    || 0);
             var fta = parseFloat(ss.fta    || 0);
-            var gp  = parseFloat(ss.gp     || p.gp   || 0);
-            var rawEff = pts + reb + ast + stl + blk - (fga-fgm) - (fta-ftm) - to;
-            var eff = gp > 0 ? rawEff / gp : rawEff;
+            var to  = parseFloat(ss.to_val || 0);
+            // These are per-game averages already, so use directly
+            var eff = pts + reb + ast + stl + blk - (fga-fgm) - (fta-ftm) - to;
             return { name:p.name, team_name:p.team_name||'', pts:pts, reb:reb, ast:ast, stl:stl, blk:blk, gp:gp, eff:eff };
-          }).filter(function(p){ return p.name && p.gp > 0; })
+          }).filter(function(p){ return p !== null; })
             .sort(function(a,b){ return b.eff - a.eff; })
-            .slice(0, 10);
+            .slice(0, 5);
 
           function renderMVP(){
             if (!mvpPlayers.length) {
