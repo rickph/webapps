@@ -655,3 +655,27 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .lb-mvp-sub { display: none; }
   .lb-mvp-title { font-size: 16px; }
 }
+
+/* ── LEADER CARD — fully clickable ── */
+a.leader-card-link {
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+a.leader-card-link:hover {
+  border-color: rgba(249,115,22,.5) !important;
+  border-top-color: var(--orange) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(249,115,22,.15);
+  text-decoration: none;
+  color: inherit;
+}
+a.leader-card-link .leader-name {
+  color: rgba(255,255,255,.55);
+  transition: color .15s;
+}
+a.leader-card-link:hover .leader-name {
+  color: var(--orange);
+}
