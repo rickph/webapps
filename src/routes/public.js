@@ -50,7 +50,7 @@ router.get('/league/:id', async (req, res) => {
     const dir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const [teams, players, games, seasonStatsRows] = await Promise.all([
-      db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [league.id]),
+      db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC, (pts_for - pts_against) DESC, pts_for DESC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name,t.color as team_color
                 FROM players p
                 LEFT JOIN teams t ON p.team_id=t.id
@@ -848,19 +848,39 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         })()}
       </div>
       <div id="tab-standings" class="tab-pane">
-        <div class="table-scroll"><table class="stats-table">
-          <thead><tr><th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th></tr></thead>
-          <tbody>
-            ${teams.map((t,i)=>`
-              <tr>
-                <td class="rank ${i<2?'rank-top':''}">${i+1}</td>
-                <td><div class="team-name-cell"><div class="team-dot" style="background:${t.color}"></div><a href="/league/${league.id}/team/${t.id}" class="team-link">${esc(t.name)}</a></div></td>
-                <td class="green">${t.wins}</td>
-                <td class="red">${t.losses}</td>
-                <td style="color:var(--gold);font-weight:700">${((t.wins/(t.wins+t.losses||1))*100).toFixed(1)}%</td>
-              </tr>`).join('') || '<tr><td colspan="5" class="empty">No teams yet.</td></tr>'}
-          </tbody>
-        </table></div>
+        ${(()=>{
+          // Detect if any teams are tied on WIN% — show tiebreaker columns
+          const hasTies = teams.some((t,i,arr) => i > 0 && arr[i-1].wins === t.wins && arr[i-1].losses === t.losses);
+          const showTb  = hasTies && teams.some(t => (t.pts_for||0) > 0);
+          return '<div class="table-scroll"><table class="stats-table">'
+            + '<thead><tr>'
+            + '<th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th>'
+            + (showTb ? '<th title="Points For">PF</th><th title="Points Against">PA</th><th title="Point Differential">DIFF</th>' : '')
+            + '</tr></thead>'
+            + '<tbody>'
+            + (teams.map((t,i,arr)=>{
+                const gp   = t.wins + t.losses;
+                const pct  = gp > 0 ? ((t.wins/gp)*100).toFixed(1) : '0.0';
+                const diff = (t.pts_for||0) - (t.pts_against||0);
+                // Tiebreaker indicator: show 'T' badge if same WIN% as adjacent team
+                const tiedWithPrev = i > 0 && arr[i-1].wins === t.wins && arr[i-1].losses === t.losses;
+                const tiedWithNext = i < arr.length-1 && arr[i+1].wins === t.wins && arr[i+1].losses === t.losses;
+                const isTied = tiedWithPrev || tiedWithNext;
+                return '<tr>'
+                  + '<td class="rank '+(i<2?'rank-top':'')+'">'+(i+1)+(isTied?'<span style="font-size:8px;color:#f7c948;vertical-align:super;margin-left:2px">T</span>':'')+'</td>'
+                  + '<td><div class="team-name-cell"><div class="team-dot" style="background:'+t.color+'"></div><a href="/league/'+league.id+'/team/'+t.id+'" class="team-link">'+esc(t.name)+'</a></div></td>'
+                  + '<td class="green">'+t.wins+'</td>'
+                  + '<td class="red">'+t.losses+'</td>'
+                  + '<td style="color:var(--gold);font-weight:700">'+pct+'%</td>'
+                  + (showTb ? '<td style="color:rgba(255,255,255,.5)">'+  (t.pts_for||0)     +'</td>'
+                            + '<td style="color:rgba(255,255,255,.5)">'+  (t.pts_against||0) +'</td>'
+                            + '<td style="color:'+(diff>=0?'#00d4aa':'#f87171')+';font-weight:700">'+(diff>0?'+':'')+diff+'</td>' : '')
+                  + '</tr>';
+              }).join('') || '<tr><td colspan="8" class="empty">No teams yet.</td></tr>')
+            + '</tbody></table>'
+            + (showTb ? '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:8px 4px;display:flex;align-items:center;gap:6px"><span style="color:#f7c948;font-weight:800">T</span> = Tied on WIN% — ranked by Head-to-Head → Point Differential → Points Scored</div>' : '')
+            + '</div>';
+        })()}
       </div>
 
       <div id="tab-players" class="tab-pane hidden">
