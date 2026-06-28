@@ -617,14 +617,13 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         {label:'BLK', key:'blk', val:blkLeader?.blk, name:blkLeader?.name, id:blkLeader?.id, c:'#60a5fa'},
         {label:'FG%', key:'fg',  val:fgLeader?.fg != null ? fgLeader.fg+'%' : null, name:fgLeader?.name, id:fgLeader?.id, c:'#34d399'},
       ].map(s=>`
-        <div class="leader-card">
+        ${s.id
+          ? `<a href="/league/${league.id}/player/${s.id}" class="leader-card leader-card-link">`
+          : `<div class="leader-card">`}
           <div class="leader-label">${s.label} LEADER</div>
           <div class="leader-val" style="color:${s.c}">${s.val ?? '—'}</div>
-          ${s.id
-            ? `<a href="/league/${league.id}/player/${s.id}" class="leader-name leader-link">${esc(s.name ?? 'N/A')}</a>`
-            : `<div class="leader-name">${esc(s.name ?? 'N/A')}</div>`
-          }
-        </div>`).join('')}
+          <div class="leader-name">${esc(s.name ?? 'N/A')}</div>
+        ${s.id ? `</a>` : `</div>`}`).join('')}
     </div>
 
     <div class="pub-tabs"><div class="tabs-inner">
