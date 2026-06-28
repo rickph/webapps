@@ -288,9 +288,23 @@ function renderLanding(leagues, stats, user) {
       .lp-anim{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
       .lp-anim.visible{opacity:1;transform:none}
       /* RESPONSIVE */
+      /* Hamburger button */
+      .lp-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:40px;height:40px;padding:8px;cursor:pointer;background:transparent;border:none;margin-left:12px;flex-shrink:0}
+      .lp-hamburger span{display:block;height:2px;background:#fff;border-radius:2px;transition:all .25s}
+      .lp-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+      .lp-hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+      .lp-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+      /* Mobile dropdown */
+      .lp-mobile-menu{display:none;position:fixed;top:62px;left:0;right:0;z-index:199;background:rgba(10,10,10,.98);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.1);padding:16px 0;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+      .lp-mobile-menu.open{display:block}
+      .lp-mobile-menu a{display:block;padding:14px 24px;font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.55);text-decoration:none;transition:all .15s;border-left:3px solid transparent}
+      .lp-mobile-menu a:hover,.lp-mobile-menu a:active{color:#fff;background:rgba(255,255,255,.05);border-left-color:#f97316}
+      .lp-mobile-menu .lp-mobile-divider{height:1px;background:rgba(255,255,255,.08);margin:8px 24px}
+      .lp-mobile-menu .lp-mobile-signin{color:#f97316!important;font-weight:900!important}
       @media(max-width:960px){
         .lp-nav-inner{padding:0 28px}
         .lp-nav-links{display:none}
+        .lp-hamburger{display:flex}
         .lp-fhead{grid-template-columns:1fr;gap:20px}
         .lp-fright p{margin-left:0}
         .lp-fgrid{grid-template-columns:repeat(2,1fr)}
@@ -342,11 +356,25 @@ function renderLanding(leagues, stats, user) {
         </div>
         <div class="lp-nav-actions">
           ${user
-            ? `<a href="/admin" class="lp-btn-signin">My Dashboard</a><a href="/admin" class="lp-btn-cta">Go to Admin</a>`
-            : `<a href="/login" class="lp-btn-signin">Sign In</a><a href="/register" class="lp-btn-cta">GET STARTED</a>`}
+            ? `<a href="/admin" class="lp-btn-signin">My Dashboard</a>`
+            : `<a href="/login" class="lp-btn-signin">Sign In</a>`}
+          <button class="lp-hamburger" id="lpHamburger" aria-label="Menu" onclick="toggleMobileMenu()">
+            <span></span><span></span><span></span>
+          </button>
         </div>
       </div>
     </nav>
+    <!-- MOBILE DROPDOWN MENU -->
+    <div class="lp-mobile-menu" id="lpMobileMenu">
+      <a href="#features" onclick="closeMobileMenu()">Features</a>
+      <a href="#how" onclick="closeMobileMenu()">How It Works</a>
+      <a href="#leagues" onclick="closeMobileMenu()">Leagues</a>
+      <a href="/install" onclick="closeMobileMenu()">Install App</a>
+      <div class="lp-mobile-divider"></div>
+      ${user
+        ? `<a href="/admin" class="lp-mobile-signin">My Dashboard →</a>`
+        : `<a href="/login" class="lp-mobile-signin">Sign In →</a><a href="/register" style="color:rgba(255,255,255,.55);padding:14px 24px;display:block;font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;text-decoration:none">Create Account</a>`}
+    </div>
 
     <!-- HERO -->
     <section class="lp-hero" id="hero">
@@ -511,6 +539,10 @@ function renderLanding(leagues, stats, user) {
 
     <script src="/js/public.js?v33"></script>
     <script>
+      // Mobile hamburger
+      function toggleMobileMenu(){var m=document.getElementById('lpMobileMenu'),b=document.getElementById('lpHamburger');if(!m||!b)return;var o=m.classList.toggle('open');b.classList.toggle('open',o);document.body.style.overflow=o?'hidden':'';}
+      function closeMobileMenu(){var m=document.getElementById('lpMobileMenu'),b=document.getElementById('lpHamburger');if(m)m.classList.remove('open');if(b)b.classList.remove('open');document.body.style.overflow='';}
+      document.addEventListener('click',function(e){var m=document.getElementById('lpMobileMenu'),b=document.getElementById('lpHamburger');if(m&&m.classList.contains('open')&&!m.contains(e.target)&&b&&!b.contains(e.target)){closeMobileMenu();}});
       // Nav scroll
       window.addEventListener('scroll',function(){
         document.getElementById('lpNav').classList.toggle('scrolled',window.scrollY>40);
