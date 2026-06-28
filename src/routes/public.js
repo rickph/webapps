@@ -886,7 +886,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
       <div id="tab-schedule" class="tab-pane hidden">
         ${games.map(g=>`
-          <div class="game-row">
+          <div class="game-row${g.status==='final'?' game-row-clickable':''}" ${g.status==='final'?`onclick="window.location='/league/${league.id}/game/${g.id}'"`:''}>
             <div class="game-meta">
               <div class="game-date">${esc(g.date||'TBD')}</div>
               <div class="game-venue">📍 ${esc(g.venue||'TBD')}</div>
@@ -902,7 +902,10 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                 : '<span class="vs-badge">VS</span>'}
               <span class="game-team">${esc(g.away_name||'TBD')}</span>
             </div>
-            ${statusBadge(g.status)}
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+              ${statusBadge(g.status)}
+              ${g.status==='final'?'<span style="font-size:11px;color:rgba(249,115,22,.7);font-weight:700;letter-spacing:.5px">BOX SCORE →</span>':''}
+            </div>
           </div>`).join('') || '<div class="empty-state"><div class="es-icon">📅</div><div>No games scheduled.</div></div>'}
       </div>
     </div>
@@ -1398,6 +1401,185 @@ router.get('/league/:id/player/:pid', async (req, res) => {
       </div>
     `));
   } catch(err) { console.error('Player profile error:', err); res.redirect('/'); }
+});
+
+// ── PUBLIC BOX SCORE ─────────────────────────────────────────────────────────
+router.get('/league/:lid/game/:gid', async (req, res) => {
+  try {
+    const { lid, gid } = req.params;
+    const user = req.user || null;
+
+    const [league, game, allStats] = await Promise.all([
+      db.queryOne('SELECT * FROM leagues WHERE id=$1', [lid]),
+      db.queryOne(
+        `SELECT g.*,
+           ht.name as home_name, ht.color as home_color,
+           at.name as away_name, at.color as away_color
+         FROM games g
+         LEFT JOIN teams ht ON g.home_team_id=ht.id
+         LEFT JOIN teams at ON g.away_team_id=at.id
+         WHERE g.id=$1 AND g.league_id=$2`, [gid, lid]),
+      db.query(
+        `SELECT gs.*, p.name, p.jersey, p.pos, p.team_id,
+           t.name as team_name, t.color as team_color
+         FROM game_stats gs
+         JOIN players p ON gs.player_id = p.id
+         JOIN teams   t ON p.team_id = t.id
+         WHERE gs.game_id=$1
+         ORDER BY t.id, (gs.fg2m*2+gs.fg3m*3+gs.ftm) DESC`, [gid]),
+    ]);
+
+    if (!league || !game) return res.redirect('/league/' + lid);
+
+    const homeWin = (game.home_score||0) > (game.away_score||0);
+
+    // Split stats by team
+    const homeStats = allStats.filter(r => r.team_id === game.home_team_id);
+    const awayStats = allStats.filter(r => r.team_id === game.away_team_id);
+
+    function calcPts(r) { return (r.fg2m||0)*2 + (r.fg3m||0)*3 + (r.ftm||0); }
+    function calcReb(r) { return (r.oreb||0) + (r.dreb||0); }
+
+    function teamTotals(rows) {
+      return rows.reduce((t,r) => {
+        t.pts += calcPts(r); t.reb += calcReb(r);
+        t.ast += r.ast||0; t.stl += r.stl||0; t.blk += r.blk||0;
+        t.to  += r.to_val||0;
+        t.fgm += (r.fg2m||0)+(r.fg3m||0);
+        t.fga += (r.fg2a||0)+(r.fg3a||0);
+        t.ftm += r.ftm||0; t.fta += r.fta||0;
+        return t;
+      }, {pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0,ftm:0,fta:0});
+    }
+
+    function playerRow(r, i) {
+      const pts = calcPts(r), reb = calcReb(r);
+      const fgm = (r.fg2m||0)+(r.fg3m||0);
+      const fga = (r.fg2a||0)+(r.fg3a||0);
+      const fg  = fga > 0 ? fgm+'/'+fga : '—';
+      const ft  = (r.fta||0) > 0 ? (r.ftm||0)+'/'+(r.fta||0) : '—';
+      const top = i === 0;
+      const nameHtml = (r.jersey ? '<span style="font-size:10px;color:rgba(255,255,255,.35);margin-right:5px">#'+esc(r.jersey)+'</span>' : '')
+                     + '<span style="font-weight:'+(top?'800':'600')+'">'+esc(r.name||'—')+'</span>'
+                     + (r.pos ? '<span style="margin-left:6px;background:#1c2a3a;color:#60a5fa;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">'+esc(r.pos)+'</span>' : '');
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'
+        + '<td class="bx-td-name">'+nameHtml+'</td>'
+        + '<td class="bx-td" style="color:'+(top?'#f97316':'rgba(255,255,255,.8)')+';font-weight:'+(top?900:700)+'">'+pts+'</td>'
+        + '<td class="bx-td">'+reb+'</td>'
+        + '<td class="bx-td">'+(r.ast||0)+'</td>'
+        + '<td class="bx-td">'+(r.stl||0)+'</td>'
+        + '<td class="bx-td">'+(r.blk||0)+'</td>'
+        + '<td class="bx-td">'+(r.to_val||0)+'</td>'
+        + '<td class="bx-td bx-fg">'+fg+'</td>'
+        + '<td class="bx-td bx-fg">'+ft+'</td>'
+        + '</tr>';
+    }
+
+    function totalRow(t) {
+      const fg = t.fga > 0 ? t.fgm+'/'+t.fga : '—';
+      const ft = t.fta > 0 ? t.ftm+'/'+t.fta : '—';
+      return '<tr style="background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.12)">'
+        + '<td class="bx-td-name" style="font-size:11px;font-weight:800;letter-spacing:.5px;color:rgba(255,255,255,.5)">TEAM TOTALS</td>'
+        + '<td class="bx-td" style="color:#f97316;font-weight:900">'+t.pts+'</td>'
+        + '<td class="bx-td">'+t.reb+'</td>'
+        + '<td class="bx-td">'+t.ast+'</td>'
+        + '<td class="bx-td">'+t.stl+'</td>'
+        + '<td class="bx-td">'+t.blk+'</td>'
+        + '<td class="bx-td">'+t.to+'</td>'
+        + '<td class="bx-td bx-fg">'+fg+'</td>'
+        + '<td class="bx-td bx-fg">'+ft+'</td>'
+        + '</tr>';
+    }
+
+    function teamTable(name, color, rows) {
+      if (!rows.length) return '<div style="padding:16px;color:rgba(255,255,255,.3);font-size:13px">No stats recorded for '+esc(name)+'</div>';
+      const tot = teamTotals(rows);
+      return '<div style="background:#111;border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-bottom:16px">'
+        + '<div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);border-left:3px solid '+(color||'#f97316')+';background:#161616;display:flex;align-items:center;justify-content:space-between">'
+        + '<span style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:.5px">'+esc(name)+'</span>'
+        + '</div>'
+        + '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
+        + '<table style="width:100%;border-collapse:collapse;min-width:480px">'
+        + '<thead><tr style="background:#161616">'
+        + '<th class="bx-th-name">PLAYER</th>'
+        + '<th class="bx-th">PTS</th><th class="bx-th">REB</th><th class="bx-th">AST</th>'
+        + '<th class="bx-th">STL</th><th class="bx-th">BLK</th><th class="bx-th">TO</th>'
+        + '<th class="bx-th">FG</th><th class="bx-th">FT</th>'
+        + '</tr></thead>'
+        + '<tbody>'
+        + rows.map((r,i) => playerRow(r,i)).join('')
+        + totalRow(tot)
+        + '</tbody></table></div></div>';
+    }
+
+    res.send(page(esc(game.home_name||'') + ' vs ' + esc(game.away_name||'') + ' | ' + esc(league.name), `
+      <style>
+        .bx-td-name{padding:10px 14px;font-size:13px;min-width:150px;white-space:nowrap}
+        .bx-td{padding:10px 10px;font-size:13px;text-align:center;color:rgba(255,255,255,.65);font-weight:600;white-space:nowrap}
+        .bx-fg{font-size:12px;color:rgba(255,255,255,.45)!important;font-weight:500!important}
+        .bx-th-name{padding:9px 14px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;text-align:left}
+        .bx-th{padding:9px 10px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;text-align:center;white-space:nowrap}
+        .game-row-clickable{cursor:pointer;transition:border-color .15s}
+        .game-row-clickable:hover{border-color:rgba(249,115,22,.4)!important;background:rgba(249,115,22,.04)!important}
+      </style>
+      <nav class="topnav">
+        <div class="topnav-inner">
+          <div class="nav-brand">
+            <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
+              <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+              <div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div>
+            </a>
+          </div>
+          <div class="nav-actions">
+            <a href="/league/${esc(league.id)}" class="nav-btn-orange">← Back to League</a>
+            ${user ? '<a href="/admin" class="nav-btn-orange">Admin Panel</a>' : '<a href="/login" class="nav-btn-orange">Login</a>'}
+          </div>
+        </div>
+      </nav>
+
+      <div style="max-width:960px;margin:0 auto;padding:32px 24px 80px">
+
+        <!-- SCOREBOARD -->
+        <div style="background:#111;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 20px 24px;margin-bottom:24px">
+          <div style="text-align:center;font-size:11px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:20px">
+            📍 ${esc(game.venue||'TBD')} &nbsp;·&nbsp; ${esc(game.date||'TBD')}
+          </div>
+          <table style="width:100%;border-collapse:collapse;max-width:560px;margin:0 auto">
+            <tr>
+              <td style="width:40%;vertical-align:middle;text-align:left">
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px">${esc(game.home_name||'Home')}</div>
+                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${homeWin?'rgba(0,212,170,.15)':'rgba(255,255,255,.05)'};color:${homeWin?'#00d4aa':'rgba(255,255,255,.35)'}">${homeWin?'WIN':'LOSS'}</span>
+              </td>
+              <td style="width:20%;text-align:center;vertical-align:middle">
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${homeWin?'#00d4aa':'rgba(255,255,255,.65)'}">${game.home_score??'—'}</div>
+                <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.2);margin:8px 0">FINAL</div>
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${!homeWin?'#00d4aa':'rgba(255,255,255,.65)'}">${game.away_score??'—'}</div>
+              </td>
+              <td style="width:40%;vertical-align:middle;text-align:right">
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px">${esc(game.away_name||'Away')}</div>
+                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${!homeWin?'rgba(0,212,170,.15)':'rgba(255,255,255,.05)'};color:${!homeWin?'#00d4aa':'rgba(255,255,255,.35)'}">${!homeWin?'WIN':'LOSS'}</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- BOX SCORE -->
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          📊 Box Score
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1px;font-family:'Outfit',sans-serif">Per game stats</span>
+        </div>
+
+        ${teamTable(game.home_name, game.home_color, homeStats)}
+        ${teamTable(game.away_name, game.away_color, awayStats)}
+
+        ${(!homeStats.length && !awayStats.length) ? '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.25);font-size:14px">No box score data recorded for this game yet.</div>' : ''}
+
+      </div>
+    `));
+  } catch(err) {
+    console.error('Box score error:', err);
+    res.redirect('/league/' + req.params.lid);
+  }
 });
 
 // ── TERMS OF USE ──────────────────────────────────────────────────────────────
