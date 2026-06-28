@@ -222,7 +222,7 @@ function renderLanding(leagues, stats, user) {
       .lp-hstep{text-align:center}
       .lp-hnum{width:72px;height:72px;border-radius:50%;border:1px solid rgba(249,115,22,.3);background:rgba(249,115,22,.07);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--orange);margin:0 auto 24px;position:relative;z-index:1;transition:all .3s}
       .lp-hstep:hover .lp-hnum{background:rgba(249,115,22,.18);border-color:rgba(249,115,22,.6);box-shadow:0 0 32px rgba(249,115,22,.2)}
-      .lp-ht{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+      .lp-ht{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
       .lp-hd{font-size:14px;color:rgba(255,255,255,.4);line-height:1.75;max-width:260px;margin:0 auto}
       /* LEAGUES */
       .lp-ll{display:grid;grid-template-columns:400px 1fr;gap:96px;align-items:start}
@@ -242,7 +242,7 @@ function renderLanding(leagues, stats, user) {
       .lp-llist{display:flex;flex-direction:column;gap:8px}
       .lrow{background:var(--d2);border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--orange);border-radius:7px;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit}
       .lrow:hover{background:var(--d3);border-color:rgba(249,115,22,.3);transform:translateX(5px);box-shadow:0 4px 24px rgba(0,0,0,.4);text-decoration:none;color:inherit}
-      .lname{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:7px}
+      .lname{font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff;margin-bottom:7px}
       .lmeta{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.38)}
       .lright{display:flex;align-items:center;gap:12px;flex-shrink:0}
       .son{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--orange);background:rgba(249,115,22,.1);padding:5px 12px;border-radius:4px;white-space:nowrap}
@@ -276,7 +276,7 @@ function renderLanding(leagues, stats, user) {
       .lp-fi{max-width:1260px;margin:0 auto}
       .lp-ftop{display:grid;grid-template-columns:280px 1fr 1fr 1fr;gap:48px;margin-bottom:56px}
       .lp-fbrand img{width:44px;height:44px;border-radius:9px;object-fit:contain;margin-bottom:16px}
-      .lp-fbname{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+      .lp-fbname{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
       .lp-fbdesc{font-size:13px;color:rgba(255,255,255,.28);line-height:1.7;max-width:220px}
       .lp-fcolt{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:20px}
       .lp-fcol a{display:block;font-size:13px;color:rgba(255,255,255,.35);margin-bottom:12px;transition:color .15s;cursor:pointer;text-decoration:none}
@@ -685,73 +685,106 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               '<table class="lb-table">'+rows+'</table>'+
             '</div>';
           }
-          // ── FIBA EFF MVP RACE ──────────────────────────────────────────────
+          // ── FIBA EFF MVP RACE — 100% inline styles, no CSS classes ──────────
           // EFF = PTS + REB + AST + STL + BLK - (FGA-FGM) - (FTA-FTM) - TO
-          // Source: FIBA Statisticians' Manual 2024
           const mvpPlayers = players.map(function(p){
-            var ss = seasonStats[p.id] || {};
-            var pts  = parseFloat(ss.pts   || p.pts  || 0);
-            var reb  = parseFloat(ss.reb   || p.reb  || 0);
-            var ast  = parseFloat(ss.ast   || p.ast  || 0);
-            var stl  = parseFloat(ss.stl   || p.stl  || 0);
-            var blk  = parseFloat(ss.blk   || p.blk  || 0);
-            var to   = parseFloat(ss.to_val|| 0);
-            var fgm  = parseFloat(ss.fgm   || 0);
-            var fga  = parseFloat(ss.fga   || 0);
-            var ftm  = parseFloat(ss.ftm   || 0);
-            var fta  = parseFloat(ss.fta   || 0);
-            var gp   = parseFloat(ss.gp    || p.gp   || 0);
-            // Per-game EFF average
-            var eff  = gp > 0
-              ? ((pts + reb + ast + stl + blk - (fga - fgm) - (fta - ftm) - to) / gp)
-              : (pts + reb + ast + stl + blk - (fga - fgm) - (fta - ftm) - to);
-            return {
-              name: p.name, team_name: p.team_name||'',
-              pts:pts, reb:reb, ast:ast, stl:stl, blk:blk, to:to, gp:gp, eff:eff
-            };
+            var ss  = seasonStats[p.id] || {};
+            var pts = parseFloat(ss.pts    || p.pts  || 0);
+            var reb = parseFloat(ss.reb    || p.reb  || 0);
+            var ast = parseFloat(ss.ast    || p.ast  || 0);
+            var stl = parseFloat(ss.stl    || p.stl  || 0);
+            var blk = parseFloat(ss.blk    || p.blk  || 0);
+            var to  = parseFloat(ss.to_val || 0);
+            var fgm = parseFloat(ss.fgm    || 0);
+            var fga = parseFloat(ss.fga    || 0);
+            var ftm = parseFloat(ss.ftm    || 0);
+            var fta = parseFloat(ss.fta    || 0);
+            var gp  = parseFloat(ss.gp     || p.gp   || 0);
+            var rawEff = pts + reb + ast + stl + blk - (fga-fgm) - (fta-ftm) - to;
+            var eff = gp > 0 ? rawEff / gp : rawEff;
+            return { name:p.name, team_name:p.team_name||'', pts:pts, reb:reb, ast:ast, gp:gp, eff:eff };
           }).filter(function(p){ return p.name && p.gp > 0; })
             .sort(function(a,b){ return b.eff - a.eff; })
             .slice(0, 10);
 
           function renderMVP(){
             if (!mvpPlayers.length) {
-              return '<div class="lb-mvp-empty">No qualifying players yet. Players must have at least 1 game played.</div>';
+              return '<p style="padding:20px;font-size:13px;color:rgba(255,255,255,.3);text-align:center">No qualifying players yet — need at least 1 game played.</p>';
             }
             var medals = ['🥇','🥈','🥉'];
             return mvpPlayers.map(function(p, i){
-              var medal   = medals[i] || '';
-              var isTop3  = i < 3;
-              var effDisp = (p.eff >= 0 ? '+' : '') + p.eff.toFixed(1);
-              return '<div class="lb-mvp-row'+(i===0?' lb-mvp-top':'')+'">'+
-                '<div class="lb-mvp-left">'+
-                  '<div class="lb-mvp-rank">'+(medal || (i+1)+'.')+'</div>'+
-                  '<div class="lb-mvp-info">'+
-                    '<div class="lb-mvp-name">'+esc(p.name)+'</div>'+
-                    '<div class="lb-mvp-team">'+esc(abbr(p.team_name))+'  ·  '+p.gp+' GP</div>'+
+              var isFirst  = i === 0;
+              var effDisp  = (p.eff >= 0 ? '+' : '') + p.eff.toFixed(1);
+              var effColor = isFirst ? '#f97316' : 'rgba(255,255,255,.55)';
+              var rowBg    = isFirst ? 'rgba(249,115,22,.07)' : 'rgba(255,255,255,.03)';
+              var rowBord  = isFirst ? '1px solid rgba(249,115,22,.3)' : '1px solid rgba(255,255,255,.06)';
+              var ptsW     = Math.min(100, (p.pts/30)*100).toFixed(0);
+              var rebW     = Math.min(100, (p.reb/15)*100).toFixed(0);
+              var astW     = Math.min(100, (p.ast/10)*100).toFixed(0);
+              var medal    = medals[i] || ((i+1)+'.');
+              return (
+                '<div style="display:table;width:100%;table-layout:fixed;background:'+rowBg+';border:'+rowBord+';border-radius:7px;margin-bottom:6px;padding:10px 12px;box-sizing:border-box">'+
+                  /* rank + name cell */
+                  '<div style="display:table-cell;width:44%;vertical-align:middle;padding-right:8px">'+
+                    '<div style="display:table;width:100%">'+
+                      '<div style="display:table-cell;width:28px;vertical-align:middle;font-size:18px;text-align:center">'+medal+'</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding-left:8px">'+
+                        '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div>'+
+                        '<div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:600;margin-top:2px">'+esc(abbr(p.team_name))+' &nbsp;·&nbsp; '+p.gp+' GP</div>'+
+                      '</div>'+
+                    '</div>'+
                   '</div>'+
-                '</div>'+
-                '<div class="lb-mvp-right">'+
-                  '<div class="lb-mvp-eff'+(i===0?' lb-mvp-eff-top':'')+'">'+effDisp+'</div>'+
-                  '<div class="lb-mvp-efflbl">EFF</div>'+
-                '</div>'+
-                '<div class="lb-mvp-bars">'+
-                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">PTS</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.pts/30)*100)+'%;background:#f97316"></div></div><span class="lb-mvp-bar-val">'+p.pts.toFixed(1)+'</span></div>'+
-                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">REB</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.reb/15)*100)+'%;background:#00d4aa"></div></div><span class="lb-mvp-bar-val">'+p.reb.toFixed(1)+'</span></div>'+
-                  '<div class="lb-mvp-bar-row"><span class="lb-mvp-bar-lbl">AST</span><div class="lb-mvp-bar-track"><div class="lb-mvp-bar-fill" style="width:'+Math.min(100,(p.ast/10)*100)+'%;background:#a78bfa"></div></div><span class="lb-mvp-bar-val">'+p.ast.toFixed(1)+'</span></div>'+
-                '</div>'+
-              '</div>';
+                  /* EFF score cell */
+                  '<div style="display:table-cell;width:18%;vertical-align:middle;text-align:right;padding-right:10px">'+
+                    '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:'+effColor+';line-height:1">'+effDisp+'</div>'+
+                    '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase;margin-top:2px">EFF</div>'+
+                  '</div>'+
+                  /* mini bars cell */
+                  '<div style="display:table-cell;width:38%;vertical-align:middle">'+
+                    /* PTS bar */
+                    '<div style="display:table;width:100%;margin-bottom:4px">'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">PTS</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
+                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+ptsW+'%;background:#f97316;border-radius:2px"></div>'+
+                        '</div>'+
+                      '</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.pts.toFixed(1)+'</div>'+
+                    '</div>'+
+                    /* REB bar */
+                    '<div style="display:table;width:100%;margin-bottom:4px">'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">REB</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
+                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+rebW+'%;background:#00d4aa;border-radius:2px"></div>'+
+                        '</div>'+
+                      '</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.reb.toFixed(1)+'</div>'+
+                    '</div>'+
+                    /* AST bar */
+                    '<div style="display:table;width:100%">'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">AST</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
+                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+astW+'%;background:#a78bfa;border-radius:2px"></div>'+
+                        '</div>'+
+                      '</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.ast.toFixed(1)+'</div>'+
+                    '</div>'+
+                  '</div>'+
+                '</div>'
+              );
             }).join('');
           }
 
-          var mvpSection = '<div class="lb-mvp-wrap">'+
-            '<div class="lb-mvp-header">'+
-              '<div>'+
-                '<div class="lb-mvp-title">🏆 MVP RACE</div>'+
-                '<div class="lb-mvp-sub">Based on official FIBA Efficiency Rating · EFF = PTS+REB+AST+STL+BLK−Missed FG−Missed FT−TO</div>'+
+          var mvpSection =
+            '<div style="background:#111;border:1px solid rgba(249,115,22,.2);border-radius:8px;overflow:hidden;margin-bottom:16px">'+
+              '<div style="padding:12px 16px;background:rgba(249,115,22,.07);border-bottom:1px solid rgba(249,115,22,.15)">'+
+                '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#fff">🏆 MVP RACE</div>'+
+                '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px">FIBA EFF = PTS+REB+AST+STL+BLK−Missed FG−Missed FT−TO</div>'+
               '</div>'+
-            '</div>'+
-            '<div class="lb-mvp-list">'+renderMVP()+'</div>'+
-          '</div>';
+              '<div style="padding:12px 14px">'+renderMVP()+'</div>'+
+            '</div>';
 
           return mvpSection + '<div class="lb-wrap"><div class="lb-grid">'+cats.map(renderCat).join('')+'</div></div>';
         })()}
