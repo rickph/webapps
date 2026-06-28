@@ -371,9 +371,9 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 
 /* ─── TABS ─── */
 .admin-tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
-.atab { padding:10px 18px; font-size:12px; font-weight:800; color:var(--text-3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; display:flex; align-items:center; gap:6px; letter-spacing:.5px; text-transform:uppercase; }
-.atab:hover { color:var(--text); }
-.atab.active { color:var(--orange); border-bottom-color:var(--orange); }
+.atab { padding:10px 18px; font-size:12px; font-weight:800; color:rgba(255,255,255,.4); cursor:pointer; background:transparent !important; border:none; border-bottom:2px solid transparent; -webkit-appearance:none; outline:none; transition:all .15s; white-space:nowrap; display:-webkit-box; display:-webkit-flex; display:flex; -webkit-box-align:center; -webkit-align-items:center; align-items:center; gap:6px; letter-spacing:.5px; text-transform:uppercase; font-family:'Outfit',sans-serif; font-size:12px; }
+.atab:hover { color:#fff; background:rgba(255,255,255,.04) !important; }
+.atab.active { color:#f97316 !important; border-bottom-color:#f97316; background:transparent !important; }
 
 /* ─── CARD ─── */
 .card { background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:24px; }
