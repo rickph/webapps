@@ -176,7 +176,7 @@ router.get('/league/:id', async (req, res) => {
     if (!league || !await ownsLeague(lid, req.user.id)) return res.redirect('/admin');
 
     const [teams, players, games, seasonStats] = await Promise.all([
-      db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC', [lid]),
+      db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC, (pts_for - pts_against) DESC', [lid]),
       db.query(`SELECT p.*,t.name as team_name FROM players p
                 LEFT JOIN teams t ON p.team_id=t.id
                 WHERE p.league_id=$1 ORDER BY p.pts DESC`, [lid]),
@@ -1450,30 +1450,136 @@ function adminPage(title, user, content) {
 
 // ── RECALC STANDINGS ──────────────────────────────────────────────────────────
 async function recalcStandings(leagueId, dbRef) {
-  // Step 1: Reset all teams to 0-0
+  // ── STEP 1: Reset all teams ─────────────────────────────────────────────────
   await dbRef.run(
-    'UPDATE teams SET wins=0, losses=0 WHERE league_id=$1',
+    'UPDATE teams SET wins=0, losses=0, pts_for=0, pts_against=0 WHERE league_id=$1',
     [leagueId]
   );
-  // Step 2: Get all FINAL games
+
+  // ── STEP 2: Fetch all final games ──────────────────────────────────────────
   const finalGames = await dbRef.query(
     `SELECT * FROM games WHERE league_id=$1 AND status='final'`,
     [leagueId]
   );
-  // Step 3: Tally W/L from actual scores
+
+  // ── STEP 3: Tally W/L + points scored/allowed ──────────────────────────────
   for (const g of finalGames) {
     const h = Number(g.home_score);
     const a = Number(g.away_score);
-    if (h === a) continue;
+    if (h === a) continue; // skip ties
+
     if (h > a) {
-      if (g.home_team_id) await dbRef.run('UPDATE teams SET wins=wins+1   WHERE id=$1', [g.home_team_id]);
-      if (g.away_team_id) await dbRef.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [g.away_team_id]);
+      if (g.home_team_id) await dbRef.run(
+        'UPDATE teams SET wins=wins+1, pts_for=pts_for+$2, pts_against=pts_against+$3 WHERE id=$1',
+        [g.home_team_id, h, a]
+      );
+      if (g.away_team_id) await dbRef.run(
+        'UPDATE teams SET losses=losses+1, pts_for=pts_for+$2, pts_against=pts_against+$3 WHERE id=$1',
+        [g.away_team_id, a, h]
+      );
     } else {
-      if (g.away_team_id) await dbRef.run('UPDATE teams SET wins=wins+1   WHERE id=$1', [g.away_team_id]);
-      if (g.home_team_id) await dbRef.run('UPDATE teams SET losses=losses+1 WHERE id=$1', [g.home_team_id]);
+      if (g.away_team_id) await dbRef.run(
+        'UPDATE teams SET wins=wins+1, pts_for=pts_for+$2, pts_against=pts_against+$3 WHERE id=$1',
+        [g.away_team_id, a, h]
+      );
+      if (g.home_team_id) await dbRef.run(
+        'UPDATE teams SET losses=losses+1, pts_for=pts_for+$2, pts_against=pts_against+$3 WHERE id=$1',
+        [g.home_team_id, h, a]
+      );
     }
   }
-  console.log(`✅ Standings recalculated for league ${leagueId} — ${finalGames.length} final games processed`);
+
+  // ── STEP 4: Apply tiebreaker sort in JS and write rank ─────────────────────
+  // Tiebreaker order (standard Philippine basketball):
+  //   1. WIN% (wins / games played)
+  //   2. Head-to-head W/L among tied teams
+  //   3. Head-to-head point differential among tied teams
+  //   4. Overall point differential (pts_for - pts_against)
+  //   5. Total points scored (pts_for)
+
+  const teams = await dbRef.query(
+    'SELECT * FROM teams WHERE league_id=$1', [leagueId]
+  );
+
+  // Build head-to-head lookup: h2h[teamA_id][teamB_id] = { wins, diff }
+  const h2h = {};
+  for (const g of finalGames) {
+    const h = Number(g.home_score), a = Number(g.away_score);
+    if (h === a || !g.home_team_id || !g.away_team_id) continue;
+    const winner = h > a ? g.home_team_id : g.away_team_id;
+    const loser  = h > a ? g.away_team_id : g.home_team_id;
+    const wScore = h > a ? h : a;
+    const lScore = h > a ? a : h;
+    if (!h2h[winner]) h2h[winner] = {};
+    if (!h2h[loser])  h2h[loser]  = {};
+    if (!h2h[winner][loser]) h2h[winner][loser] = { wins:0, diff:0 };
+    if (!h2h[loser][winner]) h2h[loser][winner] = { wins:0, diff:0 };
+    h2h[winner][loser].wins += 1;
+    h2h[winner][loser].diff += (wScore - lScore);
+    h2h[loser][winner].diff -= (wScore - lScore);
+  }
+
+  // Group teams by WIN% then apply tiebreakers within each group
+  function winPct(t) {
+    const gp = (t.wins||0) + (t.losses||0);
+    return gp > 0 ? (t.wins||0) / gp : 0;
+  }
+
+  // Pre-compute H2H stats within each team's tied group
+  // We'll compute group membership during sort
+  function h2hWins(tid, groupIds) {
+    return groupIds.filter(id => id !== tid)
+      .reduce((s,id) => s + ((h2h[tid] && h2h[tid][id]) ? h2h[tid][id].wins : 0), 0);
+  }
+  function h2hDiff(tid, groupIds) {
+    return groupIds.filter(id => id !== tid)
+      .reduce((s,id) => s + ((h2h[tid] && h2h[tid][id]) ? h2h[tid][id].diff : 0), 0);
+  }
+
+  // Group teams with same WIN%
+  const groups = {};
+  for (const t of teams) {
+    const key = winPct(t).toFixed(4);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(t.id);
+  }
+
+  teams.sort((a, b) => {
+    // 1. WIN% (primary — always applied)
+    const pctDiff = winPct(b) - winPct(a);
+    if (Math.abs(pctDiff) > 0.0001) return pctDiff;
+
+    // Teams are tied on WIN% — use same group for H2H
+    const groupIds = groups[winPct(a).toFixed(4)] || [a.id, b.id];
+
+    // 2. H2H wins within tied group
+    const aH2H = h2hWins(a.id, groupIds);
+    const bH2H = h2hWins(b.id, groupIds);
+    if (aH2H !== bH2H) return bH2H - aH2H;
+
+    // 3. H2H point differential within tied group
+    const aHDiff = h2hDiff(a.id, groupIds);
+    const bHDiff = h2hDiff(b.id, groupIds);
+    if (aHDiff !== bHDiff) return bHDiff - aHDiff;
+
+    // 4. Overall point differential (all games)
+    const aOvr = (a.pts_for||0) - (a.pts_against||0);
+    const bOvr = (b.pts_for||0) - (b.pts_against||0);
+    if (aOvr !== bOvr) return bOvr - aOvr;
+
+    // 5. Total points scored
+    return (b.pts_for||0) - (a.pts_for||0);
+  });
+
+  // Write rank position back to DB
+  for (let i = 0; i < teams.length; i++) {
+    await dbRef.run(
+      'UPDATE teams SET rank=$1 WHERE id=$2',
+      [i + 1, teams[i].id]
+    ).catch(() => {}); // rank column may not exist yet — safe to ignore
+  }
+
+  console.log('✅ Standings recalculated for league ' + leagueId + ' — ' + finalGames.length + ' games, tiebreakers applied');
 }
 
 // ── DOWNLOAD STATS TEMPLATE ───────────────────────────────────────────────────
