@@ -702,7 +702,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             var gp  = parseFloat(ss.gp     || p.gp   || 0);
             var rawEff = pts + reb + ast + stl + blk - (fga-fgm) - (fta-ftm) - to;
             var eff = gp > 0 ? rawEff / gp : rawEff;
-            return { name:p.name, team_name:p.team_name||'', pts:pts, reb:reb, ast:ast, gp:gp, eff:eff };
+            return { name:p.name, team_name:p.team_name||'', pts:pts, reb:reb, ast:ast, stl:stl, blk:blk, gp:gp, eff:eff };
           }).filter(function(p){ return p.name && p.gp > 0; })
             .sort(function(a,b){ return b.eff - a.eff; })
             .slice(0, 10);
@@ -721,6 +721,8 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               var ptsW     = Math.min(100, (p.pts/30)*100).toFixed(0);
               var rebW     = Math.min(100, (p.reb/15)*100).toFixed(0);
               var astW     = Math.min(100, (p.ast/10)*100).toFixed(0);
+              var stlW     = Math.min(100, (p.stl/5)*100).toFixed(0);
+              var blkW     = Math.min(100, (p.blk/5)*100).toFixed(0);
               var medal    = medals[i] || ((i+1)+'.');
               return (
                 '<div style="display:table;width:100%;table-layout:fixed;background:'+rowBg+';border:'+rowBord+';border-radius:7px;margin-bottom:6px;padding:10px 12px;box-sizing:border-box">'+
@@ -762,7 +764,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                       '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.reb.toFixed(1)+'</div>'+
                     '</div>'+
                     /* AST bar */
-                    '<div style="display:table;width:100%">'+
+                    '<div style="display:table;width:100%;margin-bottom:4px">'+
                       '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">AST</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
                         '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
@@ -770,6 +772,26 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                         '</div>'+
                       '</div>'+
                       '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.ast.toFixed(1)+'</div>'+
+                    '</div>'+
+                    /* STL bar */
+                    '<div style="display:table;width:100%;margin-bottom:4px">'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">STL</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
+                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+stlW+'%;background:#f7c948;border-radius:2px"></div>'+
+                        '</div>'+
+                      '</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.stl.toFixed(1)+'</div>'+
+                    '</div>'+
+                    /* BLK bar */
+                    '<div style="display:table;width:100%">'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">BLK</div>'+
+                      '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
+                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+blkW+'%;background:#60a5fa;border-radius:2px"></div>'+
+                        '</div>'+
+                      '</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.blk.toFixed(1)+'</div>'+
                     '</div>'+
                   '</div>'+
                 '</div>'
