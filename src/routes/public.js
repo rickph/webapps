@@ -851,7 +851,8 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         ${(()=>{
           // Detect if any teams are tied on WIN% — show tiebreaker columns
           const hasTies = teams.some((t,i,arr) => i > 0 && arr[i-1].wins === t.wins && arr[i-1].losses === t.losses);
-          const showTb  = hasTies && teams.some(t => (t.pts_for||0) > 0);
+          const hasPtsData = teams.some(t => (t.pts_for||0) > 0);
+          const showTb  = hasTies; // Always show tiebreaker cols when tied — pts cols show 0 until Fix Standings is clicked
           return '<div class="table-scroll"><table class="stats-table">'
             + '<thead><tr>'
             + '<th>#</th><th>Team</th><th>W</th><th>L</th><th>WIN%</th>'
@@ -872,13 +873,13 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                   + '<td class="green">'+t.wins+'</td>'
                   + '<td class="red">'+t.losses+'</td>'
                   + '<td style="color:var(--gold);font-weight:700">'+pct+'%</td>'
-                  + (showTb ? '<td style="color:rgba(255,255,255,.5)">'+  (t.pts_for||0)     +'</td>'
-                            + '<td style="color:rgba(255,255,255,.5)">'+  (t.pts_against||0) +'</td>'
-                            + '<td style="color:'+(diff>=0?'#00d4aa':'#f87171')+';font-weight:700">'+(diff>0?'+':'')+diff+'</td>' : '')
+                  + (showTb ? '<td style="color:rgba(255,255,255,.5)">'+  (hasPtsData?(t.pts_for||0):'—')  +'</td>'
+                            + '<td style="color:rgba(255,255,255,.5)">'+  (hasPtsData?(t.pts_against||0):'—')+'</td>'
+                            + '<td style="color:'+(diff>=0&&hasPtsData?'#00d4aa':'rgba(255,255,255,.3)')+';font-weight:700">'+(hasPtsData?(diff>0?'+':'')+diff:'—')+'</td>' : '')
                   + '</tr>';
               }).join('') || '<tr><td colspan="8" class="empty">No teams yet.</td></tr>')
             + '</tbody></table>'
-            + (showTb ? '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:8px 4px;display:flex;align-items:center;gap:6px"><span style="color:#f7c948;font-weight:800">T</span> = Tied on WIN% — ranked by Head-to-Head → Point Differential → Points Scored</div>' : '')
+            + (showTb ? '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:8px 4px">' + '<span style="color:#f7c948;font-weight:800">T</span> = Tied on WIN% — ranked by Head-to-Head → Point Differential → Points Scored' + (!hasPtsData ? ' &nbsp;·&nbsp; <span style="color:rgba(249,115,22,.6)">Click "Fix Standings" to compute point data</span>' : '') + '</div>' : '')
             + '</div>';
         })()}
       </div>
