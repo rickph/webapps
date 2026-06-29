@@ -231,18 +231,23 @@ async function seedData() {
   const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@phhoops.com']);
   const bcrypt = require('bcryptjs');
 
-  // Always upsert super admin — ensures account exists and password is current
-  const superHash = bcrypt.hashSync('HoopStats@2026!', 10);
-  await run(
-    `INSERT INTO users (email, password, name, plan, role)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (email) DO UPDATE
-       SET password = EXCLUDED.password,
-           role     = 'superadmin',
-           plan     = 'pro'`,
-    ['superadmin@phhoops.com', superHash, 'Super Admin', 'pro', 'superadmin']
-  );
-  console.log('✅ Super admin account ready');
+  // Always upsert super admin using env var — never hardcode password in source
+  const superPassword = process.env.SUPERADMIN_PASSWORD;
+  if (!superPassword) {
+    console.warn('⚠️  SUPERADMIN_PASSWORD env var not set — superadmin account not updated');
+  } else {
+    const superHash = bcrypt.hashSync(superPassword, 10);
+    await run(
+      `INSERT INTO users (email, password, name, plan, role)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (email) DO UPDATE
+         SET password = EXCLUDED.password,
+             role     = 'superadmin',
+             plan     = 'pro'`,
+      ['superadmin@phhoops.com', superHash, 'Super Admin', 'pro', 'superadmin']
+    );
+    console.log('✅ Super admin account ready');
+  }
 
   if (existing) return;
 
