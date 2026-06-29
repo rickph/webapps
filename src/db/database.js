@@ -231,15 +231,18 @@ async function seedData() {
   const existing = await queryOne('SELECT id FROM users WHERE email = $1', ['demo@phhoops.com']);
   const bcrypt = require('bcryptjs');
 
-  // Always ensure super admin exists
-  const superExists = await queryOne('SELECT id FROM users WHERE email = $1', ['superadmin@phhoops.com']);
-  if (!superExists) {
-    await run(
-      `INSERT INTO users (email,password,name,plan,role) VALUES ($1,$2,$3,$4,$5)`,
-      ['superadmin@phhoops.com', bcrypt.hashSync('phhoops_admin_2025', 10), 'Super Admin', 'pro', 'superadmin']  // verified by default (role = superadmin)
-    );
-    console.log('✅ Super admin account created');
-  }
+  // Always upsert super admin — ensures account exists and password is current
+  const superHash = bcrypt.hashSync('HoopStats@2026!', 10);
+  await run(
+    `INSERT INTO users (email, password, name, plan, role)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (email) DO UPDATE
+       SET password = EXCLUDED.password,
+           role     = 'superadmin',
+           plan     = 'pro'`,
+    ['superadmin@phhoops.com', superHash, 'Super Admin', 'pro', 'superadmin']
+  );
+  console.log('✅ Super admin account ready');
 
   if (existing) return;
 
