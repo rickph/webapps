@@ -79,6 +79,9 @@ router.get('/register', (req, res) => {
       <div style="font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:1.5px;background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">HOOPSTATS</div>
       <div style="font-size:10px;color:#f97316;letter-spacing:3px;font-weight:700;margin-top:2px">PILIPINAS</div>
     </div>
+    <a href="/login" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted,#888);text-decoration:none;margin-bottom:16px;font-weight:600">
+      ← Back to Login
+    </a>
     <h2>Create Account</h2>
     <p class="auth-sub">Start managing your league for free</p>
     ${errMsg ? `<div class="alert-error">${errMsg}</div>` : ''}
