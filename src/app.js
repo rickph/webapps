@@ -51,17 +51,16 @@ app.use(session({
 }));
 
 // ── ROUTES ────────────────────────────────────────────────────────────────────
-app.use('/',           require('./routes/auth'));
-app.use('/',           require('./routes/public'));
-app.use('/admin',      require('./routes/admin'));
-app.use('/superadmin', require('./routes/superadmin'));
-app.get('/upgrade',    (req, res) => res.redirect('/admin'));
+app.use('/',      require('./routes/auth'));
+app.use('/',      require('./routes/public'));
+app.use('/admin', require('./routes/admin'));
+app.get('/upgrade', (req, res) => res.redirect('/admin'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><title>Not Found | PH Hoops</title>
-<link rel="stylesheet" href="/css/main.css?v37"></head>
+<link rel="stylesheet" href="/css/main.css?v38"></head>
 <body class="dark-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
   <div style="font-size:64px">🏀</div>
   <h1 style="font-family:'Russo One',sans-serif">Page Not Found</h1>
