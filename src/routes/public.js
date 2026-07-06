@@ -658,7 +658,15 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         ${s.id ? `</a>` : `</div>`}`).join('')}
     </div>
 
-    <div class="pub-tabs"><div class="tabs-inner">
+    <style>
+      .pub-tabs{display:-webkit-box!important;display:-webkit-flex!important;display:flex!important;-webkit-flex-direction:row!important;flex-direction:row!important;gap:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;margin-bottom:20px!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;background:transparent!important;flex-wrap:nowrap!important;width:100%!important}
+      .pub-tabs::-webkit-scrollbar{display:none!important}
+      .ptab{display:-webkit-inline-box!important;display:-webkit-inline-flex!important;display:inline-flex!important;-webkit-box-align:center!important;-webkit-align-items:center!important;align-items:center!important;gap:5px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:rgba(255,255,255,.4)!important;background:transparent!important;background-color:transparent!important;border:none!important;border-top:none!important;border-left:none!important;border-right:none!important;border-bottom:2px solid transparent!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;flex-shrink:0!important;box-shadow:none!important;border-radius:0!important}
+      .ptab:hover{color:rgba(255,255,255,.8)!important}
+      .ptab.active{color:#f97316!important;border-bottom-color:#f97316!important;background:transparent!important;background-color:transparent!important}
+      @media(max-width:640px){.ptab{padding:10px 13px!important;font-size:11px!important}}
+    </style>
+    <div class="pub-tabs"><div style="display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:row;flex-direction:row;gap:0;flex-wrap:nowrap;min-width:100%">
       <button class="ptab active" data-tab="standings">🏆 Standings</button>
       <button class="ptab" data-tab="leaderboard">📊 Leader Board</button>
       <button class="ptab" data-tab="players">👤 Player Stats</button>
