@@ -708,21 +708,21 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             {title:'FREE THROWS MADE',rows:top('ftm'),    fn:function(p){return f1(p.ftm);}},
           ];
           function renderCat(cat){
-            var hasData = cat.rows.some(function(p){return (p[Object.keys(p).find(function(k){return cat.fn({[k]:1})==='1.0';})]);});
             var rows = cat.rows.length
               ? cat.rows.map(function(p,i){
                   var val; try{val=cat.fn(p);}catch(e){val='0.0';}
-                  return '<tr class="lb-row'+(i===0?' lb-first':'')+'">'+
-                    '<td class="lb-rank">'+(i+1)+'.</td>'+
-                    '<td class="lb-name">'+esc(p.name)+'</td>'+
-                    '<td class="lb-team">'+esc(abbr(p.team_name))+'</td>'+
-                    '<td class="lb-val">'+val+'</td>'+
+                  var isFirst = i===0;
+                  return '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'+
+                    '<td style="padding:7px 6px 7px 10px;font-size:11px;color:rgba(255,255,255,.3);font-weight:700;white-space:nowrap;width:20px">'+(i+1)+'.</td>'+
+                    '<td style="padding:7px 4px;font-size:13px;font-weight:'+(isFirst?800:600)+';color:'+(isFirst?'#fff':'rgba(255,255,255,.75)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">'+esc(p.name)+'</td>'+
+                    '<td style="padding:7px 4px;font-size:10px;color:rgba(255,255,255,.3);font-weight:700;white-space:nowrap">'+esc(abbr(p.team_name))+'</td>'+
+                    '<td style="padding:7px 10px 7px 4px;font-size:13px;font-weight:900;color:#f97316;text-align:right;white-space:nowrap">'+val+'</td>'+
                   '</tr>';
                 }).join('')
-              : '<tr><td colspan="4" class="lb-empty">No stats yet</td></tr>';
-            return '<div class="lb-cat">'+
-              '<div class="lb-cat-title">'+cat.title+'</div>'+
-              '<table class="lb-table">'+rows+'</table>'+
+              : '<tr><td colspan="4" style="padding:12px 10px;font-size:12px;color:rgba(255,255,255,.25)">No stats yet</td></tr>';
+            return '<div style="background:#111;border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;margin-bottom:10px">'+
+              '<div style="padding:10px 12px;background:#161616;border-bottom:1px solid rgba(255,255,255,.07);font-size:10px;font-weight:900;letter-spacing:1.5px;color:rgba(255,255,255,.4);text-transform:uppercase">'+cat.title+'</div>'+
+              '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'+rows+'</table>'+
             '</div>';
           }
           // ── FIBA EFF MVP RACE — 100% inline styles, no CSS classes ──────────
@@ -852,7 +852,14 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               '<div style="padding:12px 14px">'+renderMVP()+'</div>'+
             '</div>';
 
-          return mvpSection + '<div class="lb-wrap"><div class="lb-grid">'+cats.map(renderCat).join('')+'</div></div>';
+          // 2-column layout using display:table for cross-browser compat
+          var leftCats  = cats.filter(function(_,i){return i%2===0;});
+          var rightCats = cats.filter(function(_,i){return i%2===1;});
+          var lbHtml = '<div style="display:table;width:100%;table-layout:fixed;border-collapse:separate;border-spacing:8px 0">'+
+            '<div style="display:table-cell;width:50%;vertical-align:top">'+leftCats.map(renderCat).join('')+'</div>'+
+            '<div style="display:table-cell;width:50%;vertical-align:top">'+rightCats.map(renderCat).join('')+'</div>'+
+          '</div>';
+          return mvpSection + lbHtml;
         })()}
       </div>
       <div id="tab-standings" class="tab-pane">
@@ -1385,14 +1392,15 @@ router.get('/league/:id/player/:pid', async (req, res) => {
     const eff  = ss?.eff  ?? null;
     const gp   = ss?.gp   ?? player.gp   ?? 0;
 
-    function statBox(label, value, color='var(--text)') {
-      // Shrink font for long values like "100.0%"
+    function statBox(label, value, color) {
+      color = color || 'rgba(255,255,255,.8)';
       const valStr = String(value);
-      const fontSize = valStr.length >= 6 ? '20px' : valStr.length >= 5 ? '22px' : '28px';
-      return `<div class="ps-stat-box">
-        <div class="ps-stat-lbl">${label}</div>
-        <div class="ps-stat-val" style="color:${color};font-size:${fontSize}">${value}</div>
-      </div>`;
+      const fontSize = valStr.length >= 6 ? '18px' : valStr.length >= 5 ? '20px' : '26px';
+      // Pure inline styles — no CSS class dependency whatsoever
+      return '<div style="display:inline-block;vertical-align:top;background:#161616;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:14px 10px;text-align:center;width:calc(33.33% - 6px);min-width:80px;margin:3px;box-sizing:border-box">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:6px">' + label + '</div>'
+        + '<div style="font-size:' + fontSize + ';font-weight:900;color:' + color + ';line-height:1;font-family:Barlow Condensed,sans-serif">' + value + '</div>'
+        + '</div>';
     }
 
     res.send(page(esc(player.name) + ' | ' + esc(league.name), `
@@ -1446,7 +1454,7 @@ router.get('/league/:id/player/:pid', async (req, res) => {
 
         <!-- KEY STATS -->
         <h2 style="font-family:'Russo One',sans-serif;font-size:17px;margin-bottom:12px;letter-spacing:.5px">📊 Season Averages</h2>
-        <div class="ps-stats-grid">
+        <div style="font-size:0;margin:-3px;margin-bottom:20px">
           ${statBox('PTS', pts,      'var(--red)')}
           ${statBox('REB', reb,      'var(--teal)')}
           ${statBox('AST', ast,      'var(--purple)')}
