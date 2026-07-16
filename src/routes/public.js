@@ -640,7 +640,8 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       </div>
     </div>
 
-    <div class="pub-leaders">
+    <div style="max-width:960px;margin:0 auto;padding:24px 24px 60px"><!-- PAGE WRAPPER -->
+    <div style="font-size:0;margin:-6px;margin-bottom:28px;display:block;width:100%">
       ${[
         {label:'PTS', key:'pts', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'var(--orange)'},
         {label:'REB', key:'reb', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'#00d4aa'},
@@ -650,15 +651,20 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         {label:'FG%', key:'fg',  val:fgLeader?.fg != null ? fgLeader.fg+'%' : null, name:fgLeader?.name, id:fgLeader?.id, c:'#34d399'},
       ].map(s=>`
         ${s.id
-          ? `<a href="/league/${league.id}/player/${s.id}" class="leader-card leader-card-link">`
-          : `<div class="leader-card">`}
+          ? `<a href="/league/${league.id}/player/${s.id}" style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:#161616;border:1px solid rgba(255,255,255,.07);border-top:2px solid var(--orange);border-radius:8px;padding:16px;text-decoration:none;color:inherit;box-sizing:border-box;transition:border-color .15s,transform .15s,box-shadow .15s" class="leader-card-link">`
+          : `<div style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:#161616;border:1px solid rgba(255,255,255,.07);border-top:2px solid rgba(255,255,255,.1);border-radius:8px;padding:16px;box-sizing:border-box">`}
           <div class="leader-label">${s.label} LEADER</div>
           <div class="leader-val" style="color:${s.c}">${s.val ?? '—'}</div>
           <div class="leader-name">${esc(s.name ?? 'N/A')}</div>
         ${s.id ? `</a>` : `</div>`}`).join('')}
-    </div>
+    </div><!-- /leaders row -->
 
     <style>
+      /* Leader cards: 3-col desktop, 2-col tablet, adapt mobile */
+      @media(min-width:640px){.leader-card-link,.leader-card{width:calc(33.33% - 12px)!important}}
+      @media(max-width:639px){.leader-card-link,.leader-card{width:calc(50% - 12px)!important}}
+      a.leader-card-link:hover{border-color:rgba(249,115,22,.5)!important;transform:translateY(-2px);box-shadow:0 6px 20px rgba(249,115,22,.15)}
+      a.leader-card-link:hover .leader-name{color:#f97316}
       .pub-tabs{display:-webkit-box!important;display:-webkit-flex!important;display:flex!important;-webkit-flex-direction:row!important;flex-direction:row!important;gap:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;margin-bottom:20px!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;background:transparent!important;flex-wrap:nowrap!important;width:100%!important}
       .pub-tabs::-webkit-scrollbar{display:none!important}
       .ptab{display:-webkit-inline-box!important;display:-webkit-inline-flex!important;display:inline-flex!important;-webkit-box-align:center!important;-webkit-align-items:center!important;align-items:center!important;gap:5px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:rgba(255,255,255,.4)!important;background:transparent!important;background-color:transparent!important;border:none!important;border-top:none!important;border-left:none!important;border-right:none!important;border-bottom:2px solid transparent!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;flex-shrink:0!important;box-shadow:none!important;border-radius:0!important}
@@ -1018,7 +1024,8 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
             </div>
           </div>`).join('') || '<div class="empty-state"><div class="es-icon">📅</div><div>No games scheduled.</div></div>'}
       </div>
-    </div>
+    </div><!-- /pub-content -->
+    </div><!-- /PAGE WRAPPER -->
 
     <script src="/js/public.js"></script>
   `);
