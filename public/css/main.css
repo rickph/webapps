@@ -433,7 +433,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .stat-card .stat-lbl { font-size:10px; font-weight:800; color:var(--text-3); letter-spacing:1px; text-transform:uppercase; }
 
 /* ─── LEADER CARDS ─── */
-.pub-leaders { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+.pub-leaders { display:block; width:100%; margin-bottom:28px; } /* layout now done inline */
 .leader-card { background:var(--dark-2); border:1px solid var(--border); border-radius:6px; padding:18px 20px; position:relative; overflow:hidden; transition:border-color .15s; }
 .leader-card::before { content:''; position:absolute; bottom:0;left:0;right:0;height:2px; background:var(--orange); opacity:0; transition:opacity .2s; }
 .leader-card:hover { border-color:rgba(249,115,22,.3); }
@@ -452,8 +452,8 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .tab-pane { }
 
 /* ─── LEAGUE HEADER ─── */
-.league-header { background:var(--dark-1); border-bottom:1px solid var(--border); padding:28px 24px; }
-.lh-inner { max-width:900px; margin:0 auto; }
+.league-header { background:var(--dark-1); border-bottom:1px solid var(--border); padding:28px 0; }
+.lh-inner { max-width:960px; margin:0 auto; padding:0 24px; box-sizing:border-box; }
 .lh-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
 .league-header h1 { font-family:'Barlow Condensed',sans-serif; font-size:clamp(24px,4vw,38px); font-weight:900; text-transform:uppercase; letter-spacing:-.5px; margin-bottom:6px; line-height:1.1; }
 .lh-meta { font-size:13px; color:var(--text-3); }
@@ -533,7 +533,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 
 /* ─── TABLET ─── */
 @media(max-width:900px){
-  .pub-leaders { grid-template-columns:repeat(2,1fr); }
+  /* pub-leaders: now inline-block, no grid needed */
   .mini-stats { grid-template-columns:repeat(2,1fr); }
   .dash-stats { grid-template-columns:repeat(2,1fr); }
   .leagues-layout { grid-template-columns:1fr; gap:40px; }
@@ -565,7 +565,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .hero-stat-val { font-size:36px; }
   .section { padding:60px 20px; }
   .section-sm { padding:40px 20px; }
-  .pub-leaders { grid-template-columns:repeat(2,1fr); gap:8px; }
+  /* pub-leaders mobile: handled inline */
   .leader-val { font-size:30px; }
   .leader-card { padding:14px; }
   .dash-stats { grid-template-columns:repeat(2,1fr); }
@@ -577,7 +577,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
   .profile-avatar,.profile-avatar-placeholder { width:72px; height:72px; font-size:26px; }
   .pub-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   .ptab { padding:10px 14px; font-size:11px; }
-  .league-header { padding:18px 14px; }
+  .league-header { padding:18px 0; }
   .live-score { font-size:52px; }
   .live-scoreboard { flex-direction:column; gap:12px; }
   .bracket-rounds { flex-direction:column; }
@@ -679,3 +679,5 @@ a.leader-card-link .leader-name {
 a.leader-card-link:hover .leader-name {
   color: var(--orange);
 }
+
+.pub-content { width:100%; }
