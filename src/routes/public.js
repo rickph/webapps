@@ -417,7 +417,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     <main>
       <section class="hero">
         <div class="wrap hero-inner">
-          <span class="eyebrow"><span class="live-dot"></span>${isLive ? `${liveGames.length} game${liveGames.length > 1 ? 's' : ''} live right now` : 'Follow Philippine grassroots basketball'}</span>
+          ${isLive ? `<span class="eyebrow"><span class="live-dot"></span>${liveGames.length} game${liveGames.length > 1 ? 's' : ''} live right now</span>` : ''}
           <h1>PHILIPPINE<br>BASKETBALL. <span class="pop">LIVE.</span></h1>
           <p class="lead">Scores, stats, standings, players and games from grassroots basketball across the Philippines &mdash; from the barangay court to the big stage.</p>
           <div class="hero-ctas">
