@@ -113,6 +113,9 @@ async function initSchema() {
   // Migration: add pts_for/pts_against if upgrading from older schema
   await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS pts_for     INTEGER NOT NULL DEFAULT 0`).catch(()=>{});
   await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS pts_against INTEGER NOT NULL DEFAULT 0`).catch(()=>{});
+  // Migration: add photo_url/bio used by the team image upload feature (admin.js)
+  await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS photo_url TEXT`).catch(()=>{});
+  await run(`ALTER TABLE teams ADD COLUMN IF NOT EXISTS bio       TEXT`).catch(()=>{});
 
   await run(`
     CREATE TABLE IF NOT EXISTS players (
@@ -131,6 +134,9 @@ async function initSchema() {
       fg          NUMERIC(5,1) DEFAULT 0
     )
   `);
+  // Migration: add photo_url/bio used by the player image upload feature (admin.js)
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS photo_url TEXT`).catch(()=>{});
+  await run(`ALTER TABLE players ADD COLUMN IF NOT EXISTS bio       TEXT`).catch(()=>{});
 
   await run(`
     CREATE TABLE IF NOT EXISTS games (
