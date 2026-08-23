@@ -258,7 +258,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs header.hsite{ position:sticky; top:0; z-index:40; background:linear-gradient(180deg, var(--hs-blue), var(--hs-blue-strong)); border-bottom:1px solid var(--hs-on-navy-border); }
     #hs .hnav-row{ display:flex; align-items:center; justify-content:space-between; gap:20px; height:64px; }
     #hs .hbrand{ display:flex; align-items:center; gap:9px; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:21px; color:var(--hs-on-navy-text); white-space:nowrap; }
-    #hs .hbrand-mark{ width:36px; height:36px; flex:none; object-fit:contain; display:block; }
+    #hs .hbrand-mark{ width:52px; height:52px; flex:none; object-fit:contain; display:block; }
     #hs nav.hprimary{ display:flex; align-items:center; gap:2px; }
     #hs nav.hprimary a{ font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--hs-on-navy-text-2); padding:9px 13px; border-radius:7px; }
     #hs nav.hprimary a:hover{ color:var(--hs-on-navy-text); background:rgba(255,255,255,.10); }
