@@ -240,12 +240,34 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       --hs-border:rgba(13,30,90,.12); --hs-border-strong:rgba(13,30,90,.22);
       --hs-text:#0e1638; --hs-text-2:rgba(14,22,56,.70); --hs-text-3:rgba(14,22,56,.46); --hs-text-4:rgba(14,22,56,.28);
       --hs-accent:#ce1126; --hs-accent-strong:#a80e1f; --hs-accent-dim:rgba(206,17,38,.10); --hs-accent-border:rgba(206,17,38,.4);
-      --hs-blue:#0d2e9c; --hs-blue-strong:#081f6e;
+      --hs-blue:#0d2e9c; --hs-blue-strong:#081f6e; --hs-rank2:#0d2e9c;
       --hs-live:#ce1126; --hs-live-dim:rgba(206,17,38,.14);
       --hs-win:#1f8a52;
       --hs-on-navy-text:#ffffff; --hs-on-navy-text-2:rgba(255,255,255,.76); --hs-on-navy-text-3:rgba(255,255,255,.52);
       --hs-on-navy-border:rgba(255,255,255,.18); --hs-on-navy-border-strong:rgba(255,255,255,.3);
       font-family:'Outfit',sans-serif; color:var(--hs-text); background:var(--hs-bg); font-size:15px; line-height:1.55;
+    }
+    /* Dark mode: header/hero/footer stay on-brand navy in both themes; only content
+       surfaces (cards, tables, backgrounds) swap. See #hsThemeToggle for the switch. */
+    @media (prefers-color-scheme:dark){
+      html:not([data-theme="light"]) #hs{
+        --hs-bg:#0a0e1a; --hs-bg-2:#0d1220;
+        --hs-surface:#121a30; --hs-surface-2:#182142; --hs-surface-3:#1f2a52;
+        --hs-border:rgba(255,255,255,.08); --hs-border-strong:rgba(255,255,255,.16);
+        --hs-text:#eef1fb; --hs-text-2:rgba(238,241,251,.72); --hs-text-3:rgba(238,241,251,.48); --hs-text-4:rgba(238,241,251,.28);
+        --hs-accent:#ff5670; --hs-accent-strong:#ff7c90; --hs-accent-dim:rgba(255,86,112,.16); --hs-accent-border:rgba(255,86,112,.4);
+        --hs-rank2:#7c9bff; --hs-live:#ff5670; --hs-live-dim:rgba(255,86,112,.18);
+        --hs-win:#3ddc8a;
+      }
+    }
+    html[data-theme="dark"] #hs{
+      --hs-bg:#0a0e1a; --hs-bg-2:#0d1220;
+      --hs-surface:#121a30; --hs-surface-2:#182142; --hs-surface-3:#1f2a52;
+      --hs-border:rgba(255,255,255,.08); --hs-border-strong:rgba(255,255,255,.16);
+      --hs-text:#eef1fb; --hs-text-2:rgba(238,241,251,.72); --hs-text-3:rgba(238,241,251,.48); --hs-text-4:rgba(238,241,251,.28);
+      --hs-accent:#ff5670; --hs-accent-strong:#ff7c90; --hs-accent-dim:rgba(255,86,112,.16); --hs-accent-border:rgba(255,86,112,.4);
+      --hs-rank2:#7c9bff; --hs-live:#ff5670; --hs-live-dim:rgba(255,86,112,.18);
+      --hs-win:#3ddc8a;
     }
     #hs *,#hs *::before,#hs *::after{ box-sizing:border-box; }
     #hs h1,#hs h2,#hs h3,#hs h4{ font-family:'Barlow Condensed',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.3px; margin:0; }
@@ -274,6 +296,18 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .btn-ghost-inverse:hover{ background:rgba(255,255,255,.10); }
     #hs .btn-on-accent{ background:#ffffff; color:var(--hs-accent-strong); }
     #hs .btn-sm{ padding:7px 14px; font-size:11.5px; }
+    #hs .theme-toggle{ position:relative; width:44px; height:24px; flex:none; border-radius:99px; border:1px solid var(--hs-on-navy-border-strong); background:rgba(255,255,255,.10); padding:0; -webkit-appearance:none; appearance:none; cursor:pointer; }
+    #hs .theme-toggle .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; transition:left .18s ease; color:var(--hs-blue-strong); }
+    #hs .theme-toggle .knob svg{ width:12px; height:12px; }
+    #hs .theme-toggle .i-moon{ display:none; }
+    html[data-theme="dark"] #hs .theme-toggle .knob{ left:22px; }
+    html[data-theme="dark"] #hs .theme-toggle .i-sun{ display:none; }
+    html[data-theme="dark"] #hs .theme-toggle .i-moon{ display:block; }
+    @media (prefers-color-scheme:dark){
+      html:not([data-theme="light"]) #hs .theme-toggle .knob{ left:22px; }
+      html:not([data-theme="light"]) #hs .theme-toggle .i-sun{ display:none; }
+      html:not([data-theme="light"]) #hs .theme-toggle .i-moon{ display:block; }
+    }
     #hs .hhamburger{ display:none; flex-direction:column; gap:4px; background:none; border:0; padding:6px; }
     #hs .hhamburger span{ width:20px; height:2px; background:var(--hs-on-navy-text); border-radius:2px; }
     #hs .hmobile-menu{ display:none; background:var(--hs-blue-strong); border-top:1px solid var(--hs-on-navy-border); }
@@ -351,7 +385,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .lb-row:last-child{ border-bottom:none; }
     #hs .lb-rank{ width:20px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:16px; color:var(--hs-text-3); flex:none; }
     #hs .lb-row:nth-child(1) .lb-rank{ color:var(--hs-accent); }
-    #hs .lb-row:nth-child(2) .lb-rank{ color:var(--hs-blue); }
+    #hs .lb-row:nth-child(2) .lb-rank{ color:var(--hs-rank2); }
     #hs .lb-row:nth-child(3) .lb-rank{ color:#5c6b93; }
     #hs .lb-avatar{ width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:12.5px; color:#fff; object-fit:cover; }
     #hs .lb-id{ flex:1; min-width:0; }
@@ -399,6 +433,12 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           <a href="#hs-players">Players</a>
         </nav>
         <div class="hnav-actions">
+          <button class="theme-toggle" id="hsThemeToggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+            <span class="knob">
+              <svg class="i-sun" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.6 4.4l-1.4 1.4M5.8 14.2l-1.4 1.4M15.6 15.6l-1.4-1.4M5.8 5.8L4.4 4.4"/></g></svg>
+              <svg class="i-moon" viewBox="0 0 20 20" fill="none"><path d="M16 12.3A7 7 0 1 1 7.7 4a5.6 5.6 0 0 0 8.3 8.3z" fill="currentColor"/></svg>
+            </span>
+          </button>
           ${user ? `<a class="btn btn-ghost-inverse btn-sm" href="/admin">Commissioner Portal</a>` : `<a class="btn btn-ghost-inverse btn-sm" href="/register">Start a League</a>`}
           ${user ? `<a class="btn btn-accent btn-sm" href="/admin">My Dashboard</a>` : `<a class="btn btn-accent btn-sm" href="/login">Sign In</a>`}
           <button class="hhamburger" id="hsHamburger" type="button" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -511,6 +551,23 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
 
   <script>
     (function(){
+      var themeBtn = document.getElementById('hsThemeToggle');
+      if (themeBtn) {
+        var isDark = function(){
+          var attr = document.documentElement.getAttribute('data-theme');
+          if (attr === 'dark') return true;
+          if (attr === 'light') return false;
+          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        };
+        var syncThemeBtn = function(){ themeBtn.setAttribute('aria-pressed', String(isDark())); };
+        themeBtn.addEventListener('click', function(){
+          var next = isDark() ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          try { localStorage.setItem('hoopstats-theme', next); } catch(e){}
+          syncThemeBtn();
+        });
+        syncThemeBtn();
+      }
       var hb = document.getElementById('hsHamburger');
       var menu = document.getElementById('hsMobileMenu');
       if (hb && menu) {

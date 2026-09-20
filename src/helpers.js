@@ -32,6 +32,7 @@ const page = (title, body) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>try{var _t=localStorage.getItem('hoopstats-theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#e63329">
 <meta name="mobile-web-app-capable" content="yes">
