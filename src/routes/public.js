@@ -424,7 +424,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
   <div id="hs">
     <header class="hsite">
       <div class="wrap hnav-row">
-        <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
+        <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
         <nav class="hprimary">
           <a href="/">Home</a>
           <a href="#hs-live" class="live-link"><span class="live-dot"></span>Live</a>
@@ -523,7 +523,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       <div class="wrap">
         <div class="hfoot-top">
           <div class="hfoot-brand">
-            <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
+            <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
             <p>The digital home of Philippine grassroots basketball. From the barangay court to the big stage.</p>
           </div>
           <div class="hfoot-cols">
