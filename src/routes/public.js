@@ -328,6 +328,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .eyebrow{ display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--hs-on-navy-text); background:rgba(255,255,255,.12); border:1px solid var(--hs-on-navy-border-strong); padding:6px 14px; border-radius:99px; }
     #hs .hero h1{ font-size:clamp(36px,6.4vw,72px); line-height:.98; color:var(--hs-on-navy-text); }
     #hs .hero h1 .pop{ color:#ff4d63; }
+    #hs .hero .tagline{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:15px; letter-spacing:2.6px; text-transform:uppercase; color:var(--hs-on-navy-text-2); margin:0; }
     #hs .hero p.lead{ max-width:520px; color:var(--hs-on-navy-text-2); font-size:16px; line-height:1.6; }
     #hs .hero-ctas{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
     #hs .hero-ctas .btn{ padding:13px 24px; font-size:13px; }
@@ -458,7 +459,10 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       <section class="hero">
         <div class="wrap hero-inner">
           ${isLive ? `<span class="eyebrow"><span class="live-dot"></span>${liveGames.length} game${liveGames.length > 1 ? 's' : ''} live right now</span>` : ''}
-          <h1>PHILIPPINE<br>BASKETBALL. <span class="pop">LIVE.</span></h1>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <h1>YOUR GAME.<br>YOUR STATS.<br><span class="pop">YOUR STORY.</span></h1>
+            <p class="tagline">THE HOME OF PH BASKETBALL STATS.</p>
+          </div>
           <p class="lead">Scores, stats, standings, players and games from grassroots basketball across the Philippines &mdash; from the barangay court to the big stage.</p>
           <div class="hero-ctas">
             <a class="btn btn-accent" href="#hs-live">Watch Live</a>
