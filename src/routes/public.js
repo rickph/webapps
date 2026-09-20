@@ -248,18 +248,9 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       font-family:'Outfit',sans-serif; color:var(--hs-text); background:var(--hs-bg); font-size:15px; line-height:1.55;
     }
     /* Dark mode: header/hero/footer stay on-brand navy in both themes; only content
-       surfaces (cards, tables, backgrounds) swap. See #hsThemeToggle for the switch. */
-    @media (prefers-color-scheme:dark){
-      html:not([data-theme="light"]) #hs{
-        --hs-bg:#0a0e1a; --hs-bg-2:#0d1220;
-        --hs-surface:#121a30; --hs-surface-2:#182142; --hs-surface-3:#1f2a52;
-        --hs-border:rgba(255,255,255,.08); --hs-border-strong:rgba(255,255,255,.16);
-        --hs-text:#eef1fb; --hs-text-2:rgba(238,241,251,.72); --hs-text-3:rgba(238,241,251,.48); --hs-text-4:rgba(238,241,251,.28);
-        --hs-accent:#ff5670; --hs-accent-strong:#ff7c90; --hs-accent-dim:rgba(255,86,112,.16); --hs-accent-border:rgba(255,86,112,.4);
-        --hs-rank2:#7c9bff; --hs-live:#ff5670; --hs-live-dim:rgba(255,86,112,.18);
-        --hs-win:#3ddc8a;
-      }
-    }
+       surfaces (cards, tables, backgrounds) swap. Light is always the default —
+       dark only ever activates via the explicit #hsThemeToggle, never from OS/
+       browser color-scheme preference. */
     html[data-theme="dark"] #hs{
       --hs-bg:#0a0e1a; --hs-bg-2:#0d1220;
       --hs-surface:#121a30; --hs-surface-2:#182142; --hs-surface-3:#1f2a52;
@@ -303,11 +294,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     html[data-theme="dark"] #hs .theme-toggle .knob{ left:22px; }
     html[data-theme="dark"] #hs .theme-toggle .i-sun{ display:none; }
     html[data-theme="dark"] #hs .theme-toggle .i-moon{ display:block; }
-    @media (prefers-color-scheme:dark){
-      html:not([data-theme="light"]) #hs .theme-toggle .knob{ left:22px; }
-      html:not([data-theme="light"]) #hs .theme-toggle .i-sun{ display:none; }
-      html:not([data-theme="light"]) #hs .theme-toggle .i-moon{ display:block; }
-    }
     #hs .hhamburger{ display:none; flex-direction:column; gap:4px; background:none; border:0; padding:6px; }
     #hs .hhamburger span{ width:20px; height:2px; background:var(--hs-on-navy-text); border-radius:2px; }
     #hs .hmobile-menu{ display:none; background:var(--hs-blue-strong); border-top:1px solid var(--hs-on-navy-border); }
@@ -568,10 +554,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       var themeBtn = document.getElementById('hsThemeToggle');
       if (themeBtn) {
         var isDark = function(){
-          var attr = document.documentElement.getAttribute('data-theme');
-          if (attr === 'dark') return true;
-          if (attr === 'light') return false;
-          return window.matchMedia('(prefers-color-scheme: dark)').matches;
+          return document.documentElement.getAttribute('data-theme') === 'dark';
         };
         var syncThemeBtn = function(){ themeBtn.setAttribute('aria-pressed', String(isDark())); };
         themeBtn.addEventListener('click', function(){

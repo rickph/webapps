@@ -3,10 +3,10 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ─── TOKENS ───
-   Light is the default (bare :root). Dark applies via prefers-color-scheme
-   (guarded so an explicit "light" choice always wins) and again via
-   [data-theme="dark"] for the toggle. See helpers.js page() for the
-   pre-paint localStorage script that sets data-theme on <html>. */
+   Light is always the default (bare :root), regardless of OS/browser
+   color-scheme preference. Dark only ever activates via [data-theme="dark"],
+   set by the explicit toggle. See helpers.js page() for the pre-paint
+   localStorage script that applies a saved choice to <html> before paint. */
 :root {
   --orange:    #c2410c;
   --orange-d:  #9a3412;
@@ -41,42 +41,6 @@
   --nav-bg: rgba(255,255,255,.85);
   --stat-gold: #a16207;
   --stat-blue: #1d4ed8;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) {
-    --orange:    #f97316;
-    --orange-d:  #ea580c;
-    --orange-dim: rgba(249,115,22,.1);
-    --orange-glow: rgba(249,115,22,.2);
-    --black:     #0a0a0a;
-    --dark-1:    #111111;
-    --dark-2:    #181818;
-    --dark-3:    #222222;
-    --dark-4:    #2a2a2a;
-    --border:    rgba(255,255,255,.08);
-    --border-2:  rgba(255,255,255,.14);
-    --border-3:  rgba(255,255,255,.3);
-    --text:      #ffffff;
-    --text-2:    rgba(255,255,255,.7);
-    --text-3:    rgba(255,255,255,.45);
-    --text-4:    rgba(255,255,255,.25);
-    --overlay-1: rgba(255,255,255,.03);
-    --overlay-2: rgba(255,255,255,.05);
-    --red: #f97316; --red-dim: rgba(249,115,22,.1); --red-border: rgba(249,115,22,.3);
-    --navy: #0a0a0a; --card: #181818; --card2: #222222; --card3: #2a2a2a;
-    --gold: #f97316; --teal: #00d4aa; --teal-dim: rgba(0,212,170,.12);
-    --purple: #a78bfa; --blue: #1240ab; --blue-dim: rgba(18,64,171,.18); --blue-border: rgba(18,64,171,.4);
-    --muted: rgba(255,255,255,.45); --dim: rgba(255,255,255,.25);
-    --border2: rgba(255,255,255,.14); --surface-1:#111; --surface-2:#181818; --surface-3:#222; --surface-4:#2a2a2a;
-    --green: #22c55e;
-    --danger: #f87171; --danger-dim: rgba(239,68,68,.12); --danger-border: rgba(239,68,68,.25);
-    --success: #86efac; --success-dim: rgba(34,197,94,.1); --success-border: rgba(34,197,94,.25);
-    --info-text: #93c5fd;
-    --accent-blue-text: #6b9fff;
-    --nav-bg: rgba(10,10,10,.92);
-    --stat-gold: #f7c948;
-    --stat-blue: #60a5fa;
-  }
 }
 :root[data-theme="dark"] {
   --orange:    #f97316;
