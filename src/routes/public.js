@@ -314,7 +314,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .hmobile-menu.open{ display:block; }
     #hs .hmobile-menu a{ display:block; padding:14px 24px; font-size:13px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--hs-on-navy-text-2); border-top:1px solid rgba(255,255,255,.08); }
     #hs .hmobile-menu a:first-child{ border-top:none; }
-    @media (max-width:900px){
+    @media (max-width:1060px){
       #hs nav.hprimary{ display:none; }
       #hs .hnav-actions .btn-ghost-inverse{ display:none; }
       #hs .hhamburger{ display:flex; }
@@ -440,6 +440,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           <a href="#hs-games">Games</a>
           <a href="#hs-leagues">Leagues</a>
           <a href="#hs-players">Players</a>
+          <a href="/install">Install</a>
         </nav>
         <div class="hnav-actions">
           <button class="theme-toggle" id="hsThemeToggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
@@ -459,6 +460,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         <a href="#hs-games">Games</a>
         <a href="#hs-leagues">Leagues</a>
         <a href="#hs-players">Players</a>
+        <a href="/install">Install App</a>
         ${user ? `<a href="/admin">My Dashboard</a>` : `<a href="/login">Sign In</a><a href="/register">Create Account</a>`}
       </div>
     </header>
@@ -541,7 +543,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           <div class="hfoot-cols">
             <div class="hfoot-col">
               <h4>Platform</h4>
-              <a href="#hs-live">Live</a><a href="#hs-games">Games</a><a href="#hs-leagues">Leagues</a><a href="#hs-players">Players</a>
+              <a href="#hs-live">Live</a><a href="#hs-games">Games</a><a href="#hs-leagues">Leagues</a><a href="#hs-players">Players</a><a href="/install">Install App</a>
             </div>
             <div class="hfoot-col">
               <h4>Commissioners</h4>
