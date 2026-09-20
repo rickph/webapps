@@ -407,13 +407,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         </div>
       </section>
 
-      <section class="hblock" id="hs-live">
-        <div class="wrap">
-          <div class="hblock-head"><h2><span class="live-dot"></span>Live Now</h2></div>
-          ${liveSection}
-        </div>
-      </section>
-
       <section class="hblock" id="hs-games">
         <div class="wrap">
           <div class="hblock-head"><h2>Upcoming Games</h2></div>
@@ -425,6 +418,13 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         <div class="wrap">
           <div class="hblock-head"><h2>Public Leagues</h2><a class="hsee-all" href="/register">Start your own →</a></div>
           <div class="lgrid">${leagueCards}</div>
+        </div>
+      </section>
+
+      <section class="hblock" id="hs-live">
+        <div class="wrap">
+          <div class="hblock-head"><h2><span class="live-dot"></span>Live Now</h2></div>
+          ${liveSection}
         </div>
       </section>
 
