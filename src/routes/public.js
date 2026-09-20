@@ -614,7 +614,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       <div class="topnav-inner">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;display:block;flex-shrink:0">
+            <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;display:block;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
               <div class="brand-sub">Pilipinas</div>
@@ -1088,7 +1088,7 @@ router.get('/install', (req, res) => {
     <nav class="topnav">
       <div class="nav-brand">
         <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-          <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:cover;display:block;flex-shrink:0">
+          <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:40px;height:40px;object-fit:contain;display:block;flex-shrink:0">
           <div class="nav-brand-text">
             <div class="brand-text">HOOPSTATS</div>
             <div class="brand-sub">Pilipinas</div>
@@ -1104,10 +1104,8 @@ router.get('/install', (req, res) => {
 
       <!-- HEADER -->
       <div style="text-align:center;margin-bottom:40px">
-        <img src="/icons/icon-192.png?v=4" alt="HoopStats"
-             style="width:96px;height:96px;border-radius:22px;object-fit:cover;
-                    box-shadow:0 8px 32px rgba(230,51,41,.4);
-                    border:2px solid rgba(245,200,66,.3);margin-bottom:20px">
+        <img src="/icons/logo-watermark.png?v=2" alt="HoopStats"
+             style="width:110px;height:110px;object-fit:contain;margin-bottom:20px">
         <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px">
           Install HoopStats
         </h1>
@@ -1263,7 +1261,7 @@ router.get('/league/:id/team/:tid', async (req, res) => {
       <nav class="topnav">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
-            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
+            <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
               <div class="brand-sub">Pilipinas</div>
@@ -1439,7 +1437,7 @@ router.get('/league/:id/player/:pid', async (req, res) => {
       <nav class="topnav">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:12px">
-            <img src="/icons/icon-192.png?v=4" alt="HoopStats"
+            <img src="/icons/logo-watermark.png?v=2" alt="HoopStats"
                  style="width:40px;height:40px;border-radius:10px;object-fit:contain;display:block;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
@@ -1669,7 +1667,7 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
         <div class="topnav-inner">
           <div class="nav-brand">
             <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-              <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+              <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
               <div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div>
             </a>
           </div>
@@ -1732,7 +1730,7 @@ router.get('/terms', (req, res) => {
       <div class="topnav-inner">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+            <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
               <div class="brand-sub">Pilipinas</div>
@@ -1842,7 +1840,7 @@ router.get('/privacy', (req, res) => {
       <div class="topnav-inner">
         <div class="nav-brand">
           <a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px">
-            <img src="/icons/icon-192.png?v=4" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
+            <img src="/icons/logo-watermark.png?v=2" alt="HoopStats" style="width:38px;height:38px;border-radius:8px;object-fit:contain;flex-shrink:0">
             <div class="nav-brand-text">
               <div class="brand-text">HOOPSTATS</div>
               <div class="brand-sub">Pilipinas</div>
