@@ -686,15 +686,15 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
     <div style="font-size:0;margin:-6px;margin-bottom:28px;display:block;width:100%">
       ${[
         {label:'PTS', key:'pts', val:ptsLeader?.pts, name:ptsLeader?.name, id:ptsLeader?.id, c:'var(--orange)'},
-        {label:'REB', key:'reb', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'#00d4aa'},
-        {label:'AST', key:'ast', val:astLeader?.ast, name:astLeader?.name, id:astLeader?.id, c:'#a78bfa'},
-        {label:'STL', key:'stl', val:stlLeader?.stl, name:stlLeader?.name, id:stlLeader?.id, c:'#f7c948'},
-        {label:'BLK', key:'blk', val:blkLeader?.blk, name:blkLeader?.name, id:blkLeader?.id, c:'#60a5fa'},
-        {label:'FG%', key:'fg',  val:fgLeader?.fg != null ? fgLeader.fg+'%' : null, name:fgLeader?.name, id:fgLeader?.id, c:'#34d399'},
+        {label:'REB', key:'reb', val:rebLeader?.reb, name:rebLeader?.name, id:rebLeader?.id, c:'var(--teal)'},
+        {label:'AST', key:'ast', val:astLeader?.ast, name:astLeader?.name, id:astLeader?.id, c:'var(--purple)'},
+        {label:'STL', key:'stl', val:stlLeader?.stl, name:stlLeader?.name, id:stlLeader?.id, c:'var(--stat-gold)'},
+        {label:'BLK', key:'blk', val:blkLeader?.blk, name:blkLeader?.name, id:blkLeader?.id, c:'var(--stat-blue)'},
+        {label:'FG%', key:'fg',  val:fgLeader?.fg != null ? fgLeader.fg+'%' : null, name:fgLeader?.name, id:fgLeader?.id, c:'var(--green)'},
       ].map(s=>`
         ${s.id
-          ? `<a href="/league/${league.id}/player/${s.id}" style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:#161616;border:1px solid rgba(255,255,255,.07);border-top:2px solid var(--orange);border-radius:8px;padding:16px;text-decoration:none;color:inherit;box-sizing:border-box;transition:border-color .15s,transform .15s,box-shadow .15s" class="leader-card-link">`
-          : `<div style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:#161616;border:1px solid rgba(255,255,255,.07);border-top:2px solid rgba(255,255,255,.1);border-radius:8px;padding:16px;box-sizing:border-box">`}
+          ? `<a href="/league/${league.id}/player/${s.id}" style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:var(--dark-2);border:1px solid var(--border);border-top:2px solid var(--orange);border-radius:8px;padding:16px;text-decoration:none;color:inherit;box-sizing:border-box;transition:border-color .15s,transform .15s,box-shadow .15s" class="leader-card-link">`
+          : `<div style="display:inline-block;vertical-align:top;width:calc(33.33% - 12px);min-width:140px;margin:6px;background:var(--dark-2);border:1px solid var(--border);border-top:2px solid var(--border-2);border-radius:8px;padding:16px;box-sizing:border-box">`}
           <div class="leader-label">${s.label} LEADER</div>
           <div class="leader-val" style="color:${s.c}">${s.val ?? '—'}</div>
           <div class="leader-name">${esc(s.name ?? 'N/A')}</div>
@@ -706,12 +706,12 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
       @media(min-width:640px){.leader-card-link,.leader-card{width:calc(33.33% - 12px)!important}}
       @media(max-width:639px){.leader-card-link,.leader-card{width:calc(50% - 12px)!important}}
       a.leader-card-link:hover{border-color:rgba(249,115,22,.5)!important;transform:translateY(-2px);box-shadow:0 6px 20px rgba(249,115,22,.15)}
-      a.leader-card-link:hover .leader-name{color:#f97316}
-      .pub-tabs{display:-webkit-box!important;display:-webkit-flex!important;display:flex!important;-webkit-flex-direction:row!important;flex-direction:row!important;gap:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;margin-bottom:20px!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;background:transparent!important;flex-wrap:nowrap!important;width:100%!important}
+      a.leader-card-link:hover .leader-name{color:var(--orange)}
+      .pub-tabs{display:-webkit-box!important;display:-webkit-flex!important;display:flex!important;-webkit-flex-direction:row!important;flex-direction:row!important;gap:0!important;border-bottom:1px solid var(--border)!important;margin-bottom:20px!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;background:transparent!important;flex-wrap:nowrap!important;width:100%!important}
       .pub-tabs::-webkit-scrollbar{display:none!important}
-      .ptab{display:-webkit-inline-box!important;display:-webkit-inline-flex!important;display:inline-flex!important;-webkit-box-align:center!important;-webkit-align-items:center!important;align-items:center!important;gap:5px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:rgba(255,255,255,.4)!important;background:transparent!important;background-color:transparent!important;border:none!important;border-top:none!important;border-left:none!important;border-right:none!important;border-bottom:2px solid transparent!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;flex-shrink:0!important;box-shadow:none!important;border-radius:0!important}
-      .ptab:hover{color:rgba(255,255,255,.8)!important}
-      .ptab.active{color:#f97316!important;border-bottom-color:#f97316!important;background:transparent!important;background-color:transparent!important}
+      .ptab{display:-webkit-inline-box!important;display:-webkit-inline-flex!important;display:inline-flex!important;-webkit-box-align:center!important;-webkit-align-items:center!important;align-items:center!important;gap:5px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:var(--text-3)!important;background:transparent!important;background-color:transparent!important;border:none!important;border-top:none!important;border-left:none!important;border-right:none!important;border-bottom:2px solid transparent!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;flex-shrink:0!important;box-shadow:none!important;border-radius:0!important}
+      .ptab:hover{color:var(--text-2)!important}
+      .ptab.active{color:var(--orange)!important;border-bottom-color:var(--orange)!important;background:transparent!important;background-color:transparent!important}
       @media(max-width:640px){.ptab{padding:10px 13px!important;font-size:11px!important}}
     </style>
     <div class="pub-tabs"><div style="display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:row;flex-direction:row;gap:0;flex-wrap:nowrap;min-width:100%">
@@ -760,16 +760,16 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
               ? cat.rows.map(function(p,i){
                   var val; try{val=cat.fn(p);}catch(e){val='0.0';}
                   var isFirst = i===0;
-                  return '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'+
-                    '<td style="padding:7px 6px 7px 10px;font-size:11px;color:rgba(255,255,255,.3);font-weight:700;white-space:nowrap;width:20px">'+(i+1)+'.</td>'+
-                    '<td style="padding:7px 4px;font-size:13px;font-weight:'+(isFirst?800:600)+';color:'+(isFirst?'#fff':'rgba(255,255,255,.75)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">'+esc(p.name)+'</td>'+
-                    '<td style="padding:7px 4px;font-size:10px;color:rgba(255,255,255,.3);font-weight:700;white-space:nowrap">'+esc(abbr(p.team_name))+'</td>'+
-                    '<td style="padding:7px 10px 7px 4px;font-size:13px;font-weight:900;color:#f97316;text-align:right;white-space:nowrap">'+val+'</td>'+
+                  return '<tr style="border-bottom:1px solid var(--overlay-2)">'+
+                    '<td style="padding:7px 6px 7px 10px;font-size:11px;color:var(--text-3);font-weight:700;white-space:nowrap;width:20px">'+(i+1)+'.</td>'+
+                    '<td style="padding:7px 4px;font-size:13px;font-weight:'+(isFirst?800:600)+';color:'+(isFirst?'#fff':'var(--text-2)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">'+esc(p.name)+'</td>'+
+                    '<td style="padding:7px 4px;font-size:10px;color:var(--text-3);font-weight:700;white-space:nowrap">'+esc(abbr(p.team_name))+'</td>'+
+                    '<td style="padding:7px 10px 7px 4px;font-size:13px;font-weight:900;color:var(--orange);text-align:right;white-space:nowrap">'+val+'</td>'+
                   '</tr>';
                 }).join('')
-              : '<tr><td colspan="4" style="padding:12px 10px;font-size:12px;color:rgba(255,255,255,.25)">No stats yet</td></tr>';
-            return '<div style="background:#111;border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;margin-bottom:10px">'+
-              '<div style="padding:10px 12px;background:#161616;border-bottom:1px solid rgba(255,255,255,.07);font-size:10px;font-weight:900;letter-spacing:1.5px;color:rgba(255,255,255,.4);text-transform:uppercase">'+cat.title+'</div>'+
+              : '<tr><td colspan="4" style="padding:12px 10px;font-size:12px;color:var(--text-4)">No stats yet</td></tr>';
+            return '<div style="background:var(--dark-2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px">'+
+              '<div style="padding:10px 12px;background:var(--dark-3);border-bottom:1px solid var(--border);font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase">'+cat.title+'</div>'+
               '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'+rows+'</table>'+
             '</div>';
           }
@@ -801,15 +801,15 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
 
           function renderMVP(){
             if (!mvpPlayers.length) {
-              return '<p style="padding:20px;font-size:13px;color:rgba(255,255,255,.3);text-align:center">No qualifying players yet — need at least 1 game played.</p>';
+              return '<p style="padding:20px;font-size:13px;color:var(--text-3);text-align:center">No qualifying players yet — need at least 1 game played.</p>';
             }
             var medals = ['🥇','🥈','🥉'];
             return mvpPlayers.map(function(p, i){
               var isFirst  = i === 0;
               var effDisp  = (p.eff >= 0 ? '+' : '') + p.eff.toFixed(1);
-              var effColor = isFirst ? '#f97316' : 'rgba(255,255,255,.55)';
-              var rowBg    = isFirst ? 'rgba(249,115,22,.07)' : 'rgba(255,255,255,.03)';
-              var rowBord  = isFirst ? '1px solid rgba(249,115,22,.3)' : '1px solid rgba(255,255,255,.06)';
+              var effColor = isFirst ? 'var(--orange)' : 'var(--text-2)';
+              var rowBg    = isFirst ? 'rgba(249,115,22,.07)' : 'var(--overlay-1)';
+              var rowBord  = isFirst ? '1px solid rgba(249,115,22,.3)' : '1px solid var(--overlay-2)';
               var ptsW     = Math.min(100, (p.pts/30)*100).toFixed(0);
               var rebW     = Math.min(100, (p.reb/15)*100).toFixed(0);
               var astW     = Math.min(100, (p.ast/10)*100).toFixed(0);
@@ -823,67 +823,67 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                     '<div style="display:table;width:100%">'+
                       '<div style="display:table-cell;width:28px;vertical-align:middle;font-size:18px;text-align:center">'+medal+'</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding-left:8px">'+
-                        '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div>'+
-                        '<div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:600;margin-top:2px">'+esc(abbr(p.team_name))+' &nbsp;·&nbsp; '+p.gp+' GP</div>'+
+                        '<div style="font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div>'+
+                        '<div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px">'+esc(abbr(p.team_name))+' &nbsp;·&nbsp; '+p.gp+' GP</div>'+
                       '</div>'+
                     '</div>'+
                   '</div>'+
                   /* EFF score cell */
                   '<div style="display:table-cell;width:18%;vertical-align:middle;text-align:right;padding-right:10px">'+
                     '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:'+effColor+';line-height:1">'+effDisp+'</div>'+
-                    '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase;margin-top:2px">EFF</div>'+
+                    '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--text-4);text-transform:uppercase;margin-top:2px">EFF</div>'+
                   '</div>'+
                   /* mini bars cell */
                   '<div style="display:table-cell;width:38%;vertical-align:middle">'+
                     /* PTS bar */
                     '<div style="display:table;width:100%;margin-bottom:4px">'+
-                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">PTS</div>'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:var(--text-4);letter-spacing:1px;vertical-align:middle">PTS</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
-                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
-                          '<div style="height:4px;width:'+ptsW+'%;background:#f97316;border-radius:2px"></div>'+
+                        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+ptsW+'%;background:var(--orange);border-radius:2px"></div>'+
                         '</div>'+
                       '</div>'+
-                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.pts.toFixed(1)+'</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:var(--text-3);text-align:right;vertical-align:middle">'+p.pts.toFixed(1)+'</div>'+
                     '</div>'+
                     /* REB bar */
                     '<div style="display:table;width:100%;margin-bottom:4px">'+
-                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">REB</div>'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:var(--text-4);letter-spacing:1px;vertical-align:middle">REB</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
-                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
-                          '<div style="height:4px;width:'+rebW+'%;background:#00d4aa;border-radius:2px"></div>'+
+                        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+rebW+'%;background:var(--teal);border-radius:2px"></div>'+
                         '</div>'+
                       '</div>'+
-                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.reb.toFixed(1)+'</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:var(--text-3);text-align:right;vertical-align:middle">'+p.reb.toFixed(1)+'</div>'+
                     '</div>'+
                     /* AST bar */
                     '<div style="display:table;width:100%;margin-bottom:4px">'+
-                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">AST</div>'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:var(--text-4);letter-spacing:1px;vertical-align:middle">AST</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
-                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
-                          '<div style="height:4px;width:'+astW+'%;background:#a78bfa;border-radius:2px"></div>'+
+                        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+astW+'%;background:var(--purple);border-radius:2px"></div>'+
                         '</div>'+
                       '</div>'+
-                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.ast.toFixed(1)+'</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:var(--text-3);text-align:right;vertical-align:middle">'+p.ast.toFixed(1)+'</div>'+
                     '</div>'+
                     /* STL bar */
                     '<div style="display:table;width:100%;margin-bottom:4px">'+
-                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">STL</div>'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:var(--text-4);letter-spacing:1px;vertical-align:middle">STL</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
-                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
-                          '<div style="height:4px;width:'+stlW+'%;background:#f7c948;border-radius:2px"></div>'+
+                        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+stlW+'%;background:var(--stat-gold);border-radius:2px"></div>'+
                         '</div>'+
                       '</div>'+
-                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.stl.toFixed(1)+'</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:var(--text-3);text-align:right;vertical-align:middle">'+p.stl.toFixed(1)+'</div>'+
                     '</div>'+
                     /* BLK bar */
                     '<div style="display:table;width:100%">'+
-                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:rgba(255,255,255,.28);letter-spacing:1px;vertical-align:middle">BLK</div>'+
+                      '<div style="display:table-cell;width:22px;font-size:9px;font-weight:800;color:var(--text-4);letter-spacing:1px;vertical-align:middle">BLK</div>'+
                       '<div style="display:table-cell;vertical-align:middle;padding:0 5px">'+
-                        '<div style="height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">'+
-                          '<div style="height:4px;width:'+blkW+'%;background:#60a5fa;border-radius:2px"></div>'+
+                        '<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">'+
+                          '<div style="height:4px;width:'+blkW+'%;background:var(--stat-blue);border-radius:2px"></div>'+
                         '</div>'+
                       '</div>'+
-                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:rgba(255,255,255,.4);text-align:right;vertical-align:middle">'+p.blk.toFixed(1)+'</div>'+
+                      '<div style="display:table-cell;width:28px;font-size:10px;font-weight:700;color:var(--text-3);text-align:right;vertical-align:middle">'+p.blk.toFixed(1)+'</div>'+
                     '</div>'+
                   '</div>'+
                 '</div>'
@@ -892,10 +892,10 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
           }
 
           var mvpSection =
-            '<div style="background:#111;border:1px solid rgba(249,115,22,.2);border-radius:8px;overflow:hidden;margin-bottom:16px">'+
+            '<div style="background:var(--dark-2);border:1px solid rgba(249,115,22,.2);border-radius:8px;overflow:hidden;margin-bottom:16px">'+
               '<div style="padding:12px 16px;background:rgba(249,115,22,.07);border-bottom:1px solid rgba(249,115,22,.15)">'+
-                '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#fff">🏆 MVP RACE</div>'+
-                '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:3px">FIBA EFF = PTS+REB+AST+STL+BLK−Missed FG−Missed FT−TO</div>'+
+                '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--text)">🏆 MVP RACE</div>'+
+                '<div style="font-size:10px;color:var(--text-3);margin-top:3px">FIBA EFF = PTS+REB+AST+STL+BLK−Missed FG−Missed FT−TO</div>'+
               '</div>'+
               '<div style="padding:12px 14px">'+renderMVP()+'</div>'+
             '</div>';
@@ -931,18 +931,18 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                 const tiedWithNext = i < arr.length-1 && arr[i+1].wins === t.wins && arr[i+1].losses === t.losses;
                 const isTied = tiedWithPrev || tiedWithNext;
                 return '<tr>'
-                  + '<td class="rank '+(i<2?'rank-top':'')+'">'+(i+1)+(isTied?'<span style="font-size:8px;color:#f7c948;vertical-align:super;margin-left:2px">T</span>':'')+'</td>'
+                  + '<td class="rank '+(i<2?'rank-top':'')+'">'+(i+1)+(isTied?'<span style="font-size:8px;color:var(--stat-gold);vertical-align:super;margin-left:2px">T</span>':'')+'</td>'
                   + '<td><div class="team-name-cell"><div class="team-dot" style="background:'+t.color+'"></div><a href="/league/'+league.id+'/team/'+t.id+'" class="team-link">'+esc(t.name)+'</a></div></td>'
                   + '<td class="green">'+t.wins+'</td>'
                   + '<td class="red">'+t.losses+'</td>'
                   + '<td style="color:var(--gold);font-weight:700">'+pct+'%</td>'
-                  + (showTb ? '<td style="color:rgba(255,255,255,.5)">'+  (hasPtsData?(t.pts_for||0):'—')  +'</td>'
-                            + '<td style="color:rgba(255,255,255,.5)">'+  (hasPtsData?(t.pts_against||0):'—')+'</td>'
-                            + '<td style="color:'+(diff>=0&&hasPtsData?'#00d4aa':'rgba(255,255,255,.3)')+';font-weight:700">'+(hasPtsData?(diff>0?'+':'')+diff:'—')+'</td>' : '')
+                  + (showTb ? '<td style="color:var(--text-2)">'+  (hasPtsData?(t.pts_for||0):'—')  +'</td>'
+                            + '<td style="color:var(--text-2)">'+  (hasPtsData?(t.pts_against||0):'—')+'</td>'
+                            + '<td style="color:'+(diff>=0&&hasPtsData?'var(--teal)':'var(--text-3)')+';font-weight:700">'+(hasPtsData?(diff>0?'+':'')+diff:'—')+'</td>' : '')
                   + '</tr>';
               }).join('') || '<tr><td colspan="8" class="empty">No teams yet.</td></tr>')
             + '</tbody></table>'
-            + (showTb ? '<div style="font-size:11px;color:rgba(255,255,255,.3);padding:8px 4px">' + '<span style="color:#f7c948;font-weight:800">T</span> = Tied on WIN% — ranked by Head-to-Head → Point Differential → Points Scored' + (!hasPtsData ? ' &nbsp;·&nbsp; <span style="color:rgba(249,115,22,.6)">Click "Fix Standings" to compute point data</span>' : '') + '</div>' : '')
+            + (showTb ? '<div style="font-size:11px;color:var(--text-3);padding:8px 4px">' + '<span style="color:var(--stat-gold);font-weight:800">T</span> = Tied on WIN% — ranked by Head-to-Head → Point Differential → Points Scored' + (!hasPtsData ? ' &nbsp;·&nbsp; <span style="color:rgba(249,115,22,.6)">Click "Fix Standings" to compute point data</span>' : '') + '</div>' : '')
             + '</div>';
         })()}
       </div>
@@ -981,17 +981,17 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                 '<td class="rank" data-val="' + (i+1) + '">' + (i+1) + '</td>' +
                 '<td><a href="/league/' + league.id + '/player/' + p.id + '" style="color:inherit;text-decoration:none"><div style="font-weight:700;transition:color .15s" class="player-name-link">' + esc(p.name) + '</div><div class="sub-text">' + esc(p.team_name||'') + '</div></a></td>' +
                 '<td><span class="pos-badge">' + p.pos + '</span></td>' +
-                '<td style="color:#888" data-val="' + (p.gp||0) + '">' + (p.gp||0) + '</td>' +
+                '<td style="color:var(--text-3)" data-val="' + (p.gp||0) + '">' + (p.gp||0) + '</td>' +
                 '<td class="orange" data-val="' + (p.pts||0) + '">' + p.pts + '</td>' +
                 '<td data-val="' + (p.reb||0) + '">' + p.reb + '</td>' +
                 '<td data-val="' + (p.ast||0) + '">' + p.ast + '</td>' +
                 '<td data-val="' + (p.stl||0) + '">' + p.stl + '</td>' +
                 '<td data-val="' + (p.blk||0) + '">' + p.blk + '</td>' +
-                '<td style="color:#ff4757" data-val="' + (to === '—' ? -1 : to) + '">' + to + '</td>' +
+                '<td style="color:var(--danger)" data-val="' + (to === '—' ? -1 : to) + '">' + to + '</td>' +
                 '<td class="teal" data-val="' + (fgp === '—' ? -1 : fgp) + '">' + (fgp === '—' ? '—' : fgp + '%') + '</td>' +
-                '<td style="color:#a78bfa" data-val="' + (fg3p === '—' ? -1 : fg3p) + '">' + (fg3p === '—' ? '—' : fg3p + '%') + '</td>' +
-                '<td style="color:#f7c948" data-val="' + (ftp === '—' ? -1 : ftp) + '">' + (ftp === '—' ? '—' : ftp + '%') + '</td>' +
-                '<td style="color:#ff6b35;font-weight:700" data-val="' + (eff === '—' ? -999 : eff) + '">' + eff + '</td>' +
+                '<td style="color:var(--purple)" data-val="' + (fg3p === '—' ? -1 : fg3p) + '">' + (fg3p === '—' ? '—' : fg3p + '%') + '</td>' +
+                '<td style="color:var(--stat-gold)" data-val="' + (ftp === '—' ? -1 : ftp) + '">' + (ftp === '—' ? '—' : ftp + '%') + '</td>' +
+                '<td style="color:var(--orange);font-weight:700" data-val="' + (eff === '—' ? -999 : eff) + '">' + eff + '</td>' +
                 '</tr>';
             }).join('') || '<tr><td colspan="14" class="empty">No players yet.</td></tr>'}
           </tbody>
@@ -1008,33 +1008,33 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
           }
           return finalGames.map(function(g){
             const homeWin   = (g.home_score||0) > (g.away_score||0);
-            const homeCls   = homeWin  ? 'color:#00d4aa;font-weight:900' : 'color:rgba(255,255,255,.55);font-weight:700';
-            const awayCls   = !homeWin ? 'color:#00d4aa;font-weight:900' : 'color:rgba(255,255,255,.55);font-weight:700';
+            const homeCls   = homeWin  ? 'color:var(--teal);font-weight:900' : 'color:var(--text-2);font-weight:700';
+            const awayCls   = !homeWin ? 'color:var(--teal);font-weight:900' : 'color:var(--text-2);font-weight:700';
             return '<a href="/league/'+league.id+'/game/'+g.id+'" style="display:block;text-decoration:none;color:inherit">'
               + '<div class="game-row game-row-clickable" style="cursor:pointer">'
               +   '<div style="display:table;width:100%">'
                   // Home team
               +     '<div style="display:table-cell;width:38%;vertical-align:middle;padding-right:10px">'
-              +       '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.home_name||'Home')+'</div>'
-              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(homeWin?'rgba(0,212,170,.12)':'rgba(255,255,255,.04)')+';color:'+(homeWin?'#00d4aa':'rgba(255,255,255,.3)')+'">'+( homeWin?'WIN':'LOSS')+'</div>'
+              +       '<div style="font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.home_name||'Home')+'</div>'
+              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(homeWin?'rgba(0,212,170,.12)':'var(--overlay-1)')+';color:'+(homeWin?'var(--teal)':'var(--text-3)')+'">'+( homeWin?'WIN':'LOSS')+'</div>'
               +     '</div>'
                   // Score
               +     '<div style="display:table-cell;width:24%;vertical-align:middle;text-align:center">'
               +       '<div style="display:flex;align-items:center;justify-content:center;gap:8px">'
               +         '<span style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;'+homeCls+'">'+g.home_score+'</span>'
-              +         '<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.2)">—</span>'
+              +         '<span style="font-size:11px;font-weight:700;color:var(--text-4)">—</span>'
               +         '<span style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;'+awayCls+'">'+g.away_score+'</span>'
               +       '</div>'
-              +       '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.2);text-transform:uppercase;margin-top:2px">FINAL</div>'
+              +       '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--text-4);text-transform:uppercase;margin-top:2px">FINAL</div>'
               +     '</div>'
                   // Away team
               +     '<div style="display:table-cell;width:38%;vertical-align:middle;padding-left:10px;text-align:right">'
-              +       '<div style="font-size:13px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.away_name||'Away')+'</div>'
-              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(!homeWin?'rgba(0,212,170,.12)':'rgba(255,255,255,.04)')+';color:'+(!homeWin?'#00d4aa':'rgba(255,255,255,.3)')+'">'+(!homeWin?'WIN':'LOSS')+'</div>'
+              +       '<div style="font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.away_name||'Away')+'</div>'
+              +       '<div style="font-size:10px;font-weight:800;letter-spacing:.5px;margin-top:3px;padding:2px 7px;border-radius:3px;display:inline-block;background:'+(!homeWin?'rgba(0,212,170,.12)':'var(--overlay-1)')+';color:'+(!homeWin?'var(--teal)':'var(--text-3)')+'">'+(!homeWin?'WIN':'LOSS')+'</div>'
               +     '</div>'
               +   '</div>'
               +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">'
-              +     '<span style="font-size:11px;color:rgba(255,255,255,.3)">📍 '+esc(g.venue||'TBD')+' · '+esc(g.date||'TBD')+'</span>'
+              +     '<span style="font-size:11px;color:var(--text-3)">📍 '+esc(g.venue||'TBD')+' · '+esc(g.date||'TBD')+'</span>'
               +     '<span style="font-size:11px;font-weight:800;color:rgba(249,115,22,.8);letter-spacing:.5px">BOX SCORE →</span>'
               +   '</div>'
               + '</div></a>';
@@ -1078,7 +1078,7 @@ function notFound() {
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
       <div style="font-size:64px">🏀</div>
       <h1 style="font-family:'Russo One',sans-serif">Page Not Found</h1>
-      <a href="/" style="color:#ff6b35">← Go Home</a>
+      <a href="/" style="color:var(--orange)">← Go Home</a>
     </div>`);
 }
 
@@ -1089,7 +1089,7 @@ function sortTh(col, label, title, sort, league) {
   const isActive = sort.col === col;
   const nextDir  = isActive && sort.dir === 'desc' ? 'asc' : 'desc';
   const icon     = isActive ? (sort.dir === 'desc' ? ' ↓' : ' ↑') : ' ↕';
-  const style    = isActive ? 'color:#ff6b35;cursor:pointer;white-space:nowrap;user-select:none' : 'cursor:pointer;white-space:nowrap;user-select:none';
+  const style    = isActive ? 'color:var(--orange);cursor:pointer;white-space:nowrap;user-select:none' : 'cursor:pointer;white-space:nowrap;user-select:none';
   return `<th title="${title}" style="${style}">
     <a href="/league/${league.id}?tab=players&sort=${col}&dir=${nextDir}"
        style="color:inherit;text-decoration:none;display:block">
@@ -1442,12 +1442,12 @@ router.get('/league/:id/player/:pid', async (req, res) => {
     const gp   = ss?.gp   ?? player.gp   ?? 0;
 
     function statBox(label, value, color) {
-      color = color || 'rgba(255,255,255,.8)';
+      color = color || 'var(--text-2)';
       const valStr = String(value);
       const fontSize = valStr.length >= 6 ? '18px' : valStr.length >= 5 ? '20px' : '26px';
       // Pure inline styles — no CSS class dependency whatsoever
-      return '<div style="display:inline-block;vertical-align:top;background:#161616;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:14px 10px;text-align:center;width:calc(33.33% - 6px);min-width:80px;margin:3px;box-sizing:border-box">'
-        + '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:6px">' + label + '</div>'
+      return '<div style="display:inline-block;vertical-align:top;background:var(--dark-3);border:1px solid var(--border);border-radius:8px;padding:14px 10px;text-align:center;width:calc(33.33% - 6px);min-width:80px;margin:3px;box-sizing:border-box">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase;margin-bottom:6px">' + label + '</div>'
         + '<div style="font-size:' + fontSize + ';font-weight:900;color:' + color + ';line-height:1;font-family:Barlow Condensed,sans-serif">' + value + '</div>'
         + '</div>';
     }
@@ -1479,7 +1479,7 @@ router.get('/league/:id/player/:pid', async (req, res) => {
             ${photoUrl
               ? `<img src="${photoUrl}" alt="${esc(player.name)}"
                    style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid ${player.team_color||'var(--border)'};">`
-              : `<div style="width:110px;height:110px;border-radius:50%;background:${player.team_color||'var(--card2)'};display:flex;align-items:center;justify-content:center;font-size:42px;font-family:'Russo One',sans-serif;color:#fff;border:3px solid ${player.team_color||'var(--border)'}">
+              : `<div style="width:110px;height:110px;border-radius:50%;background:${player.team_color||'var(--card2)'};display:flex;align-items:center;justify-content:center;font-size:42px;font-family:'Russo One',sans-serif;color:${player.team_color?'#fff':'var(--text)'};border:3px solid ${player.team_color||'var(--border)'}">
                   ${esc(player.name.charAt(0).toUpperCase())}
                 </div>`}
           </div>
@@ -1508,7 +1508,7 @@ router.get('/league/:id/player/:pid', async (req, res) => {
           ${statBox('REB', reb,      'var(--teal)')}
           ${statBox('AST', ast,      'var(--purple)')}
           ${statBox('STL', stl,      'var(--gold)')}
-          ${statBox('BLK', blk,      '#60a5fa')}
+          ${statBox('BLK', blk,      'var(--stat-blue)')}
           ${statBox('GP',  gp,       'var(--muted)')}
           ${statBox('FG%', fgp+'%',  'var(--teal)')}
           ${fg3p!=null ? statBox('3P%', fg3p+'%', 'var(--purple)') : ''}
@@ -1619,12 +1619,12 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
       const fg  = fga > 0 ? fgm+'/'+fga : '—';
       const ft  = (r.fta||0) > 0 ? (r.ftm||0)+'/'+(r.fta||0) : '—';
       const top = i === 0;
-      const nameHtml = (r.jersey ? '<span style="font-size:10px;color:rgba(255,255,255,.35);margin-right:5px">#'+esc(r.jersey)+'</span>' : '')
+      const nameHtml = (r.jersey ? '<span style="font-size:10px;color:var(--text-3);margin-right:5px">#'+esc(r.jersey)+'</span>' : '')
                      + '<span style="font-weight:'+(top?'800':'600')+'">'+esc(r.name||'—')+'</span>'
-                     + (r.pos ? '<span style="margin-left:6px;background:#1c2a3a;color:#60a5fa;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">'+esc(r.pos)+'</span>' : '');
-      return '<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'
+                     + (r.pos ? '<span style="margin-left:6px;background:#1c2a3a;color:var(--stat-blue);padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700">'+esc(r.pos)+'</span>' : '');
+      return '<tr style="border-bottom:1px solid var(--overlay-2)">'
         + '<td class="bx-td-name">'+nameHtml+'</td>'
-        + '<td class="bx-td" style="color:'+(top?'#f97316':'rgba(255,255,255,.8)')+';font-weight:'+(top?900:700)+'">'+pts+'</td>'
+        + '<td class="bx-td" style="color:'+(top?'var(--orange)':'var(--text-2)')+';font-weight:'+(top?900:700)+'">'+pts+'</td>'
         + '<td class="bx-td">'+reb+'</td>'
         + '<td class="bx-td">'+(r.ast||0)+'</td>'
         + '<td class="bx-td">'+(r.stl||0)+'</td>'
@@ -1638,9 +1638,9 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
     function totalRow(t) {
       const fg = t.fga > 0 ? t.fgm+'/'+t.fga : '—';
       const ft = t.fta > 0 ? t.ftm+'/'+t.fta : '—';
-      return '<tr style="background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.12)">'
-        + '<td class="bx-td-name" style="font-size:11px;font-weight:800;letter-spacing:.5px;color:rgba(255,255,255,.5)">TEAM TOTALS</td>'
-        + '<td class="bx-td" style="color:#f97316;font-weight:900">'+t.pts+'</td>'
+      return '<tr style="background:var(--overlay-1);border-top:1px solid var(--border-2)">'
+        + '<td class="bx-td-name" style="font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-2)">TEAM TOTALS</td>'
+        + '<td class="bx-td" style="color:var(--orange);font-weight:900">'+t.pts+'</td>'
         + '<td class="bx-td">'+t.reb+'</td>'
         + '<td class="bx-td">'+t.ast+'</td>'
         + '<td class="bx-td">'+t.stl+'</td>'
@@ -1652,15 +1652,15 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
     }
 
     function teamTable(name, color, rows) {
-      if (!rows.length) return '<div style="padding:16px;color:rgba(255,255,255,.3);font-size:13px">No stats recorded for '+esc(name)+'</div>';
+      if (!rows.length) return '<div style="padding:16px;color:var(--text-3);font-size:13px">No stats recorded for '+esc(name)+'</div>';
       const tot = teamTotals(rows);
-      return '<div style="background:#111;border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-bottom:16px">'
-        + '<div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.08);border-left:3px solid '+(color||'#f97316')+';background:#161616;display:flex;align-items:center;justify-content:space-between">'
+      return '<div style="background:var(--dark-2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px">'
+        + '<div style="padding:14px 18px;border-bottom:1px solid var(--border);border-left:3px solid '+(color||'var(--orange)')+';background:var(--dark-3);display:flex;align-items:center;justify-content:space-between">'
         + '<span style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:.5px">'+esc(name)+'</span>'
         + '</div>'
         + '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">'
         + '<table style="width:100%;border-collapse:collapse;min-width:480px">'
-        + '<thead><tr style="background:#161616">'
+        + '<thead><tr style="background:var(--dark-3)">'
         + '<th class="bx-th-name">PLAYER</th>'
         + '<th class="bx-th">PTS</th><th class="bx-th">REB</th><th class="bx-th">AST</th>'
         + '<th class="bx-th">STL</th><th class="bx-th">BLK</th><th class="bx-th">TO</th>'
@@ -1675,10 +1675,10 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
     res.send(page(esc(game.home_name||'') + ' vs ' + esc(game.away_name||'') + ' | ' + esc(league.name), `
       <style>
         .bx-td-name{padding:10px 14px;font-size:13px;min-width:150px;white-space:nowrap}
-        .bx-td{padding:10px 10px;font-size:13px;text-align:center;color:rgba(255,255,255,.65);font-weight:600;white-space:nowrap}
-        .bx-fg{font-size:12px;color:rgba(255,255,255,.45)!important;font-weight:500!important}
-        .bx-th-name{padding:9px 14px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;text-align:left}
-        .bx-th{padding:9px 10px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.35);text-transform:uppercase;text-align:center;white-space:nowrap}
+        .bx-td{padding:10px 10px;font-size:13px;text-align:center;color:var(--text-2);font-weight:600;white-space:nowrap}
+        .bx-fg{font-size:12px;color:var(--text-3)!important;font-weight:500!important}
+        .bx-th-name{padding:9px 14px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase;text-align:left}
+        .bx-th{padding:9px 10px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--text-3);text-transform:uppercase;text-align:center;white-space:nowrap}
         .game-row-clickable{cursor:pointer;transition:border-color .15s}
         .game-row-clickable:hover{border-color:rgba(249,115,22,.4)!important;background:rgba(249,115,22,.04)!important}
       </style>
@@ -1700,24 +1700,24 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
       <div style="max-width:960px;margin:0 auto;padding:32px 24px 80px">
 
         <!-- SCOREBOARD -->
-        <div style="background:#111;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 20px 24px;margin-bottom:24px">
-          <div style="text-align:center;font-size:11px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:20px">
+        <div style="background:var(--dark-2);border:1px solid var(--border);border-radius:10px;padding:28px 20px 24px;margin-bottom:24px">
+          <div style="text-align:center;font-size:11px;font-weight:800;letter-spacing:2px;color:var(--text-3);text-transform:uppercase;margin-bottom:20px">
             📍 ${esc(game.venue||'TBD')} &nbsp;·&nbsp; ${esc(game.date||'TBD')}
           </div>
           <table style="width:100%;border-collapse:collapse;max-width:560px;margin:0 auto">
             <tr>
               <td style="width:40%;vertical-align:middle;text-align:left">
-                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px">${esc(game.home_name||'Home')}</div>
-                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${homeWin?'rgba(0,212,170,.15)':'rgba(255,255,255,.05)'};color:${homeWin?'#00d4aa':'rgba(255,255,255,.35)'}">${homeWin?'WIN':'LOSS'}</span>
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:var(--text);margin-bottom:6px">${esc(game.home_name||'Home')}</div>
+                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${homeWin?'rgba(0,212,170,.15)':'var(--overlay-2)'};color:${homeWin?'var(--teal)':'var(--text-3)'}">${homeWin?'WIN':'LOSS'}</span>
               </td>
               <td style="width:20%;text-align:center;vertical-align:middle">
-                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${homeWin?'#00d4aa':'rgba(255,255,255,.65)'}">${game.home_score??'—'}</div>
-                <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.2);margin:8px 0">FINAL</div>
-                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${!homeWin?'#00d4aa':'rgba(255,255,255,.65)'}">${game.away_score??'—'}</div>
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${homeWin?'var(--teal)':'var(--text-2)'}">${game.home_score??'—'}</div>
+                <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--text-4);margin:8px 0">FINAL</div>
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(42px,9vw,72px);font-weight:900;line-height:1;color:${!homeWin?'var(--teal)':'var(--text-2)'}">${game.away_score??'—'}</div>
               </td>
               <td style="width:40%;vertical-align:middle;text-align:right">
-                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:#fff;margin-bottom:6px">${esc(game.away_name||'Away')}</div>
-                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${!homeWin?'rgba(0,212,170,.15)':'rgba(255,255,255,.05)'};color:${!homeWin?'#00d4aa':'rgba(255,255,255,.35)'}">${!homeWin?'WIN':'LOSS'}</span>
+                <div style="font-family:Barlow Condensed,sans-serif;font-size:clamp(18px,3.5vw,26px);font-weight:900;text-transform:uppercase;color:var(--text);margin-bottom:6px">${esc(game.away_name||'Away')}</div>
+                <span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:800;letter-spacing:1px;background:${!homeWin?'rgba(0,212,170,.15)':'var(--overlay-2)'};color:${!homeWin?'var(--teal)':'var(--text-3)'}">${!homeWin?'WIN':'LOSS'}</span>
               </td>
             </tr>
           </table>
@@ -1726,13 +1726,13 @@ router.get('/league/:lid/game/:gid', async (req, res) => {
         <!-- BOX SCORE -->
         <div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
           📊 Box Score
-          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:1px;font-family:'Outfit',sans-serif">Per game stats</span>
+          <span style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:1px;font-family:'Outfit',sans-serif">Per game stats</span>
         </div>
 
         ${teamTable(game.home_name, game.home_color, homeStats)}
         ${teamTable(game.away_name, game.away_color, awayStats)}
 
-        ${(!homeStats.length && !awayStats.length) ? '<div style="text-align:center;padding:40px;color:rgba(255,255,255,.25);font-size:14px">No box score data recorded for this game yet.</div>' : ''}
+        ${(!homeStats.length && !awayStats.length) ? '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:14px">No box score data recorded for this game yet.</div>' : ''}
 
       </div>
     `));
@@ -1765,12 +1765,12 @@ router.get('/terms', (req, res) => {
       <div style="margin-bottom:32px">
         <div style="font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px">Legal</div>
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:8px">Terms of Use</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,.35)">Last updated: June 2025 &nbsp;·&nbsp; Effective immediately upon use</p>
+        <p style="font-size:13px;color:var(--text-3)">Last updated: June 2025 &nbsp;·&nbsp; Effective immediately upon use</p>
       </div>
 
-      <div style="background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 32px;margin-bottom:16px">
-        <p style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.8">
-          Welcome to <strong style="color:#fff">HoopStats Pilipinas</strong> ("HoopStats," "we," "our," or "us"). By accessing or using our platform at hoopstats-ph.up.railway.app or any associated mobile application (collectively, the "Service"), you agree to be bound by these Terms of Use. If you do not agree, please discontinue use immediately.
+      <div style="background:var(--dark-3);border:1px solid var(--border);border-radius:10px;padding:28px 32px;margin-bottom:16px">
+        <p style="font-size:14px;color:var(--text-2);line-height:1.8">
+          Welcome to <strong style="color:var(--text)">HoopStats Pilipinas</strong> ("HoopStats," "we," "our," or "us"). By accessing or using our platform at hoopstats-ph.up.railway.app or any associated mobile application (collectively, the "Service"), you agree to be bound by these Terms of Use. If you do not agree, please discontinue use immediately.
         </p>
       </div>
 
@@ -1832,7 +1832,7 @@ router.get('/terms', (req, res) => {
           body:`If you have questions about these Terms, please contact us through the platform's public channels or by emailing the league administrator. We will do our best to respond within a reasonable timeframe.`
         },
       ].map(s => `
-        <div style="margin-bottom:16px;padding:24px 32px;background:#111;border:1px solid rgba(255,255,255,.07);border-radius:10px">
+        <div style="margin-bottom:16px;padding:24px 32px;background:var(--dark-2);border:1px solid var(--border);border-radius:10px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--orange);flex-shrink:0">${s.num}</div>
             <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.3px">${s.title}</h2>
@@ -1842,7 +1842,7 @@ router.get('/terms', (req, res) => {
       `).join('')}
 
       <div style="margin-top:32px;padding:20px 32px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;text-align:center">
-        <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+        <p style="font-size:13px;color:var(--text-2);line-height:1.7">
           By using HoopStats Pilipinas, you acknowledge that you have read, understood, and agree to these Terms of Use.<br>
           <a href="/privacy" style="color:var(--orange);font-weight:700">Privacy Policy</a> &nbsp;·&nbsp;
           <a href="/" style="color:var(--orange);font-weight:700">Back to Home</a>
@@ -1875,12 +1875,12 @@ router.get('/privacy', (req, res) => {
       <div style="margin-bottom:32px">
         <div style="font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:12px">Legal</div>
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,52px);font-weight:900;text-transform:uppercase;letter-spacing:-.5px;margin-bottom:8px">Privacy Policy</h1>
-        <p style="font-size:13px;color:rgba(255,255,255,.35)">Last updated: June 2025 &nbsp;·&nbsp; Applies to all users of HoopStats Pilipinas</p>
+        <p style="font-size:13px;color:var(--text-3)">Last updated: June 2025 &nbsp;·&nbsp; Applies to all users of HoopStats Pilipinas</p>
       </div>
 
-      <div style="background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:28px 32px;margin-bottom:16px">
-        <p style="font-size:14px;color:rgba(255,255,255,.6);line-height:1.8">
-          HoopStats Pilipinas ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our basketball league management platform. We comply with the <strong style="color:#fff">Republic Act No. 10173</strong> — the Data Privacy Act of 2012 of the Philippines — and applicable international privacy standards.
+      <div style="background:var(--dark-3);border:1px solid var(--border);border-radius:10px;padding:28px 32px;margin-bottom:16px">
+        <p style="font-size:14px;color:var(--text-2);line-height:1.8">
+          HoopStats Pilipinas ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our basketball league management platform. We comply with the <strong style="color:var(--text)">Republic Act No. 10173</strong> — the Data Privacy Act of 2012 of the Philippines — and applicable international privacy standards.
         </p>
       </div>
 
@@ -1944,7 +1944,7 @@ router.get('/privacy', (req, res) => {
           body:`For privacy-related concerns, requests to exercise your rights, or to report a data breach, please contact the HoopStats Pilipinas Data Privacy Officer through the platform. We will respond to all verifiable requests within 30 days in accordance with RA 10173. You also have the right to lodge a complaint with the National Privacy Commission (NPC) at www.privacy.gov.ph.`
         },
       ].map(s => `
-        <div style="margin-bottom:16px;padding:24px 32px;background:#111;border:1px solid rgba(255,255,255,.07);border-radius:10px">
+        <div style="margin-bottom:16px;padding:24px 32px;background:var(--dark-2);border:1px solid var(--border);border-radius:10px">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:${s.subsections ? 16 : 12}px">
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--orange);flex-shrink:0">${s.num}</div>
             <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.3px">${s.title}</h2>
@@ -1959,7 +1959,7 @@ router.get('/privacy', (req, res) => {
       `).join('')}
 
       <div style="margin-top:32px;padding:20px 32px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:10px;text-align:center">
-        <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.7">
+        <p style="font-size:13px;color:var(--text-2);line-height:1.7">
           Your privacy matters to us. We are committed to transparent, responsible data practices.<br>
           <a href="/terms" style="color:var(--orange);font-weight:700">Terms of Use</a> &nbsp;·&nbsp;
           <a href="/" style="color:var(--orange);font-weight:700">Back to Home</a>

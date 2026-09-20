@@ -19,25 +19,25 @@ const uploadSheet = multer({
 router.use(requireAuth);
 
 const LEVEL_OPTIONS = ['Barangay','City/Municipal','Provincial','Regional'];
-const TEAM_COLORS   = ['#e63946','#c1121f','#f4a261','#e9c46a','#f7c948','#8ac926','#2a9d8f','#00d4aa','#457b9d','#1982c4','#264653','#023e8a','#6a4c93','#a78bfa','#e76f51','#ff6b35','#ff4757','#ffffff','#cccccc','#111111'];
+const TEAM_COLORS   = ['#e63946','#c1121f','#f4a261','#e9c46a','var(--stat-gold)','#8ac926','#2a9d8f','var(--teal)','#457b9d','#1982c4','#264653','#023e8a','#6a4c93','var(--purple)','#e76f51','var(--orange)','var(--danger)','#ffffff','#cccccc','#111111'];
 const COLOR_NAMES   = {
   '#e63946': 'Red',
   '#c1121f': 'Dark Red',
   '#f4a261': 'Peach',
   '#e9c46a': 'Sand',
-  '#f7c948': 'Yellow',
+  'var(--stat-gold)': 'Yellow',
   '#8ac926': 'Lime Green',
   '#2a9d8f': 'Teal',
-  '#00d4aa': 'Mint',
+  'var(--teal)': 'Mint',
   '#457b9d': 'Steel Blue',
   '#1982c4': 'Blue',
   '#264653': 'Dark Teal',
   '#023e8a': 'Navy',
   '#6a4c93': 'Dark Purple',
-  '#a78bfa': 'Lavender',
+  'var(--purple)': 'Lavender',
   '#e76f51': 'Burnt Orange',
-  '#ff6b35': 'Orange',
-  '#ff4757': 'Hot Red',
+  'var(--orange)': 'Orange',
+  'var(--danger)': 'Hot Red',
   '#ffffff': 'White',
   '#cccccc': 'Light Gray',
   '#111111': 'Black',
@@ -73,9 +73,9 @@ router.get('/', async (req, res) => {
         <div class="alc-loc">📍 ${esc(l.location)} · ${esc(l.season)}</div>
         <div class="alc-meta">Admin Code: <code>${esc(l.admin_code)}</code></div>
         <div class="alc-stats">
-          <span class="acs"><b style="color:#ff6b35">${l.team_count}</b> Teams</span>
-          <span class="acs"><b style="color:#00d4aa">${l.player_count}</b> Players</span>
-          <span class="acs"><b style="color:#f7c948">${l.game_count}</b> Games</span>
+          <span class="acs"><b style="color:var(--orange)">${l.team_count}</b> Teams</span>
+          <span class="acs"><b style="color:var(--teal)">${l.player_count}</b> Players</span>
+          <span class="acs"><b style="color:var(--stat-gold)">${l.game_count}</b> Games</span>
         </div>
         <div class="alc-actions">
           <a href="/admin/league/${l.id}" class="btn-primary-sm">Manage →</a>
@@ -96,13 +96,13 @@ router.get('/', async (req, res) => {
         </div>
       </div>
       <div class="dash-stats">
-        <div class="stat-card" style="--c:#f97316"><div class="stat-val">${leagues.length}</div><div class="stat-lbl">My Leagues</div></div>
-        <div class="stat-card" style="--c:#00d4aa"><div class="stat-val">${totals.teams}</div><div class="stat-lbl">Teams</div></div>
-        <div class="stat-card" style="--c:#a78bfa"><div class="stat-val">${totals.players}</div><div class="stat-lbl">Players</div></div>
-        <div class="stat-card" style="--c:#f7c948"><div class="stat-val">${totals.games}</div><div class="stat-lbl">Games Played</div></div>
+        <div class="stat-card" style="--c:var(--orange)"><div class="stat-val">${leagues.length}</div><div class="stat-lbl">My Leagues</div></div>
+        <div class="stat-card" style="--c:var(--teal)"><div class="stat-val">${totals.teams}</div><div class="stat-lbl">Teams</div></div>
+        <div class="stat-card" style="--c:var(--purple)"><div class="stat-val">${totals.players}</div><div class="stat-lbl">Players</div></div>
+        <div class="stat-card" style="--c:var(--stat-gold)"><div class="stat-val">${totals.games}</div><div class="stat-lbl">Games Played</div></div>
       </div>
       <div class="league-grid-admin">
-        ${leagueCards || '<div class="empty-state"><div class="es-icon">🏆</div><div>No leagues yet. <a href="/admin/new-league" style="color:#ff6b35">Create your first one!</a></div></div>'}
+        ${leagueCards || '<div class="empty-state"><div class="es-icon">🏆</div><div>No leagues yet. <a href="/admin/new-league" style="color:var(--orange)">Create your first one!</a></div></div>'}
       </div>
     `));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
@@ -218,9 +218,9 @@ router.get('/league/:id', async (req, res) => {
       <!-- DASHBOARD TAB -->
       <div id="tab-dashboard" class="atab-pane">
         <div class="mini-stats">
-          ${[{v:teams.length,l:'Teams',c:'#ff6b35'},{v:players.length,l:'Players',c:'#00d4aa'},
-             {v:games.filter(g=>g.status==='final').length,l:'Games Played',c:'#a78bfa'},
-             {v:upcomingGames.length,l:'Upcoming',c:'#f7c948'}]
+          ${[{v:teams.length,l:'Teams',c:'var(--orange)'},{v:players.length,l:'Players',c:'var(--teal)'},
+             {v:games.filter(g=>g.status==='final').length,l:'Games Played',c:'var(--purple)'},
+             {v:upcomingGames.length,l:'Upcoming',c:'var(--stat-gold)'}]
             .map(s=>`<div class="ms"><div style="font-size:36px;font-weight:800;color:${s.c}">${s.v}</div><div class="ms-label">${s.l}</div></div>`).join('')}
         </div>
 
@@ -319,7 +319,7 @@ router.get('/league/:id', async (req, res) => {
               </div>
               <div class="game-meta"><div class="game-date">${esc(g.date||'TBD')}</div></div>
               <a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Start Scoring</a>
-            </div>`).join('') || '<div class="empty-state">No upcoming games. <a href="/admin/league/${league.id}/add-game" style="color:#ff6b35">Schedule a game first.</a></div>'}
+            </div>`).join('') || '<div class="empty-state">No upcoming games. <a href="/admin/league/${league.id}/add-game" style="color:var(--orange)">Schedule a game first.</a></div>'}
         </div>
       </div>
 
@@ -683,138 +683,138 @@ router.get('/league/:id/score/:gid', async (req, res) => {
       <style>
         body { overflow:hidden; margin:0; }
         *{ box-sizing:border-box; }
-        .ls { display:flex; flex-direction:column; height:100vh; margin:-24px; background:#0b0f1e; color:#e8eaf0; font-family:'Outfit',sans-serif; }
-        .ls-nav { display:flex; align-items:center; gap:0; background:#0d1225; border-bottom:1px solid rgba(255,255,255,.07); height:44px; flex-shrink:0; padding:0 12px; }
-        .ls-nav-tab { padding:0 16px; height:100%; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.5px; color:rgba(255,255,255,.4); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
-        .ls-nav-tab.active { color:#fff; border-bottom-color:#e63329; }
+        .ls { display:flex; flex-direction:column; height:100vh; margin:-24px; background:var(--black); color:var(--text); font-family:'Outfit',sans-serif; }
+        .ls-nav { display:flex; align-items:center; gap:0; background:var(--dark-1); border-bottom:1px solid var(--border); height:44px; flex-shrink:0; padding:0 12px; }
+        .ls-nav-tab { padding:0 16px; height:100%; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; letter-spacing:.5px; color:var(--text-3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; white-space:nowrap; }
+        .ls-nav-tab.active { color:var(--text); border-bottom-color:#e63329; }
         .live-dot { width:7px; height:7px; border-radius:50%; background:#e63329; animation:pulse 1.5s infinite; flex-shrink:0; display:inline-block; }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
         .ls-nav-spacer { flex:1; }
         .ls-nav-actions { display:flex; gap:8px; }
-        .ls-nav-btn { padding:5px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06); color:#e8eaf0; font-family:'Outfit',sans-serif; transition:all .15s; }
-        .ls-nav-btn:hover { background:rgba(255,255,255,.12); }
+        .ls-nav-btn { padding:5px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid var(--border-2); background:var(--overlay-2); color:var(--text); font-family:'Outfit',sans-serif; transition:all .15s; }
+        .ls-nav-btn:hover { background:var(--border-2); }
         .ls-nav-btn.end { background:#e63329; border-color:#e63329; color:#fff; }
         .ls-nav-btn.end:hover { background:#c72820; }
-        .ls-sb { background:linear-gradient(180deg,#1b2748 0%,#111930 100%); border-bottom:1px solid rgba(255,255,255,.08); padding:10px 20px; flex-shrink:0; }
+        .ls-sb { background:linear-gradient(180deg,#1b2748 0%,#111930 100%); border-bottom:1px solid var(--border); padding:10px 20px; flex-shrink:0; }
         .ls-sb-inner { display:flex; align-items:center; justify-content:space-between; max-width:900px; margin:0 auto; gap:12px; }
         .ls-team-block { flex:1; display:flex; align-items:center; gap:10px; }
         .ls-team-block.away { flex-direction:row-reverse; text-align:right; }
         .ls-logo { width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Russo One',sans-serif; font-size:14px; font-weight:900; color:#fff; flex-shrink:0; }
         .ls-team-name { font-size:13px; font-weight:800; color:#fff; text-transform:uppercase; letter-spacing:.5px; }
-        .ls-team-sub { font-size:10px; color:rgba(255,255,255,.35); margin-top:2px; display:flex; align-items:center; gap:8px; }
+        .ls-team-sub { font-size:10px; color:var(--text-3); margin-top:2px; display:flex; align-items:center; gap:8px; }
         .ls-team-sub.right { justify-content:flex-end; }
         .ls-score-block { text-align:center; flex-shrink:0; min-width:220px; }
         .ls-score-nums { display:flex; align-items:center; justify-content:center; gap:10px; }
         .ls-score { font-size:62px; font-weight:900; color:#fff; line-height:1; font-family:'Russo One',sans-serif; }
         .ls-score-adj-col { display:flex; flex-direction:column; gap:4px; }
-        .ls-score-adj { width:24px; height:24px; border-radius:6px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:rgba(255,255,255,.7); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+        .ls-score-adj { width:24px; height:24px; border-radius:6px; border:1px solid var(--text-4); background:var(--border); color:var(--text-2); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
         .ls-score-adj:hover { background:rgba(255,255,255,.22); }
-        .ls-score-sep { font-size:36px; font-weight:900; color:rgba(255,255,255,.2); }
+        .ls-score-sep { font-size:36px; font-weight:900; color:var(--text-4); }
         .ls-qtr-block { display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:4px; }
-        .ls-qtr-label { font-size:10px; color:rgba(255,255,255,.4); font-weight:700; letter-spacing:1px; }
+        .ls-qtr-label { font-size:10px; color:rgba(255,255,255,.5); font-weight:700; letter-spacing:1px; }
         .ls-qtr-val { font-size:20px; font-weight:900; color:#f7c948; }
         .ls-qtr-ctrl { display:flex; gap:4px; align-items:center; }
-        .ls-qtr-btn { width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .ls-qtr-btn { width:22px; height:22px; border-radius:4px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#fff; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         .ls-qtr-btn:hover { background:rgba(255,255,255,.18); }
         .ls-live-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(230,51,41,.2); border:1px solid rgba(230,51,41,.4); color:#ff6b6b; font-size:10px; font-weight:800; padding:2px 8px; border-radius:20px; letter-spacing:1px; margin-top:4px; }
         .ls-main { display:grid; grid-template-columns:240px 1fr 260px; flex:1; overflow:hidden; }
-        .ls-left { background:#0d1225; border-right:1px solid rgba(255,255,255,.06); overflow-y:auto; display:flex; flex-direction:column; }
+        .ls-left { background:var(--dark-1); border-right:1px solid var(--overlay-2); overflow-y:auto; display:flex; flex-direction:column; }
         .ls-left-head { padding:10px 14px 6px; flex-shrink:0; }
-        .ls-left-title { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.35); }
-        .ls-search { margin:6px 0; display:flex; align-items:center; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:7px; padding:5px 10px; gap:6px; }
-        .ls-search input { background:none; border:none; outline:none; color:#e8eaf0; font-size:12px; width:100%; font-family:'Outfit',sans-serif; }
-        .ls-search input::placeholder { color:rgba(255,255,255,.25); }
+        .ls-left-title { font-size:10px; font-weight:800; letter-spacing:2px; color:var(--text-3); }
+        .ls-search { margin:6px 0; display:flex; align-items:center; background:var(--overlay-2); border:1px solid var(--border); border-radius:7px; padding:5px 10px; gap:6px; }
+        .ls-search input { background:none; border:none; outline:none; color:var(--text); font-size:12px; width:100%; font-family:'Outfit',sans-serif; }
+        .ls-search input::placeholder { color:var(--text-4); }
         .ls-team-label { font-size:10px; font-weight:800; letter-spacing:1.5px; padding:8px 14px 4px; }
         .lsc-player { display:flex; align-items:center; gap:8px; padding:8px 14px; cursor:pointer; transition:background .12s; border-left:3px solid transparent; }
-        .lsc-player:hover { background:rgba(255,255,255,.04); }
-        .lsc-player.active { background:rgba(255,255,255,.07); border-left-color:var(--pc,#e63329); }
+        .lsc-player:hover { background:var(--overlay-1); }
+        .lsc-player.active { background:var(--border); border-left-color:var(--pc,#e63329); }
         .lsc-player-num { width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff; flex-shrink:0; }
         .lsc-player-info { flex:1; min-width:0; }
         .lsc-player-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .lsc-player-pos { font-size:10px; color:rgba(255,255,255,.35); margin-top:1px; }
-        .lsc-player-pts { font-size:14px; font-weight:800; color:#f97316; }
-        .lsc-player-pts-lbl { font-size:9px; color:rgba(255,255,255,.3); }
-        .ls-center { display:flex; flex-direction:column; overflow:hidden; background:#0b0f1e; }
-        .ls-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.07); background:#0d1225; flex-shrink:0; }
-        .ls-tab { padding:10px 16px; font-size:11px; font-weight:700; letter-spacing:.5px; color:rgba(255,255,255,.35); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-        .ls-tab.active { color:#fff; border-bottom-color:#e63329; background:rgba(255,255,255,.03); }
+        .lsc-player-pos { font-size:10px; color:var(--text-3); margin-top:1px; }
+        .lsc-player-pts { font-size:14px; font-weight:800; color:var(--orange); }
+        .lsc-player-pts-lbl { font-size:9px; color:var(--text-3); }
+        .ls-center { display:flex; flex-direction:column; overflow:hidden; background:var(--black); }
+        .ls-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--dark-1); flex-shrink:0; }
+        .ls-tab { padding:10px 16px; font-size:11px; font-weight:700; letter-spacing:.5px; color:var(--text-3); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+        .ls-tab.active { color:var(--text); border-bottom-color:#e63329; background:var(--overlay-1); }
         .ls-tab-content { flex:1; overflow-y:auto; overflow-x:hidden; display:none; flex-direction:column; min-height:0; }
         .ls-tab-content.active { display:flex; }
-        .ls-pp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:rgba(255,255,255,.2); gap:10px; font-size:13px; flex:1; }
-        .ls-pp-hdr { background:#131d38; padding:14px 20px 12px; border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
-        .ls-pp-name { font-size:20px; font-weight:900; color:#fff; font-family:'Russo One',sans-serif; }
-        .ls-pp-role { font-size:12px; color:rgba(255,255,255,.4); margin-top:2px; }
-        .ls-pp-pts-big { font-size:40px; font-weight:900; color:#f97316; line-height:1; }
-        .ls-pp-pts-lbl { font-size:10px; color:rgba(255,255,255,.3); text-align:right; letter-spacing:1px; }
-        .ls-rec-label { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.25); padding:8px 20px 4px; flex-shrink:0; }
+        .ls-pp-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-4); gap:10px; font-size:13px; flex:1; }
+        .ls-pp-hdr { background:var(--dark-2); padding:14px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
+        .ls-pp-name { font-size:20px; font-weight:900; color:var(--text); font-family:'Russo One',sans-serif; }
+        .ls-pp-role { font-size:12px; color:var(--text-3); margin-top:2px; }
+        .ls-pp-pts-big { font-size:40px; font-weight:900; color:var(--orange); line-height:1; }
+        .ls-pp-pts-lbl { font-size:10px; color:var(--text-3); text-align:right; letter-spacing:1px; }
+        .ls-rec-label { font-size:10px; font-weight:800; letter-spacing:2px; color:var(--text-4); padding:8px 20px 4px; flex-shrink:0; }
         .ls-shots { padding:8px 20px 6px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; flex-shrink:0; }
         .ls-shot { padding:14px 8px; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; transition:all .12s; font-family:'Outfit',sans-serif; }
         .ls-shot:active { transform:scale(.97); }
         .ls-shot.make-2,.ls-shot.make-ft { background:#e63329; color:#fff; }
         .ls-shot.make-3 { background:#2563eb; color:#fff; }
-        .ls-shot.miss { background:rgba(255,255,255,.07); color:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.1); }
+        .ls-shot.miss { background:var(--border); color:var(--text-2); border:1px solid var(--border-2); }
         .ls-shot-sub { font-size:10px; font-weight:700; letter-spacing:.5px; opacity:.8; }
-        .ls-fg-row { font-size:11px; color:rgba(255,255,255,.4); text-align:center; padding:4px 20px 8px; flex-shrink:0; }
+        .ls-fg-row { font-size:11px; color:var(--text-3); text-align:center; padding:4px 20px 8px; flex-shrink:0; }
         .ls-counters { padding:6px 20px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; flex-shrink:0; }
-        .ls-cnt { background:#111829; border:1px solid rgba(255,255,255,.08); border-radius:9px; padding:10px 8px; text-align:center; }
-        .ls-cnt-lbl { font-size:10px; font-weight:800; letter-spacing:1px; color:rgba(255,255,255,.35); margin-bottom:5px; }
-        .ls-cnt-val { font-size:24px; font-weight:900; color:#fff; line-height:1; margin-bottom:6px; }
+        .ls-cnt { background:var(--dark-2); border:1px solid var(--border); border-radius:9px; padding:10px 8px; text-align:center; }
+        .ls-cnt-lbl { font-size:10px; font-weight:800; letter-spacing:1px; color:var(--text-3); margin-bottom:5px; }
+        .ls-cnt-val { font-size:24px; font-weight:900; color:var(--text); line-height:1; margin-bottom:6px; }
         .ls-cnt-btns { display:flex; gap:5px; justify-content:center; }
         .ls-cnt-btn { flex:1; padding:5px 0; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; border:none; font-family:'Outfit',sans-serif; transition:all .12s; }
-        .ls-cnt-btn.minus { background:rgba(255,71,87,.15); color:#ff4757; }
+        .ls-cnt-btn.minus { background:rgba(255,71,87,.15); color:var(--danger); }
         .ls-cnt-btn.minus:hover { background:rgba(255,71,87,.3); }
         .ls-cnt-btn.plus  { background:rgba(34,197,94,.15); color:#22c55e; }
         .ls-cnt-btn.plus:hover  { background:rgba(34,197,94,.3); }
-        .ls-undo { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; color:rgba(255,255,255,.3); font-size:12px; font-weight:700; cursor:pointer; border-top:1px solid rgba(255,255,255,.06); flex-shrink:0; transition:color .15s; }
-        .ls-undo:hover { color:rgba(255,255,255,.6); }
+        .ls-undo { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px; color:var(--text-3); font-size:12px; font-weight:700; cursor:pointer; border-top:1px solid var(--overlay-2); flex-shrink:0; transition:color .15s; }
+        .ls-undo:hover { color:var(--text-2); }
         .ls-box { padding:12px 16px; overflow-x:auto; }
         .ls-box table { width:100%; border-collapse:collapse; font-size:11px; }
-        .ls-box th { padding:5px 6px; text-align:center; color:rgba(255,255,255,.35); font-weight:700; letter-spacing:.5px; font-size:10px; border-bottom:1px solid rgba(255,255,255,.08); }
+        .ls-box th { padding:5px 6px; text-align:center; color:var(--text-3); font-weight:700; letter-spacing:.5px; font-size:10px; border-bottom:1px solid var(--border); }
         .ls-box th:first-child { text-align:left; }
-        .ls-box td { padding:6px; text-align:center; border-bottom:1px solid rgba(255,255,255,.04); color:rgba(255,255,255,.8); }
+        .ls-box td { padding:6px; text-align:center; border-bottom:1px solid var(--overlay-1); color:var(--text-2); }
         .ls-box td:first-child { text-align:left; font-weight:600; }
-        .ls-box .pts-cell { color:#f97316; font-weight:800; }
+        .ls-box .pts-cell { color:var(--orange); font-weight:800; }
         .ls-box-team-hdr { font-size:10px; font-weight:800; letter-spacing:2px; padding:10px 6px 5px; }
         .ls-pbp { display:flex; flex-direction:column; overflow:hidden; }
-        .ls-pbp-entry { display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid rgba(255,255,255,.04); flex-shrink:0; }
-        .ls-pbp-time { font-size:11px; color:rgba(255,255,255,.3); font-weight:700; min-width:28px; }
+        .ls-pbp-entry { display:flex; align-items:center; gap:10px; padding:9px 16px; border-bottom:1px solid var(--overlay-1); flex-shrink:0; }
+        .ls-pbp-time { font-size:11px; color:var(--text-3); font-weight:700; min-width:28px; }
         .ls-pbp-num { width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; flex-shrink:0; }
-        .ls-pbp-text { flex:1; font-size:12px; color:rgba(255,255,255,.7); }
+        .ls-pbp-text { flex:1; font-size:12px; color:var(--text-2); }
         .ls-pbp-badge { font-size:11px; font-weight:800; padding:2px 8px; border-radius:20px; flex-shrink:0; }
         .ls-pbp-badge.pos { background:rgba(34,197,94,.15); color:#22c55e; }
-        .ls-pbp-badge.neg { background:rgba(255,71,87,.12); color:#ff4757; }
+        .ls-pbp-badge.neg { background:rgba(255,71,87,.12); color:var(--danger); }
         .ls-leaders { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; }
-        .ls-leader-card { background:#111829; border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+        .ls-leader-card { background:var(--dark-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
         .ls-leader-avatar { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; color:#fff; flex-shrink:0; }
         .ls-leader-info { flex:1; min-width:0; }
         .ls-leader-name { font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .ls-leader-team { font-size:10px; color:rgba(255,255,255,.3); }
-        .ls-leader-stat { font-size:22px; font-weight:900; color:#f97316; line-height:1; }
-        .ls-leader-stat-lbl { font-size:9px; color:rgba(255,255,255,.3); }
-        .ls-right { background:#0d1225; border-left:1px solid rgba(255,255,255,.06); overflow-y:auto; display:flex; flex-direction:column; }
-        .ls-right-hdr { padding:12px 14px 8px; border-bottom:1px solid rgba(255,255,255,.07); flex-shrink:0; }
+        .ls-leader-team { font-size:10px; color:var(--text-3); }
+        .ls-leader-stat { font-size:22px; font-weight:900; color:var(--orange); line-height:1; }
+        .ls-leader-stat-lbl { font-size:9px; color:var(--text-3); }
+        .ls-right { background:var(--dark-1); border-left:1px solid var(--overlay-2); overflow-y:auto; display:flex; flex-direction:column; }
+        .ls-right-hdr { padding:12px 14px 8px; border-bottom:1px solid var(--border); flex-shrink:0; }
         .ls-right-title { font-size:12px; font-weight:800; }
-        .ls-mini-sb { background:#131d38; border-radius:9px; margin:10px 12px; padding:10px 12px; }
+        .ls-mini-sb { background:var(--dark-2); border-radius:9px; margin:10px 12px; padding:10px 12px; }
         .ls-mini-row { display:flex; align-items:center; justify-content:space-between; }
-        .ls-mini-score { font-size:24px; font-weight:900; color:#fff; }
+        .ls-mini-score { font-size:24px; font-weight:900; color:var(--text); }
         .ls-mini-badge { font-size:9px; background:rgba(230,51,41,.2); color:#ff6b6b; border:1px solid rgba(230,51,41,.3); padding:2px 7px; border-radius:20px; font-weight:800; letter-spacing:1px; }
         .ls-rp { padding:10px 12px; }
-        .ls-rp-hdr { background:#111829; border-radius:9px; padding:10px 12px; margin-bottom:8px; }
-        .ls-rp-name { font-size:14px; font-weight:800; color:#fff; }
-        .ls-rp-role { font-size:10px; color:rgba(255,255,255,.35); }
-        .ls-rp-pts { font-size:28px; font-weight:900; color:#f97316; line-height:1; }
-        .ls-rp-pts-lbl { font-size:9px; color:rgba(255,255,255,.3); }
+        .ls-rp-hdr { background:var(--dark-2); border-radius:9px; padding:10px 12px; margin-bottom:8px; }
+        .ls-rp-name { font-size:14px; font-weight:800; color:var(--text); }
+        .ls-rp-role { font-size:10px; color:var(--text-3); }
+        .ls-rp-pts { font-size:28px; font-weight:900; color:var(--orange); line-height:1; }
+        .ls-rp-pts-lbl { font-size:9px; color:var(--text-3); }
         .ls-rp-stats { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
-        .ls-rp-stat { background:#0d1225; border-radius:6px; padding:4px 8px; text-align:center; flex:1; min-width:40px; }
-        .ls-rp-stat-v { font-size:14px; font-weight:800; color:#e8eaf0; }
-        .ls-rp-stat-l { font-size:9px; color:rgba(255,255,255,.3); }
+        .ls-rp-stat { background:var(--dark-1); border-radius:6px; padding:4px 8px; text-align:center; flex:1; min-width:40px; }
+        .ls-rp-stat-v { font-size:14px; font-weight:800; color:var(--text); }
+        .ls-rp-stat-l { font-size:9px; color:var(--text-3); }
         .ls-rp-shots { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:8px; }
         .ls-rp-shot { padding:10px 4px; border-radius:7px; font-size:11px; font-weight:800; cursor:pointer; border:none; text-align:center; font-family:'Outfit',sans-serif; transition:all .12s; }
         .ls-rp-shot.make-2,.ls-rp-shot.make-ft { background:#e63329; color:#fff; }
         .ls-rp-shot.make-3 { background:#2563eb; color:#fff; }
-        .ls-rp-shot.miss { background:rgba(255,255,255,.07); color:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.09); }
+        .ls-rp-shot.miss { background:var(--border); color:var(--text-2); border:1px solid var(--border-2); }
         .ls-rp-pbp { padding:0 12px 12px; }
-        .ls-rp-pbp-title { font-size:11px; font-weight:800; color:rgba(255,255,255,.4); letter-spacing:1px; padding:8px 0 6px; }
+        .ls-rp-pbp-title { font-size:11px; font-weight:800; color:var(--text-3); letter-spacing:1px; padding:8px 0 6px; }
 
         /* ── TABLET (820px) ── */
         @media(max-width:820px){
@@ -854,7 +854,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             flex-direction:column;
             height:auto;
             border-right:none;
-            border-bottom:1px solid rgba(255,255,255,.08);
+            border-bottom:1px solid var(--border);
             overflow:visible;
           }
           .ls-left-head { padding:8px 12px 6px; }
@@ -996,12 +996,12 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             <div class="ls-team-label" style="color:${homeColor}">${esc((game.home_name||'HOME').toUpperCase())}</div>
             <div id="homePlayerList">
               <div class="ls-team-strip-label" style="color:${homeColor};display:none">${esc((game.home_name||'HOME').toUpperCase())}</div>
-              ${homePlayers.length ? homePlayers.map(p=>playerRow(p,'home',homeColor,game.home_name||'Home')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+              ${homePlayers.length ? homePlayers.map(p=>playerRow(p,'home',homeColor,game.home_name||'Home')).join('') : '<div style="padding:10px 14px;font-size:12px;color:var(--text-4)">No players</div>'}
             </div>
             <div class="ls-team-label" style="color:${awayColor};margin-top:4px">${esc((game.away_name||'AWAY').toUpperCase())}</div>
             <div id="awayPlayerList">
               <div class="ls-team-strip-label" style="color:${awayColor};display:none">${esc((game.away_name||'AWAY').toUpperCase())}</div>
-              ${awayPlayers.length ? awayPlayers.map(p=>playerRow(p,'away',awayColor,game.away_name||'Away')).join('') : '<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,.25)">No players</div>'}
+              ${awayPlayers.length ? awayPlayers.map(p=>playerRow(p,'away',awayColor,game.away_name||'Away')).join('') : '<div style="padding:10px 14px;font-size:12px;color:var(--text-4)">No players</div>'}
             </div>
           </div>
 
@@ -1046,7 +1046,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
                      {k:'stl',l:'STEAL'},{k:'blk',l:'BLOCK'},{k:'to',l:'TURNOVER'},
                      {k:'foul',l:'FOUL'}].map(s=>`
                   <div class="ls-cnt" ${s.k==='foul'?'style="border-color:rgba(255,71,87,.25)"':''}>
-                    <div class="ls-cnt-lbl" ${s.k==='foul'?'style="color:#ff4757"':''}>${s.l}</div>
+                    <div class="ls-cnt-lbl" ${s.k==='foul'?'style="color:var(--danger)"':''}>${s.l}</div>
                     <div class="ls-cnt-val" id="pp-${s.k}">0</div>
                     <div class="ls-cnt-btns">
                       <button class="ls-cnt-btn minus" data-stat="${s.k}" data-dir="-1">−</button>
@@ -1054,8 +1054,8 @@ router.get('/league/:id/score/:gid', async (req, res) => {
                     </div>
                   </div>`).join('')}
                   <div class="ls-cnt" style="border-color:rgba(249,115,22,.2)">
-                    <div class="ls-cnt-lbl" style="color:#f97316">EFF</div>
-                    <div class="ls-cnt-val" style="color:#f97316;font-size:20px" id="pp-eff">0</div>
+                    <div class="ls-cnt-lbl" style="color:var(--orange)">EFF</div>
+                    <div class="ls-cnt-val" style="color:var(--orange);font-size:20px" id="pp-eff">0</div>
                     <div style="height:28px"></div>
                   </div>
                   <div class="ls-cnt">
@@ -1081,13 +1081,13 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             <!-- PBP TAB -->
             <div class="ls-tab-content" id="ctab-pbp">
               <div class="ls-pbp" id="pbpLog" style="overflow-y:auto;flex:1">
-                <div style="padding:24px;color:rgba(255,255,255,.25);font-size:13px;text-align:center">No plays yet — select a player and start scoring</div>
+                <div style="padding:24px;color:var(--text-4);font-size:13px;text-align:center">No plays yet — select a player and start scoring</div>
               </div>
             </div>
 
             <!-- LEADERS TAB -->
             <div class="ls-tab-content" id="ctab-leaders">
-              <div style="padding:12px 16px;font-size:10px;font-weight:800;letter-spacing:1px;color:rgba(255,255,255,.35)">GAME LEADERS</div>
+              <div style="padding:12px 16px;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--text-3)">GAME LEADERS</div>
               <div class="ls-leaders" id="leadersGrid"></div>
             </div>
           </div>
@@ -1097,9 +1097,9 @@ router.get('/league/:id/score/:gid', async (req, res) => {
             <div class="ls-right-hdr"><div class="ls-right-title">Live Game</div></div>
             <div class="ls-mini-sb">
               <div class="ls-mini-row">
-                <div><div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.home_name||'HME').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-home">${game.home_score||0}</div></div>
-                <div style="text-align:center"><div class="ls-mini-badge">● LIVE</div><div style="font-size:11px;color:rgba(255,255,255,.3);margin-top:4px">Q<span id="mini-qtr">${game.quarter||1}</span></div></div>
-                <div style="text-align:right"><div style="font-size:10px;color:rgba(255,255,255,.35);font-weight:700">${esc((game.away_name||'AWY').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-away">${game.away_score||0}</div></div>
+                <div><div style="font-size:10px;color:var(--text-3);font-weight:700">${esc((game.home_name||'HME').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-home">${game.home_score||0}</div></div>
+                <div style="text-align:center"><div class="ls-mini-badge">● LIVE</div><div style="font-size:11px;color:var(--text-3);margin-top:4px">Q<span id="mini-qtr">${game.quarter||1}</span></div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--text-3);font-weight:700">${esc((game.away_name||'AWY').substring(0,3).toUpperCase())}</div><div class="ls-mini-score" id="mini-away">${game.away_score||0}</div></div>
               </div>
             </div>
             <div class="ls-rp" id="rightPlayerPanel" style="display:none">
@@ -1272,29 +1272,29 @@ router.get('/league/:id/pdf', async (req, res) => {
     res.setHeader('Content-Disposition',`attachment; filename="${league.name.replace(/[^a-z0-9]/gi,'_')}_stats.pdf"`);
     doc.pipe(res);
     doc.rect(0,0,595,80).fill('#0f0f1a');
-    doc.fillColor('#f97316').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS Pilipinas',40,18);
+    doc.fillColor('var(--orange)').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS Pilipinas',40,18);
     doc.fillColor('#ffffff').fontSize(14).text(league.name,40,44);
     doc.fillColor('#888888').fontSize(10).text(`${league.location} · ${league.season} · ${league.level}`,40,62);
     let y=100;
-    doc.fillColor('#ff6b35').fontSize(13).font('Helvetica-Bold').text('TEAM STANDINGS',40,y);
-    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('#ff6b35').lineWidth(1).stroke();
+    doc.fillColor('var(--orange)').fontSize(13).font('Helvetica-Bold').text('TEAM STANDINGS',40,y);
+    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('var(--orange)').lineWidth(1).stroke();
     y+=26;
     doc.fillColor('#888').fontSize(9).font('Helvetica-Bold').text('#',40,y).text('TEAM',65,y).text('W',340,y).text('L',380,y).text('WIN%',415,y);
     y+=14;
     for (const [i,t] of teams.entries()) {
       if(i%2===0)doc.rect(40,y-2,515,17).fill('#0a0a12');
       const pct=((t.wins/(t.wins+t.losses||1))*100).toFixed(1);
-      doc.fillColor(i<2?'#ff6b35':'#ccc').fontSize(9).font('Helvetica-Bold').text(`${i+1}`,42,y);
+      doc.fillColor(i<2?'var(--orange)':'#ccc').fontSize(9).font('Helvetica-Bold').text(`${i+1}`,42,y);
       doc.fillColor('#fff').font('Helvetica').text(t.name,65,y,{width:260});
-      doc.fillColor('#00d4aa').text(`${t.wins}`,340,y);
-      doc.fillColor('#ff4757').text(`${t.losses}`,380,y);
+      doc.fillColor('var(--teal)').text(`${t.wins}`,340,y);
+      doc.fillColor('var(--danger)').text(`${t.losses}`,380,y);
       doc.fillColor('#aaa').text(`${pct}%`,415,y);
       y+=17;
     }
     y+=18;
     if(y>720){doc.addPage();y=40;}
-    doc.fillColor('#ff6b35').fontSize(13).font('Helvetica-Bold').text('PLAYER STATISTICS',40,y);
-    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('#ff6b35').lineWidth(1).stroke();
+    doc.fillColor('var(--orange)').fontSize(13).font('Helvetica-Bold').text('PLAYER STATISTICS',40,y);
+    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('var(--orange)').lineWidth(1).stroke();
     y+=26;
     doc.fillColor('#888').fontSize(8).font('Helvetica-Bold')
       .text('#',40,y).text('PLAYER',58,y).text('TEAM',195,y).text('POS',295,y)
@@ -1303,12 +1303,12 @@ router.get('/league/:id/pdf', async (req, res) => {
     for (const [i,p] of players.entries()) {
       if(y>760){doc.addPage();y=40;}
       if(i%2===0)doc.rect(40,y-2,515,16).fill('#0a0a12');
-      doc.fillColor(i===0?'#ff6b35':'#888').fontSize(8).font('Helvetica-Bold').text(`${i+1}`,42,y);
+      doc.fillColor(i===0?'var(--orange)':'#888').fontSize(8).font('Helvetica-Bold').text(`${i+1}`,42,y);
       doc.fillColor('#fff').font('Helvetica').text(p.name,58,y,{width:130});
       doc.fillColor('#aaa').text((p.team_name||'').slice(0,20),195,y).text(p.pos,295,y);
-      doc.fillColor('#ff6b35').text(`${p.pts}`,330,y);
+      doc.fillColor('var(--orange)').text(`${p.pts}`,330,y);
       doc.fillColor('#fff').text(`${p.reb}`,360,y).text(`${p.ast}`,390,y).text(`${p.stl}`,420,y).text(`${p.blk}`,450,y);
-      doc.fillColor('#00d4aa').text(`${p.fg}%`,480,y);
+      doc.fillColor('var(--teal)').text(`${p.fg}%`,480,y);
       y+=16;
     }
     doc.fillColor('#444').fontSize(8).text(`Generated by PH Hoops · ${new Date().toLocaleDateString('en-PH')}`,40,800);
@@ -1408,10 +1408,10 @@ function playerForm(league, teams, player) {
       </form>
     </div>
     ${!player ? `
-    <div style="max-width:480px;margin-top:16px;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:12px;color:#555;line-height:1.8">
-      💡 <b style="color:#888">Stats are auto-calculated</b> from game entries.<br>
-      Use <b style="color:#888">📋 Post-Game Stats</b> in the Games tab to enter box scores after each game.<br>
-      Use <b style="color:#888">🔴 Live Score</b> to record stats in real time during a game.
+    <div style="max-width:480px;margin-top:16px;padding:14px 18px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:#555;line-height:1.8">
+      💡 <b style="color:var(--text-3)">Stats are auto-calculated</b> from game entries.<br>
+      Use <b style="color:var(--text-3)">📋 Post-Game Stats</b> in the Games tab to enter box scores after each game.<br>
+      Use <b style="color:var(--text-3)">🔴 Live Score</b> to record stats in real time during a game.
     </div>` : ''}`;
 }
 
@@ -1424,11 +1424,11 @@ function adminPage(title, user, content) {
 <title>${title} | PH Hoops Admin</title>
 <link rel="stylesheet" href="/css/main.css?v38"><style>
 /* Admin tabs - inline override to prevent browser default button styles */
-.admin-tabs{display:flex!important;gap:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;margin-bottom:24px!important;overflow-x:auto!important;background:transparent!important;}
+.admin-tabs{display:flex!important;gap:0!important;border-bottom:1px solid var(--border)!important;margin-bottom:24px!important;overflow-x:auto!important;background:transparent!important;}
 .admin-tabs::-webkit-scrollbar{display:none!important;}
-.atab{display:inline-flex!important;align-items:center!important;gap:6px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:rgba(255,255,255,.4)!important;background:transparent!important;border:none!important;border-bottom:2px solid transparent!important;border-top:none!important;border-left:none!important;border-right:none!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;transition:color .15s,border-color .15s!important;flex-shrink:0!important;}
-.atab:hover{color:rgba(255,255,255,.8)!important;background:rgba(255,255,255,.03)!important;}
-.atab.active{color:#f97316!important;border-bottom-color:#f97316!important;background:transparent!important;}
+.atab{display:inline-flex!important;align-items:center!important;gap:6px!important;padding:12px 18px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.5px!important;text-transform:uppercase!important;font-family:Outfit,sans-serif!important;color:var(--text-3)!important;background:transparent!important;border:none!important;border-bottom:2px solid transparent!important;border-top:none!important;border-left:none!important;border-right:none!important;outline:none!important;cursor:pointer!important;white-space:nowrap!important;-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;transition:color .15s,border-color .15s!important;flex-shrink:0!important;}
+.atab:hover{color:var(--text-2)!important;background:var(--overlay-1)!important;}
+.atab.active{color:var(--orange)!important;border-bottom-color:var(--orange)!important;background:transparent!important;}
 </style>
 </head>
 <body class="dark-bg">
@@ -1437,7 +1437,7 @@ function adminPage(title, user, content) {
     <div class="nav-brand"><a href="/" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px"><img src="/icons/icon-192.png?v=4" alt="HoopStats Pilipinas" style="width:38px;height:38px;border-radius:8px;object-fit:contain;display:block;flex-shrink:0"><div class="nav-brand-text"><div class="brand-text">HOOPSTATS</div><div class="brand-sub">Pilipinas</div></div></a></div>
     <div style="flex:1"></div>
     <div class="nav-actions">
-      <span style="font-size:13px;color:rgba(255,255,255,.4);font-weight:600">${esc(user.name)}</span>
+      <span style="font-size:13px;color:var(--text-3);font-weight:600">${esc(user.name)}</span>
       <a href="/logout" class="btn-ghost-sm">Logout</a>
     </div>
   </div>
@@ -1637,7 +1637,7 @@ router.get('/league/:id/import-stats/:gid', async (req, res) => {
            class="btn-primary" style="display:inline-flex;align-items:center;gap:8px">
           📥 Download Template (.xlsx)
         </a>
-        <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8">
+        <div style="margin-top:12px;padding:12px 14px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8">
           <strong style="color:var(--text)">Template columns:</strong><br>
           Name · FG2M · FG2A · FG3M · FG3A · FTM · FTA · OREB · DREB · AST · STL · BLK · TO · Foul<br><br>
           <strong style="color:var(--text)">Tips:</strong><br>
@@ -1675,7 +1675,7 @@ router.get('/league/:id/import-stats/:gid', async (req, res) => {
         <div style="font-weight:700;margin-bottom:10px;font-size:14px">👥 Players in this league (${players.length})</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
           ${players.map(p => `
-          <span style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600">
+          <span style="background:var(--overlay-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600">
             ${esc(p.name)}
           </span>`).join('')}
         </div>
@@ -1762,40 +1762,40 @@ router.post('/league/:id/import-stats/:gid', (req, res) => {
           <!-- SUMMARY STRIP -->
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
             <div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:10px;padding:16px;text-align:center">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:#00d4aa;line-height:1">${result.imported.length}</div>
-              <div style="font-size:10px;color:#00d4aa;font-weight:800;letter-spacing:1.5px;margin-top:6px">IMPORTED</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--teal);line-height:1">${result.imported.length}</div>
+              <div style="font-size:10px;color:var(--teal);font-weight:800;letter-spacing:1.5px;margin-top:6px">IMPORTED</div>
             </div>
             <div style="background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.18);border-radius:10px;padding:16px;text-align:center">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:#f7c948;line-height:1">${result.skipped.length}</div>
-              <div style="font-size:10px;color:#f7c948;font-weight:800;letter-spacing:1.5px;margin-top:6px">SKIPPED</div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--stat-gold);line-height:1">${result.skipped.length}</div>
+              <div style="font-size:10px;color:var(--stat-gold);font-weight:800;letter-spacing:1.5px;margin-top:6px">SKIPPED</div>
             </div>
-            <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;text-align:center">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:rgba(255,255,255,.4);line-height:1">${result.total}</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:800;letter-spacing:1.5px;margin-top:6px">TOTAL ROWS</div>
+            <div style="background:var(--overlay-1);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--text-3);line-height:1">${result.total}</div>
+              <div style="font-size:10px;color:var(--text-3);font-weight:800;letter-spacing:1.5px;margin-top:6px">TOTAL ROWS</div>
             </div>
           </div>
 
           <!-- IMPORTED PLAYERS -->
           ${result.imported.length > 0 ? `
           <div style="margin-bottom:18px">
-            <div style="font-size:11px;font-weight:800;color:#00d4aa;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <div style="font-size:11px;font-weight:800;color:var(--teal);letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
               ✅ SUCCESSFULLY IMPORTED
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
-              ${result.imported.map(n => `<span style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.18);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:#00d4aa">${esc(n)}</span>`).join('')}
+              ${result.imported.map(n => `<span style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.18);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--teal)">${esc(n)}</span>`).join('')}
             </div>
           </div>` : ''}
 
           <!-- SKIPPED PLAYERS -->
           ${result.skipped.length > 0 ? `
           <div style="margin-bottom:18px">
-            <div style="font-size:11px;font-weight:800;color:#f7c948;letter-spacing:1.5px;margin-bottom:10px">
+            <div style="font-size:11px;font-weight:800;color:var(--stat-gold);letter-spacing:1.5px;margin-bottom:10px">
               ⚠️ SKIPPED — Name not found in league roster
             </div>
             <div style="background:rgba(247,201,72,.04);border:1px solid rgba(247,201,72,.12);border-radius:8px;padding:12px 14px">
-              ${result.skipped.map(n => `<div style="font-size:12px;color:rgba(255,255,255,.5);padding:3px 0">• ${esc(n)}</div>`).join('')}
+              ${result.skipped.map(n => `<div style="font-size:12px;color:var(--text-2);padding:3px 0">• ${esc(n)}</div>`).join('')}
             </div>
-            <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:8px">
+            <div style="font-size:11px;color:var(--text-3);margin-top:8px">
               💡 Check player name spelling in the spreadsheet matches the roster exactly.
             </div>
           </div>` : ''}
@@ -1999,7 +1999,7 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
       const s = statMap[p.id] || {};
       const val = (k, def=0) => s[k] != null ? s[k] : def;
       return `
-        <tr style="border-bottom:1px solid rgba(255,255,255,.06)">
+        <tr style="border-bottom:1px solid var(--overlay-2)">
           <td style="padding:10px 12px;white-space:nowrap">
             <span class="pos-badge">${p.pos}</span>
             <span style="font-weight:600;margin-left:6px">#${p.jersey} ${esc(p.name)}</span>
@@ -2007,7 +2007,7 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
           ${['fg2m','fg2a','fg3m','fg3a','ftm','fta','oreb','dreb','ast','stl','blk','to_val','foul'].map(k => `
           <td style="padding:6px 4px;text-align:center">
             <input type="number" name="${k}_${p.id}" value="${val(k)}" min="0"
-              style="width:52px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;color:#fff;font-size:13px;font-weight:700;padding:5px 2px;outline:none" />
+              style="width:52px;text-align:center;background:var(--overlay-2);border:1px solid var(--border-2);border-radius:4px;color:var(--text);font-size:13px;font-weight:700;padding:5px 2px;outline:none" />
           </td>`).join('')}
         </tr>`;
     }
@@ -2029,13 +2029,13 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
       <!-- SCORELINE -->
       <div style="background:linear-gradient(135deg,#1a2a6c,#2a4db5);border-radius:12px;padding:20px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:32px">
         <div style="text-align:center">
-          <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">${esc(game.home_name||'Home')}</div>
-          <div style="font-size:48px;font-weight:900;color:#00d4aa">${game.home_score||0}</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:4px">${esc(game.home_name||'Home')}</div>
+          <div style="font-size:48px;font-weight:900;color:var(--teal)">${game.home_score||0}</div>
         </div>
-        <div style="color:rgba(255,255,255,.3);font-size:20px;font-weight:700">FINAL</div>
+        <div style="color:var(--text-3);font-size:20px;font-weight:700">FINAL</div>
         <div style="text-align:center">
-          <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">${esc(game.away_name||'Away')}</div>
-          <div style="font-size:48px;font-weight:900;color:#ff6b35">${game.away_score||0}</div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:4px">${esc(game.away_name||'Away')}</div>
+          <div style="font-size:48px;font-weight:900;color:var(--orange)">${game.away_score||0}</div>
         </div>
       </div>
 
@@ -2062,9 +2062,9 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
           <table style="width:100%;border-collapse:collapse;min-width:700px">
             <thead>
               <tr style="border-bottom:1px solid rgba(255,107,53,.25)">
-                <th style="padding:8px 12px;text-align:left;font-size:10px;color:#ff6b35;letter-spacing:1px;font-weight:700">PLAYER</th>
+                <th style="padding:8px 12px;text-align:left;font-size:10px;color:var(--orange);letter-spacing:1px;font-weight:700">PLAYER</th>
                 ${['2PM','2PA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','FOUL'].map(h=>`
-                <th style="padding:8px 4px;text-align:center;font-size:10px;color:#ff6b35;letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
+                <th style="padding:8px 4px;text-align:center;font-size:10px;color:var(--orange);letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
               </tr>
             </thead>
             <tbody>${homePlayers.map(p => statRow(p)).join('')}</tbody>
@@ -2082,9 +2082,9 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
           <table style="width:100%;border-collapse:collapse;min-width:700px">
             <thead>
               <tr style="border-bottom:1px solid rgba(0,212,170,.25)">
-                <th style="padding:8px 12px;text-align:left;font-size:10px;color:#00d4aa;letter-spacing:1px;font-weight:700">PLAYER</th>
+                <th style="padding:8px 12px;text-align:left;font-size:10px;color:var(--teal);letter-spacing:1px;font-weight:700">PLAYER</th>
                 ${['2PM','2PA','3PM','3PA','FTM','FTA','OREB','DREB','AST','STL','BLK','TO','FOUL'].map(h=>`
-                <th style="padding:8px 4px;text-align:center;font-size:10px;color:#00d4aa;letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
+                <th style="padding:8px 4px;text-align:center;font-size:10px;color:var(--teal);letter-spacing:1px;font-weight:700;min-width:52px">${h}</th>`).join('')}
               </tr>
             </thead>
             <tbody>${awayPlayers.map(p => statRow(p)).join('')}</tbody>
@@ -2092,8 +2092,8 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
         </div>` : ''}
 
         <!-- FIBA LEGEND -->
-        <div style="background:rgba(255,255,255,.03);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:11px;color:#555;line-height:2">
-          <b style="color:#888">FIBA STAT GUIDE:</b>
+        <div style="background:var(--overlay-1);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:11px;color:#555;line-height:2">
+          <b style="color:var(--text-3)">FIBA STAT GUIDE:</b>
           2PM/2PA = 2-point made/attempted &nbsp;·&nbsp;
           3PM/3PA = 3-point made/attempted &nbsp;·&nbsp;
           FTM/FTA = Free throw made/attempted &nbsp;·&nbsp;
