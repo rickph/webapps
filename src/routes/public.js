@@ -272,10 +272,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       background: radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.10), transparent 60%),
                   radial-gradient(70% 55% at 88% 6%, rgba(206,17,38,.22), transparent 60%),
                   linear-gradient(160deg, var(--hs-blue), var(--hs-blue-strong)); }
-    #hs .hero-inner{ position:relative; z-index:1; text-align:center; display:flex; flex-direction:column; align-items:center; gap:20px; }
-    #hs .hero-figure{ position:absolute; right:2%; bottom:0; height:96%; width:auto; color:rgba(255,255,255,.13); pointer-events:none; z-index:0; }
-    #hs .hero-figure-seams{ stroke:rgba(8,31,110,.5); }
-    @media (max-width:900px){ #hs .hero-figure{ display:none; } }
+    #hs .hero-inner{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:20px; }
     #hs .eyebrow{ display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--hs-on-navy-text); background:rgba(255,255,255,.12); border:1px solid var(--hs-on-navy-border-strong); padding:6px 14px; border-radius:99px; }
     #hs .hero h1{ font-size:clamp(36px,6.4vw,72px); line-height:.98; color:var(--hs-on-navy-text); }
     #hs .hero h1 .pop{ color:#ff4d63; }
@@ -391,22 +388,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
 
     <main>
       <section class="hero">
-        <svg class="hero-figure" viewBox="0 0 220 300" aria-hidden="true" focusable="false">
-          <g fill="none" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M126 53 L104 130"/>
-            <path d="M126 53 L78 88 L48 145"/>
-            <path d="M126 53 L168 48 L194 72"/>
-            <path d="M104 130 L128 190 L150 252"/>
-            <path d="M104 130 L68 178 L44 244"/>
-          </g>
-          <circle cx="126" cy="34" r="17" fill="currentColor"/>
-          <circle cx="42" cy="168" r="25" fill="currentColor"/>
-          <g fill="none" stroke-width="3" class="hero-figure-seams">
-            <path d="M42 143 V193"/>
-            <path d="M19 155 Q42 168 19 181"/>
-            <path d="M65 155 Q42 168 65 181"/>
-          </g>
-        </svg>
         <div class="wrap hero-inner">
           ${isLive ? `<span class="eyebrow"><span class="live-dot"></span>${liveGames.length} game${liveGames.length > 1 ? 's' : ''} live right now</span>` : ''}
           <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
