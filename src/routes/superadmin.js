@@ -481,7 +481,9 @@ function superPage(title, user, content, req = {}) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<script>try{var _t=localStorage.getItem('hoopstats-theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#e63329">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -493,7 +495,7 @@ function superPage(title, user, content, req = {}) {
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | Hoopstats Pilipinas Super Admin</title>
-<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/main.css?v39">
 </head>
 <body class="dark-bg">
 <nav class="topnav" style="border-bottom-color:var(--gold)">
