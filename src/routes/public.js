@@ -319,6 +319,14 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       #hs .hnav-actions .btn-ghost-inverse{ display:none; }
       #hs .hhamburger{ display:flex; }
     }
+    @media (max-width:540px){
+      /* Logo mark + Sign In/Dashboard button + toggle + hamburger no longer
+         fit alongside the full wordmark at phone widths; drop the text and
+         keep just the mark so the header doesn't overflow the viewport. */
+      #hs header.hsite .hbrand{ font-size:0; gap:0; }
+      #hs .hnav-row{ gap:12px; }
+      #hs .hnav-actions{ gap:6px; }
+    }
 
     #hs .hero{ position:relative; overflow:hidden; padding:64px 0 56px;
       background: radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.10), transparent 60%),
