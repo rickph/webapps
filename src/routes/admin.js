@@ -19,26 +19,26 @@ const uploadSheet = multer({
 router.use(requireAuth);
 
 const LEVEL_OPTIONS = ['Barangay','City/Municipal','Provincial','Regional'];
-const TEAM_COLORS   = ['#e63946','#c1121f','#f4a261','#e9c46a','var(--stat-gold)','#8ac926','#2a9d8f','var(--teal)','#457b9d','#1982c4','#264653','#023e8a','#6a4c93','var(--purple)','#e76f51','var(--orange)','var(--danger)','#ffffff','#cccccc','#111111'];
+const TEAM_COLORS   = ['#e63946','#c1121f','#f4a261','#e9c46a','#f7c948','#8ac926','#2a9d8f','#00d4aa','#457b9d','#1982c4','#264653','#023e8a','#6a4c93','#a78bfa','#e76f51','#ff6b35','#ff4757','#e8e4d9','#cccccc','#111111'];
 const COLOR_NAMES   = {
   '#e63946': 'Red',
   '#c1121f': 'Dark Red',
   '#f4a261': 'Peach',
   '#e9c46a': 'Sand',
-  'var(--stat-gold)': 'Yellow',
+  '#f7c948': 'Yellow',
   '#8ac926': 'Lime Green',
   '#2a9d8f': 'Teal',
-  'var(--teal)': 'Mint',
+  '#00d4aa': 'Mint',
   '#457b9d': 'Steel Blue',
   '#1982c4': 'Blue',
   '#264653': 'Dark Teal',
   '#023e8a': 'Navy',
   '#6a4c93': 'Dark Purple',
-  'var(--purple)': 'Lavender',
+  '#a78bfa': 'Lavender',
   '#e76f51': 'Burnt Orange',
-  'var(--orange)': 'Orange',
-  'var(--danger)': 'Hot Red',
-  '#ffffff': 'White',
+  '#ff6b35': 'Orange',
+  '#ff4757': 'Hot Red',
+  '#e8e4d9': 'White',
   '#cccccc': 'Light Gray',
   '#111111': 'Black',
 };
@@ -352,7 +352,7 @@ router.get('/league/:id/add-team', async (req, res) => {
           <input name="name" class="input" placeholder="e.g. Purok 1 Ballers" required /></div>
         <div class="field-group"><label>Color</label>
           <select name="color" class="input">
-            ${TEAM_COLORS.map(c=>`<option value="${c}" style="background:${c};color:${c==='#ffffff'||c==='#cccccc'?'#000':'#fff'}">${COLOR_NAMES[c]||c}</option>`).join('')}
+            ${TEAM_COLORS.map(c=>`<option value="${c}" style="background:${c};color:${c==='#e8e4d9'||c==='#cccccc'?'#000':'#fff'}">${COLOR_NAMES[c]||c}</option>`).join('')}
           </select></div>
         <div class="field-group"><label>Bio / Description <span style="color:var(--muted);font-size:11px">(optional)</span></label>
           <textarea name="bio" class="input" rows="2" placeholder="e.g. Barangay champions 2024, home court: Plaza..."></textarea></div>

@@ -7,14 +7,6 @@ const { esc, levelColor, levelBadge, statusBadge, page } = require('../helpers')
 router.use(optionalAuth);
 
 // ── LANDING PAGE ──────────────────────────────────────────────────────────────
-const LEADER_COLS = {
-  pts: { col: 'pss.pts', label: 'PPG' },
-  reb: { col: 'pss.reb', label: 'RPG' },
-  ast: { col: 'pss.ast', label: 'APG' },
-  stl: { col: 'pss.stl', label: 'SPG' },
-  blk: { col: 'pss.blk', label: 'BPG' },
-  eff: { col: 'pss.eff', label: 'EFF' },
-};
 
 router.get('/', async (req, res) => {
   try {
@@ -28,7 +20,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN teams at ON g.away_team_id = at.id`;
 
     const [
-      leagues, [totals], liveGames, upcomingGames, recentResults, leaderRows,
+      leagues, [totals], liveGames, upcomingGames, recentResults,
     ] = await Promise.all([
       db.query(
         `SELECT l.*,
@@ -47,26 +39,10 @@ router.get('/', async (req, res) => {
       db.query(`${gameSelect} WHERE g.status='ongoing' ORDER BY g.id DESC LIMIT 6`),
       db.query(`${gameSelect} WHERE g.status='upcoming' ORDER BY g.id DESC LIMIT 6`),
       db.query(`${gameSelect} WHERE g.status='final' ORDER BY g.id DESC LIMIT 6`),
-      Promise.all(Object.entries(LEADER_COLS).map(([key, { col }]) =>
-        db.query(`
-          SELECT p.name, p.pos, p.jersey, p.photo_url, t.name as team_name, t.color as team_color,
-                 l.name as league_name, pss.${key} as value
-          FROM player_season_stats pss
-          JOIN players p ON p.id = pss.player_id
-          JOIN leagues l ON l.id = pss.league_id AND l.is_public = true
-          LEFT JOIN teams t ON p.team_id = t.id
-          WHERE pss.gp > 0
-          ORDER BY ${col} DESC NULLS LAST
-          LIMIT 5
-        `).then(rows => [key, rows])
-      )),
     ]);
 
-    const leaders = {};
-    leaderRows.forEach(([key, rows]) => { leaders[key] = rows; });
-
     res.send(renderLanding({
-      leagues, totals, liveGames, upcomingGames, recentResults, leaders, user: req.user,
+      leagues, totals, liveGames, upcomingGames, recentResults, user: req.user,
     }));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
@@ -130,7 +106,7 @@ router.post('/league/:id/access', async (req, res) => {
 });
 
 // ── RENDERERS ─────────────────────────────────────────────────────────────────
-function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResults, leaders, user }) {
+function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResults, user }) {
   const initials = (name) => (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   const teamBadge = (name, color) => `<span class="badge" style="background:${esc(color || '#5c6b93')}">${esc(initials(name))}</span>`;
@@ -206,28 +182,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         </a>`;
       }).join('')
     : `<div class="empty"><b>No public leagues yet.</b>Be the first commissioner to <a href="/register" style="color:var(--accent)">start a league</a>.</div>`;
-
-  const LEADER_META = {
-    pts: 'PPG', reb: 'RPG', ast: 'APG', stl: 'SPG', blk: 'BPG', eff: 'EFF',
-  };
-  const leaderPanels = Object.entries(LEADER_META).map(([key, label]) => {
-    const rows = leaders[key] || [];
-    const body = rows.length
-      ? rows.map((p, i) => `<div class="lb-row">
-          <span class="lb-rank num">${i + 1}</span>
-          ${p.photo_url
-            ? `<img class="lb-avatar" src="/uploads/players/${esc(p.photo_url)}" alt="">`
-            : `<span class="lb-avatar" style="background:${esc(p.team_color || '#5c6b93')}">${esc(initials(p.name))}</span>`}
-          <span class="lb-id"><b>${esc(p.name)}</b><span>${esc(p.team_name || '')}${p.league_name ? ' · ' + esc(p.league_name) : ''}</span></span>
-          <span class="lb-val"><b class="num">${Number(p.value || 0).toFixed(1)}</b><span>${label}</span></span>
-        </div>`).join('')
-      : `<div class="empty"><b>No stats recorded yet for this category.</b>Leaders appear once commissioners log game stats.</div>`;
-    return `<div class="lb-panel" data-panel="${key}" ${key === 'pts' ? '' : 'hidden'}>${body}</div>`;
-  }).join('');
-
-  const leaderTabs = Object.entries(LEADER_META).map(([key, label], i) =>
-    `<button type="button" class="tab${i === 0 ? ' active' : ''}" data-cat="${key}">${label.slice(0, 3) === 'EFF' ? 'Efficiency' : { pts: 'Scoring', reb: 'Rebounding', ast: 'Assists', stl: 'Steals', blk: 'Blocks' }[key]}</button>`
-  ).join('');
 
   const isLive = liveGames.length > 0;
 
@@ -314,7 +268,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
       #hs .hnav-actions{ gap:6px; }
     }
 
-    #hs .hero{ position:relative; overflow:hidden; padding:64px 0 56px;
+    #hs .hero{ position:relative; overflow:hidden; padding:64px 0 56px; min-height:0; display:block;
       background: radial-gradient(120% 90% at 50% -10%, rgba(255,255,255,.10), transparent 60%),
                   radial-gradient(70% 55% at 88% 6%, rgba(206,17,38,.22), transparent 60%),
                   linear-gradient(160deg, var(--hs-blue), var(--hs-blue-strong)); }
@@ -326,7 +280,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .hero p.lead{ max-width:520px; color:var(--hs-on-navy-text-2); font-size:16px; line-height:1.6; }
     #hs .hero-ctas{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
     #hs .hero-ctas .btn{ padding:13px 24px; font-size:13px; }
-    #hs .hero-stats{ display:flex; gap:28px; margin-top:8px; flex-wrap:wrap; justify-content:center; }
+    #hs .hero-stats{ display:flex; gap:28px; margin-top:8px; flex-wrap:wrap; justify-content:center; background:none; border-top:none; }
     #hs .hero-stats div{ text-align:center; }
     #hs .hero-stats b{ display:block; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:28px; color:var(--hs-on-navy-text); }
     #hs .hero-stats span{ font-size:11px; color:var(--hs-on-navy-text-3); text-transform:uppercase; letter-spacing:1px; }
@@ -349,7 +303,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .gcard-league{ font-size:11px; color:var(--hs-text-3); font-weight:600; text-transform:uppercase; letter-spacing:.4px; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     #hs .team-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
     #hs .team-id{ display:flex; align-items:center; gap:9px; min-width:0; }
-    #hs .badge{ width:26px; height:26px; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:12px; color:#fff; }
+    #hs .badge{ width:26px; height:26px; padding:0; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:12px; color:#fff; }
     #hs .team-name{ font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     #hs .team-score{ font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:21px; }
     #hs .team-score.win{ color:var(--hs-text); }
@@ -371,24 +325,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .lcard-stats div b{ display:block; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:17px; }
     #hs .lcard-stats div span{ font-size:10.5px; color:var(--hs-text-3); text-transform:uppercase; letter-spacing:.5px; }
 
-    #hs .tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
-    #hs .tab{ background:var(--hs-surface); border:1px solid var(--hs-border); color:var(--hs-text-2); font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; padding:8px 14px; border-radius:99px; }
-    #hs .tab.active{ background:var(--hs-accent); border-color:var(--hs-accent); color:#fff; }
-    #hs .tab:not(.active):hover{ border-color:var(--hs-border-strong); color:var(--hs-text); }
-    #hs .lb-panel{ display:flex; flex-direction:column; border:1px solid var(--hs-border); border-radius:10px; overflow:hidden; }
-    #hs .lb-row{ display:flex; align-items:center; gap:14px; padding:12px 16px; background:var(--hs-surface); border-bottom:1px solid var(--hs-border); }
-    #hs .lb-row:last-child{ border-bottom:none; }
-    #hs .lb-rank{ width:20px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:16px; color:var(--hs-text-3); flex:none; }
-    #hs .lb-row:nth-child(1) .lb-rank{ color:var(--hs-accent); }
-    #hs .lb-row:nth-child(2) .lb-rank{ color:var(--hs-rank2); }
-    #hs .lb-row:nth-child(3) .lb-rank{ color:#5c6b93; }
-    #hs .lb-avatar{ width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:12.5px; color:#fff; object-fit:cover; }
-    #hs .lb-id{ flex:1; min-width:0; }
-    #hs .lb-id b{ display:block; font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    #hs .lb-id span{ font-size:11.5px; color:var(--hs-text-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
-    #hs .lb-val{ text-align:right; flex:none; }
-    #hs .lb-val b{ font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:20px; color:var(--hs-accent); }
-    #hs .lb-val span{ display:block; font-size:10px; color:var(--hs-text-3); text-transform:uppercase; letter-spacing:.5px; }
 
     #hs .results{ display:flex; flex-direction:column; border:1px solid var(--hs-border); border-radius:10px; overflow:hidden; }
     #hs .rrow{ display:flex; align-items:center; gap:16px; padding:13px 18px; background:var(--hs-surface); border-bottom:1px solid var(--hs-border); flex-wrap:wrap; }
@@ -425,7 +361,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           <a href="#hs-live" class="live-link"><span class="live-dot"></span>Live</a>
           <a href="#hs-games">Games</a>
           <a href="#hs-leagues">Leagues</a>
-          <a href="#hs-players">Players</a>
           <a href="/install">Install</a>
         </nav>
         <div class="hnav-actions">
@@ -445,7 +380,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         <a href="#hs-live">Live</a>
         <a href="#hs-games">Games</a>
         <a href="#hs-leagues">Leagues</a>
-        <a href="#hs-players">Players</a>
         <a href="/install">Install App</a>
         ${user ? `<a href="/admin">My Dashboard</a>` : `<a href="/login">Sign In</a><a href="/register">Create Account</a>`}
       </div>
@@ -493,14 +427,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         </div>
       </section>
 
-      <section class="hblock" id="hs-players">
-        <div class="wrap">
-          <div class="hblock-head"><h2>Top Performers</h2></div>
-          <div class="tabs" role="tablist">${leaderTabs}</div>
-          ${leaderPanels}
-        </div>
-      </section>
-
       <section class="hblock" style="border-bottom:none;">
         <div class="wrap">
           <div class="hblock-head"><h2>Latest Results</h2></div>
@@ -529,7 +455,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           <div class="hfoot-cols">
             <div class="hfoot-col">
               <h4>Platform</h4>
-              <a href="#hs-live">Live</a><a href="#hs-games">Games</a><a href="#hs-leagues">Leagues</a><a href="#hs-players">Players</a><a href="/install">Install App</a>
+              <a href="#hs-live">Live</a><a href="#hs-games">Games</a><a href="#hs-leagues">Leagues</a><a href="/install">Install App</a>
             </div>
             <div class="hfoot-col">
               <h4>Commissioners</h4>
@@ -579,16 +505,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
           }
         });
       }
-      var tabs = document.querySelectorAll('#hs .tab');
-      tabs.forEach(function(tab){
-        tab.addEventListener('click', function(){
-          tabs.forEach(function(t){ t.classList.remove('active'); });
-          tab.classList.add('active');
-          document.querySelectorAll('#hs .lb-panel').forEach(function(p){
-            p.hidden = p.getAttribute('data-panel') !== tab.getAttribute('data-cat');
-          });
-        });
-      });
     })();
   </script>
   `);
