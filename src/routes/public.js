@@ -317,6 +317,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
 
     #hs .lgrid{ display:flex; flex-wrap:wrap; gap:14px; }
     #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; }
+    #hs .lcard:nth-child(even){ background:var(--hs-surface-2); }
     #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
     #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
     #hs .lcard h3{ font-size:18px; margin-top:10px; }
