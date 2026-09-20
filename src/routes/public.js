@@ -662,7 +662,7 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
                   var isFirst = i===0;
                   return '<tr style="border-bottom:1px solid var(--overlay-2)">'+
                     '<td style="padding:7px 6px 7px 10px;font-size:11px;color:var(--text-3);font-weight:700;white-space:nowrap;width:20px">'+(i+1)+'.</td>'+
-                    '<td style="padding:7px 4px;font-size:13px;font-weight:'+(isFirst?800:600)+';color:'+(isFirst?'#fff':'var(--text-2)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">'+esc(p.name)+'</td>'+
+                    '<td style="padding:7px 4px;font-size:13px;font-weight:'+(isFirst?800:600)+';color:'+(isFirst?'var(--text)':'var(--text-2)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px">'+esc(p.name)+'</td>'+
                     '<td style="padding:7px 4px;font-size:10px;color:var(--text-3);font-weight:700;white-space:nowrap">'+esc(abbr(p.team_name))+'</td>'+
                     '<td style="padding:7px 10px 7px 4px;font-size:13px;font-weight:900;color:var(--orange);text-align:right;white-space:nowrap">'+val+'</td>'+
                   '</tr>';
@@ -1735,7 +1735,7 @@ router.get('/terms', (req, res) => {
             <div style="width:28px;height:28px;border-radius:50%;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--orange);flex-shrink:0">${s.num}</div>
             <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.3px">${s.title}</h2>
           </div>
-          <p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85;margin-left:40px">${s.body}</p>
+          <p style="font-size:14px;color:var(--text-2);line-height:1.85;margin-left:40px">${s.body}</p>
         </div>
       `).join('')}
 
@@ -1850,9 +1850,9 @@ router.get('/privacy', (req, res) => {
           ${s.subsections ? s.subsections.map(ss => `
             <div style="margin-left:40px;margin-bottom:14px">
               <div style="font-size:12px;font-weight:800;color:var(--orange);letter-spacing:.5px;margin-bottom:4px">${ss.sub}</div>
-              <p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85">${ss.text}</p>
+              <p style="font-size:14px;color:var(--text-2);line-height:1.85">${ss.text}</p>
             </div>
-          `).join('') : `<p style="font-size:14px;color:rgba(255,255,255,.58);line-height:1.85;margin-left:40px">${s.body}</p>`}
+          `).join('') : `<p style="font-size:14px;color:var(--text-2);line-height:1.85;margin-left:40px">${s.body}</p>`}
         </div>
       `).join('')}
 
