@@ -74,13 +74,16 @@ router.get('/league/:id', async (req, res) => {
     const sortDir = req.query.dir  || 'desc';
     const tab     = req.query.tab  || 'standings';
 
-    // Whitelist allowed sort columns → map to player_season_stats column
+    // Whitelist allowed sort columns. PTS/REB/AST/STL/BLK/GP/FG% are displayed
+    // straight from the players table, so sort by the same columns the admin
+    // Players tab uses — otherwise a player without a player_season_stats row
+    // (e.g. seed/demo data) sorts as if 0, scrambling the order vs what's shown.
     const colMap = {
-      pts:'pss.pts', reb:'pss.reb', ast:'pss.ast', stl:'pss.stl',
-      blk:'pss.blk', gp:'pss.gp',  fg:'pss.fgp',  name:'p.name',
+      pts:'p.pts', reb:'p.reb', ast:'p.ast', stl:'p.stl',
+      blk:'p.blk', gp:'p.gp',  fg:'p.fg',  name:'p.name',
       fg3p:'pss.fg3p', ftp:'pss.ftp', eff:'pss.eff', to:'pss.to_val',
     };
-    const col = colMap[sortCol] || 'pss.pts';
+    const col = colMap[sortCol] || 'p.pts';
     const dir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const [teams, players, games, seasonStatsRows] = await Promise.all([
