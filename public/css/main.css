@@ -169,6 +169,26 @@ a:hover { text-decoration: none; }
 }
 .btn-ghost-sm:hover { background: var(--dark-3); color: var(--text); border-color: var(--border-2); text-decoration:none; }
 
+.btn-primary-sm {
+  background: var(--orange); color: #fff;
+  border: 1px solid var(--orange); border-radius: 4px;
+  padding: 6px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: all .15s; text-decoration: none; white-space: nowrap; letter-spacing: .3px;
+}
+.btn-primary-sm:hover { background: var(--orange-d); color: #fff; text-decoration:none; }
+
+.btn-danger-sm {
+  background: var(--danger-dim); color: var(--danger);
+  border: 1px solid var(--danger-border); border-radius: 4px;
+  padding: 6px 10px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: 'Outfit', sans-serif;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: all .15s; text-decoration: none; white-space: nowrap;
+}
+.btn-danger-sm:hover { background: var(--danger-border); color: var(--danger); text-decoration:none; }
+
 .btn-nav-cta {
   background: var(--orange); color: #fff; border: none; border-radius: 4px;
   padding: 9px 20px; font-size: 13px; font-weight: 800; letter-spacing: .5px;
@@ -481,7 +501,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .stat-card .stat-lbl { font-size:10px; font-weight:800; color:var(--text-3); letter-spacing:1px; text-transform:uppercase; }
 
 /* ─── ADMIN LEAGUE CARDS (commissioner dashboard) ─── */
-.league-grid-admin { display:-webkit-flex; display:flex; flex-wrap:wrap; gap:14px; margin-top:24px; }
+.league-grid-admin { display:-webkit-flex; display:flex; flex-wrap:wrap; gap:20px; margin-top:24px; }
 .admin-league-card { flex:1 1 320px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:18px 20px; display:-webkit-flex; display:flex; flex-direction:column; gap:9px; transition:border-color .15s; }
 .admin-league-card:hover { border-color:var(--border-2); }
 .alc-top { display:-webkit-flex; display:flex; gap:8px; flex-wrap:wrap; }
@@ -492,7 +512,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .alc-stats { display:-webkit-flex; display:flex; gap:16px; padding-top:10px; margin-top:2px; border-top:1px solid var(--border); flex-wrap:wrap; }
 .acs { font-size:12.5px; color:var(--text-3); }
 .acs b { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; margin-right:4px; }
-.alc-actions { display:-webkit-flex; display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.alc-actions { display:-webkit-flex; display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
 
 /* ─── LEADER CARDS ─── */
 .pub-leaders { display:block; width:100%; margin-bottom:28px; } /* layout now done inline */

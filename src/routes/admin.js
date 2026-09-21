@@ -1424,7 +1424,7 @@ function adminPage(title, user, content) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | PH Hoops Admin</title>
-<link rel="stylesheet" href="/css/main.css?v39"><style>
+<link rel="stylesheet" href="/css/main.css?v40"><style>
 /* Admin tabs - inline override to prevent browser default button styles */
 .admin-tabs{display:flex!important;gap:0!important;border-bottom:1px solid var(--border)!important;margin-bottom:24px!important;overflow-x:auto!important;background:transparent!important;}
 .admin-tabs::-webkit-scrollbar{display:none!important;}
