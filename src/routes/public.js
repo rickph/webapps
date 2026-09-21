@@ -202,7 +202,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
 
   const isLive = liveGames.length > 0;
 
-  return page('HoopStats Pilipinas — The Digital Home of Philippine Grassroots Basketball', `
+  return page('HoopStats Pilipinas — The Digital Home of Philippine Basketball', `
   <style>
     body{ background:var(--hs-bg); }
     #hs{
@@ -412,7 +412,6 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
             <h1>YOUR GAME.<br>YOUR STATS.<br><span class="pop">YOUR STORY.</span></h1>
             <p class="tagline">THE HOME OF PH BASKETBALL STATS.</p>
           </div>
-          <p class="lead">Scores, stats, standings, players and games from grassroots basketball across the Philippines &mdash; from the barangay court to the big stage.</p>
           <div class="hero-ctas">
             <a class="btn btn-accent" href="#hs-live">Watch Live</a>
             <a class="btn btn-ghost-inverse" href="#hs-leagues">Explore Leagues</a>
@@ -469,7 +468,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
         <div class="hfoot-top">
           <div class="hfoot-brand">
             <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
-            <p>The digital home of Philippine grassroots basketball. From the barangay court to the big stage.</p>
+            <p>The digital home of Philippine basketball. From the barangay court to the big stage.</p>
           </div>
           <div class="hfoot-cols">
             <div class="hfoot-col">
@@ -707,7 +706,7 @@ function renderAllLeagues(leagues, user) {
         <div class="hfoot-top">
           <div class="hfoot-brand">
             <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
-            <p>The digital home of Philippine grassroots basketball. From the barangay court to the big stage.</p>
+            <p>The digital home of Philippine basketball. From the barangay court to the big stage.</p>
           </div>
           <div class="hfoot-cols">
             <div class="hfoot-col">
