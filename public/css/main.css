@@ -481,14 +481,19 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .badge-regional { background:rgba(167,139,250,.1); color:#a78bfa; border:1px solid rgba(167,139,250,.2); }
 
 /* ─── GAME CARDS ─── */
-.game-card, .game-row { background:var(--dark-2); border:1px solid var(--border); border-radius:6px; padding:14px 18px; display:-webkit-flex; display:flex; align-items:center; gap:16px; transition:border-color .15s; flex-wrap:wrap; }
-.game-card:hover, .game-row:hover { border-color:var(--border-2); }
+.game-card { background:var(--dark-2); border:1px solid var(--border); border-radius:6px; padding:14px 18px; display:-webkit-flex; display:flex; align-items:center; gap:16px; transition:border-color .15s; flex-wrap:wrap; }
+.game-card:hover { border-color:var(--border-2); }
 .games-list { display:-webkit-flex; display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+.game-row { background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:14px 18px; display:-webkit-flex; display:flex; flex-direction:column; gap:12px; transition:border-color .15s; }
+.game-row:hover { border-color:var(--border-2); }
+.game-top { display:-webkit-flex; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.game-foot { display:-webkit-flex; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding-top:10px; border-top:1px solid var(--border); }
+.game-foot .row-actions { width:auto; justify-content:flex-end; }
 .game-matchup { display:-webkit-flex; display:flex; align-items:center; gap:12px; flex:1; min-width:0; flex-wrap:wrap; }
 .game-team { font-size:13px; font-weight:700; }
 .game-vs { font-size:10px; color:var(--text-4); font-weight:800; letter-spacing:1px; flex-shrink:0; }
 .game-score { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; }
-.game-meta { font-size:11px; color:var(--text-3); }
+.game-meta { font-size:11px; color:var(--text-3); flex-shrink:0; }
 .game-date { font-weight:600; }
 .game-venue { margin-top:2px; }
 .row-actions { display:-webkit-flex; display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; align-items:center; }
@@ -499,6 +504,11 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .score-vs { font-size:9px; color:var(--text-4); font-weight:700; letter-spacing:1px; }
 .btn-teal-sm { background:rgba(0,212,170,.12); color:var(--teal); border:1px solid rgba(0,212,170,.3); border-radius:4px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Outfit',sans-serif; display:-webkit-inline-flex; display:inline-flex; align-items:center; gap:5px; transition:all .15s; text-decoration:none; white-space:nowrap; }
 .btn-teal-sm:hover { background:rgba(0,212,170,.22); color:var(--teal); text-decoration:none; }
+
+@media (max-width:600px) {
+  .game-top { flex-direction:column; align-items:flex-start; gap:8px; }
+  .game-matchup { width:100%; }
+}
 
 /* ─── DASH STATS ─── */
 .dash-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:28px; }
@@ -524,11 +534,13 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 
 /* ─── TEAMS TAB (block cards) ─── */
 .teams-list { display:-webkit-flex; display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; }
-.team-row { flex:1 1 260px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; display:-webkit-flex; display:flex; align-items:center; gap:14px; transition:border-color .15s; overflow:hidden; position:relative; }
+.team-row { flex:1 1 260px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:16px 18px 16px 22px; display:-webkit-flex; display:flex; align-items:flex-start; gap:12px; transition:border-color .15s; overflow:hidden; position:relative; }
 .team-row:hover { border-color:var(--border-2); }
-.team-color-bar { position:absolute; top:0; left:0; bottom:0; width:5px; border-radius:8px 0 0 8px; }
-.team-info { flex:1; min-width:0; margin-left:8px; }
+.team-color-bar { position:absolute; top:0; left:0; bottom:0; width:5px; }
+.team-body { flex:1; min-width:0; display:-webkit-flex; display:flex; flex-direction:column; gap:10px; }
 .team-info .sub-text { font-size:12px; color:var(--text-3); margin-top:2px; }
+.team-foot { display:-webkit-flex; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.team-foot .row-actions { width:auto; justify-content:flex-end; }
 .team-record { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; flex-shrink:0; white-space:nowrap; }
 .team-record .green { color:var(--teal); }
 .team-record .red { color:var(--danger); margin-left:4px; }

@@ -63,7 +63,7 @@ app.use((req, res) => {
 <html lang="en"><head><meta charset="UTF-8">
 <script>try{var _t=localStorage.getItem('hoopstats-theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <title>Not Found | PH Hoops</title>
-<link rel="stylesheet" href="/css/main.css?v41"></head>
+<link rel="stylesheet" href="/css/main.css?v43"></head>
 <body class="dark-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
   <div style="font-size:64px">🏀</div>
   <h1 style="font-family:'Russo One',sans-serif">Page Not Found</h1>

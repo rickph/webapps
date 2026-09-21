@@ -236,14 +236,18 @@ router.get('/league/:id', async (req, res) => {
           ${teams.map(t=>`
             <div class="team-row">
               <div class="team-color-bar" style="background:${t.color}"></div>
-              <div class="team-info">
-                <div style="font-weight:700">${esc(t.name)}</div>
-                <div class="sub-text">${players.filter(p=>p.team_id==t.id).length} players</div>
-              </div>
-              <div class="team-record"><span class="green">${t.wins}W</span> <span class="red">${t.losses}L</span></div>
-              <div class="row-actions">
-                <a href="/admin/league/${league.id}/edit-team/${t.id}" class="btn-ghost-sm">✏ Edit</a>
-                <a href="/admin/league/${league.id}/delete-team/${t.id}" class="btn-danger-sm" data-confirm="Delete this team?">🗑</a>
+              <div class="team-body">
+                <div class="team-info">
+                  <div style="font-weight:700">${esc(t.name)}</div>
+                  <div class="sub-text">${players.filter(p=>p.team_id==t.id).length} players</div>
+                </div>
+                <div class="team-foot">
+                  <div class="team-record"><span class="green">${t.wins}W</span> <span class="red">${t.losses}L</span></div>
+                  <div class="row-actions">
+                    <a href="/admin/league/${league.id}/edit-team/${t.id}" class="btn-ghost-sm">✏ Edit</a>
+                    <a href="/admin/league/${league.id}/delete-team/${t.id}" class="btn-danger-sm" data-confirm="Delete this team?">🗑</a>
+                  </div>
+                </div>
               </div>
             </div>`).join('') || '<div class="empty-state">No teams yet.</div>'}
         </div>
@@ -286,21 +290,25 @@ router.get('/league/:id', async (req, res) => {
         <div class="games-list">
           ${games.map(g=>`
             <div class="game-row">
-              <div class="game-meta"><div class="game-date">${esc(g.date||'TBD')}</div><div class="game-venue">📍 ${esc(g.venue||'TBD')}</div></div>
-              <div class="game-matchup">
-                <span class="game-team">${esc(g.home_name||'TBD')}</span>
-                ${g.status==='final'
-                  ? `<div class="score-final"><span class="${g.home_score>=g.away_score?'score-win':'score-lose'}">${g.home_score}</span><span class="score-vs">FINAL</span><span class="${g.away_score>g.home_score?'score-win':'score-lose'}">${g.away_score}</span></div>`
-                  : '<span class="vs-badge">VS</span>'}
-                <span class="game-team">${esc(g.away_name||'TBD')}</span>
+              <div class="game-top">
+                <div class="game-meta"><div class="game-date">${esc(g.date||'TBD')}</div><div class="game-venue">📍 ${esc(g.venue||'TBD')}</div></div>
+                <div class="game-matchup">
+                  <span class="game-team">${esc(g.home_name||'TBD')}</span>
+                  ${g.status==='final'
+                    ? `<div class="score-final"><span class="${g.home_score>=g.away_score?'score-win':'score-lose'}">${g.home_score}</span><span class="score-vs">FINAL</span><span class="${g.away_score>g.home_score?'score-win':'score-lose'}">${g.away_score}</span></div>`
+                    : '<span class="vs-badge">VS</span>'}
+                  <span class="game-team">${esc(g.away_name||'TBD')}</span>
+                </div>
               </div>
-              <div class="row-actions">
+              <div class="game-foot">
                 ${statusBadge(g.status)}
-                <a href="/admin/league/${league.id}/edit-game/${g.id}" class="btn-ghost-sm">✏ Edit</a>
-                <a href="/admin/league/${league.id}/game-stats/${g.id}" class="btn-ghost-sm" title="Enter/Edit Player Stats">📋 Stats</a>
-                <a href="/admin/league/${league.id}/import-stats/${g.id}" class="btn-ghost-sm" title="Import Stats from Spreadsheet" style="color:var(--teal)">📤 Import</a>
-                ${g.status!=='final'?`<a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Live</a>`:''}
-                <a href="/admin/league/${league.id}/delete-game/${g.id}" class="btn-danger-sm" data-confirm="Delete this game?">🗑</a>
+                <div class="row-actions">
+                  <a href="/admin/league/${league.id}/edit-game/${g.id}" class="btn-ghost-sm">✏ Edit</a>
+                  <a href="/admin/league/${league.id}/game-stats/${g.id}" class="btn-ghost-sm" title="Enter/Edit Player Stats">📋 Stats</a>
+                  <a href="/admin/league/${league.id}/import-stats/${g.id}" class="btn-ghost-sm" title="Import Stats from Spreadsheet" style="color:var(--teal)">📤 Import</a>
+                  ${g.status!=='final'?`<a href="/admin/league/${league.id}/score/${g.id}" class="btn-teal-sm">🔴 Live</a>`:''}
+                  <a href="/admin/league/${league.id}/delete-game/${g.id}" class="btn-danger-sm" data-confirm="Delete this game?">🗑</a>
+                </div>
               </div>
             </div>`).join('') || '<div class="empty-state">No games scheduled.</div>'}
         </div>
@@ -1424,7 +1432,7 @@ function adminPage(title, user, content) {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | PH Hoops Admin</title>
-<link rel="stylesheet" href="/css/main.css?v41"><style>
+<link rel="stylesheet" href="/css/main.css?v43"><style>
 /* Admin tabs - inline override to prevent browser default button styles */
 .admin-tabs{display:flex!important;gap:0!important;border-bottom:1px solid var(--border)!important;margin-bottom:24px!important;overflow-x:auto!important;background:transparent!important;}
 .admin-tabs::-webkit-scrollbar{display:none!important;}

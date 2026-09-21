@@ -495,7 +495,7 @@ function superPage(title, user, content, req = {}) {
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | Hoopstats Pilipinas Super Admin</title>
-<link rel="stylesheet" href="/css/main.css?v41">
+<link rel="stylesheet" href="/css/main.css?v43">
 </head>
 <body class="dark-bg">
 <nav class="topnav" style="border-bottom-color:var(--gold)">
