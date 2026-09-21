@@ -1258,8 +1258,14 @@ function sortTh(col, label, title, sort, league) {
 }
 
 // ── INSTALL PAGE ──────────────────────────────────────────────────────────────
-router.get('/install', (req, res) => {
+router.get('/install', async (req, res) => {
   const { page } = require('../helpers');
+  const QRCode = require('qrcode');
+  const siteUrl = `${req.protocol}://${req.get('host')}/`;
+  let qrDataUrl = null;
+  try {
+    qrDataUrl = await QRCode.toDataURL(siteUrl, { width: 220, margin: 1, color: { dark: '#0a0e1a', light: '#ffffff' } });
+  } catch (e) { console.error('QR generation error:', e); }
   res.send(page('Install App | HoopStats', `
     <nav class="topnav">
       <div class="nav-brand">
@@ -1276,13 +1282,13 @@ router.get('/install', (req, res) => {
       </div>
     </nav>
 
-    <div style="max-width:640px;margin:0 auto;padding:40px 20px 60px">
+    <div style="max-width:640px;margin:0 auto;padding:40px 20px 60px;background:#0a0e1a;color:#fff">
 
       <!-- HEADER -->
       <div style="text-align:center;margin-bottom:40px">
         <img src="/icons/logo-watermark.png?v=2" alt="HoopStats"
              style="width:110px;height:110px;object-fit:contain;margin-bottom:20px">
-        <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px">
+        <h1 style="font-family:'Russo One',sans-serif;font-size:28px;margin-bottom:8px;color:#fff">
           Install HoopStats
         </h1>
         <p style="color:rgba(240,244,255,.55);font-size:15px">
@@ -1290,12 +1296,20 @@ router.get('/install', (req, res) => {
         </p>
       </div>
 
+      ${qrDataUrl ? `
+      <!-- QR CODE -->
+      <div style="background:#0f1628;border:1px solid rgba(240,244,255,.09);border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
+        <div style="font-weight:800;font-size:15px;margin-bottom:4px;color:#fff">📱 Scan with your phone</div>
+        <div style="font-size:12px;color:rgba(240,244,255,.45);margin-bottom:16px">Open your phone's camera and point it at the code below</div>
+        <img src="${qrDataUrl}" alt="QR code to open HoopStats on your phone" width="180" height="180" style="border-radius:8px;background:#fff;padding:10px;display:inline-block">
+      </div>` : ''}
+
       <!-- ANDROID -->
       <div style="background:#0f1628;border:1px solid rgba(240,244,255,.09);border-left:4px solid #3ddc84;border-radius:12px;padding:24px;margin-bottom:16px">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
           <div style="width:44px;height:44px;border-radius:10px;background:rgba(61,220,132,.12);border:1px solid rgba(61,220,132,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🤖</div>
           <div>
-            <div style="font-weight:800;font-size:16px">Android</div>
+            <div style="font-weight:800;font-size:16px;color:#fff">Android</div>
             <div style="font-size:12px;color:rgba(240,244,255,.45)">Chrome browser</div>
           </div>
         </div>
@@ -1319,7 +1333,7 @@ router.get('/install', (req, res) => {
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
           <div style="width:44px;height:44px;border-radius:10px;background:rgba(0,122,255,.12);border:1px solid rgba(0,122,255,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍎</div>
           <div>
-            <div style="font-weight:800;font-size:16px">iPhone / iPad</div>
+            <div style="font-weight:800;font-size:16px;color:#fff">iPhone / iPad</div>
             <div style="font-size:12px;color:rgba(240,244,255,.45)">Safari browser</div>
           </div>
         </div>
@@ -1346,7 +1360,7 @@ router.get('/install', (req, res) => {
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
           <div style="width:44px;height:44px;border-radius:10px;background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💻</div>
           <div>
-            <div style="font-weight:800;font-size:16px">Desktop / Laptop</div>
+            <div style="font-weight:800;font-size:16px;color:#fff">Desktop / Laptop</div>
             <div style="font-size:12px;color:rgba(240,244,255,.45)">Chrome or Edge browser</div>
           </div>
         </div>
