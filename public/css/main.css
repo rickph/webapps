@@ -434,6 +434,7 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .admin-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
 .admin-header h1 { font-family:'Barlow Condensed',sans-serif; font-size:30px; font-weight:900; text-transform:uppercase; letter-spacing:.5px; line-height:1.1; }
 .admin-header .header-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.ah-right { display:-webkit-flex; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .back-link { display:inline-flex; align-items:center; gap:5px; color:var(--text-3); font-size:12px; font-weight:700; margin-bottom:8px; transition:color .15s; letter-spacing:.3px; }
 .back-link:hover { color:var(--orange); text-decoration:none; }
 
