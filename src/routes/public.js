@@ -337,7 +337,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .lcard::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--hs-accent); }
     #hs .lcard:hover{ border-color:var(--hs-accent-border); }
     #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
+    #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-blue); color:#fff; border:1px solid var(--hs-blue); }
     #hs .lcard h3{ font-size:18px; margin-top:10px; }
     #hs .lcard .loc{ font-size:12px; color:var(--hs-text-3); margin-top:2px; text-transform:none; letter-spacing:0; font-weight:500; font-family:'Outfit',sans-serif; }
     #hs .lcard-stats{ display:flex; gap:18px; padding-top:12px; border-top:1px solid var(--hs-border); }
@@ -635,7 +635,7 @@ function renderAllLeagues(leagues, user) {
     #hs .lcard::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--hs-accent); }
     #hs .lcard:hover{ border-color:var(--hs-accent-border); }
     #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
+    #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-blue); color:#fff; border:1px solid var(--hs-blue); }
     #hs .lcard h3{ font-size:18px; margin-top:10px; }
     #hs .lcard .loc{ font-size:12px; color:var(--hs-text-3); margin-top:2px; text-transform:none; letter-spacing:0; font-weight:500; font-family:'Outfit',sans-serif; }
     #hs .lcard-stats{ display:flex; gap:18px; padding-top:12px; border-top:1px solid var(--hs-border); }
