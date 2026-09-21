@@ -2079,8 +2079,8 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
         <!-- HOME TEAM -->
         ${homePlayers.length > 0 ? `
         <div class="card" style="margin-bottom:20px;overflow-x:auto">
-          <div style="font-size:15px;font-weight:800;color:${homeColor};margin-bottom:16px;display:flex;align-items:center;gap:8px">
-            <div style="width:4px;height:20px;background:${homeColor};border-radius:2px"></div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:${homeColor};border-radius:2px;border:1px solid var(--border-2)"></div>
             ${esc(game.home_name||'Home Team')}
             <span style="font-size:11px;color:#555;font-weight:600;margin-left:4px">— Player Stats</span>
           </div>
@@ -2099,8 +2099,8 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
         <!-- AWAY TEAM -->
         ${awayPlayers.length > 0 ? `
         <div class="card" style="margin-bottom:20px;overflow-x:auto">
-          <div style="font-size:15px;font-weight:800;color:${awayColor};margin-bottom:16px;display:flex;align-items:center;gap:8px">
-            <div style="width:4px;height:20px;background:${awayColor};border-radius:2px"></div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px">
+            <div style="width:4px;height:20px;background:${awayColor};border-radius:2px;border:1px solid var(--border-2)"></div>
             ${esc(game.away_name||'Away Team')}
             <span style="font-size:11px;color:#555;font-weight:600;margin-left:4px">— Player Stats</span>
           </div>
