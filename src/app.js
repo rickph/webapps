@@ -54,6 +54,7 @@ app.use(session({
 app.use('/',      require('./routes/auth'));
 app.use('/',      require('./routes/public'));
 app.use('/admin', require('./routes/admin'));
+app.use('/superadmin', require('./routes/superadmin'));
 app.get('/upgrade', (req, res) => res.redirect('/admin'));
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
