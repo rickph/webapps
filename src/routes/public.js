@@ -47,6 +47,20 @@ router.get('/', async (req, res) => {
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
 
+// ── ALL PUBLIC LEAGUES ────────────────────────────────────────────────────────
+router.get('/leagues', async (req, res) => {
+  try {
+    const leagues = await db.query(
+      `SELECT l.*,
+        (SELECT COUNT(*) FROM teams   WHERE league_id=l.id) as team_count,
+        (SELECT COUNT(*) FROM players WHERE league_id=l.id) as player_count,
+        (SELECT COUNT(*) FROM games   WHERE league_id=l.id AND status='final') as game_count
+       FROM leagues l WHERE l.is_public=true ORDER BY l.created_at DESC`
+    );
+    res.send(renderAllLeagues(leagues, req.user));
+  } catch (err) { console.error(err); res.status(500).send('Server error'); }
+});
+
 // ── PUBLIC LEAGUE PAGE ────────────────────────────────────────────────────────
 router.get('/league/:id', async (req, res) => {
   try {
@@ -409,7 +423,7 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
 
       <section class="hblock" id="hs-leagues">
         <div class="wrap">
-          <div class="hblock-head"><h2>Public Leagues</h2><a class="hsee-all" href="/register">Start your own →</a></div>
+          <div class="hblock-head"><h2>Public Leagues</h2><div style="display:flex;gap:16px;flex-wrap:wrap">${leagues.length > 6 ? `<a class="hsee-all" href="/leagues">View all leagues →</a>` : ''}<a class="hsee-all" href="/register">Start your own →</a></div></div>
           <div class="lgrid">${leagueCards}</div>
         </div>
       </section>
@@ -457,6 +471,243 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
             <div class="hfoot-col">
               <h4>Platform</h4>
               <a href="#hs-live">Live</a><a href="#hs-games">Games</a><a href="#hs-leagues">Leagues</a><a href="/install">Install App</a>
+            </div>
+            <div class="hfoot-col">
+              <h4>Commissioners</h4>
+              <a href="/register">Start a League</a><a href="/login">Sign In</a>
+            </div>
+            <div class="hfoot-col">
+              <h4>Company</h4>
+              <a href="/terms">Terms of Use</a><a href="/privacy">Privacy Policy</a>
+            </div>
+          </div>
+        </div>
+        <div class="hfoot-bottom">
+          <span>&copy; ${new Date().getFullYear()} HoopStats Pilipinas</span>
+          <span>Stats powered by the FIBA 2024 EFF engine</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      var themeBtn = document.getElementById('hsThemeToggle');
+      if (themeBtn) {
+        var isDark = function(){
+          return document.documentElement.getAttribute('data-theme') === 'dark';
+        };
+        var syncThemeBtn = function(){ themeBtn.setAttribute('aria-pressed', String(isDark())); };
+        themeBtn.addEventListener('click', function(){
+          var next = isDark() ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          try { localStorage.setItem('hoopstats-theme', next); } catch(e){}
+          syncThemeBtn();
+        });
+        syncThemeBtn();
+      }
+      var hb = document.getElementById('hsHamburger');
+      var menu = document.getElementById('hsMobileMenu');
+      if (hb && menu) {
+        hb.addEventListener('click', function(){
+          var open = menu.classList.toggle('open');
+          hb.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        document.addEventListener('click', function(e){
+          if (menu.classList.contains('open') && !menu.contains(e.target) && !hb.contains(e.target)) {
+            menu.classList.remove('open');
+            hb.setAttribute('aria-expanded', 'false');
+          }
+        });
+      }
+    })();
+  </script>
+  `);
+}
+
+function renderAllLeagues(leagues, user) {
+  const initials = (name) => (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  const leagueCards = leagues.length
+    ? leagues.map(l => {
+        const isOngoing = l.status === 'ongoing';
+        return `<a class="lcard" href="/league/${l.id}">
+          <div class="lcard-top">
+            <div><span class="lmark">${esc(initials(l.name))}</span><h3>${esc(l.name)}</h3><div class="loc">${esc(l.level || '')}${l.location ? ' · ' + esc(l.location) : ''}</div></div>
+            ${isOngoing ? `<span class="status-chip live"><span class="live-dot"></span>Live</span>` : ''}
+          </div>
+          <div class="lcard-stats">
+            <div><b class="num">${l.team_count}</b><span>Teams</span></div>
+            <div><b class="num">${esc(l.season || '—')}</b><span>Season</span></div>
+            <div><b class="num">${l.game_count}</b><span>Games</span></div>
+          </div>
+        </a>`;
+      }).join('')
+    : `<div class="empty"><b>No public leagues yet.</b>Be the first commissioner to <a href="/register" style="color:var(--hs-accent)">start a league</a>.</div>`;
+
+  return page(`All Public Leagues | HoopStats Pilipinas`, `
+  <style>
+    body{ background:var(--hs-bg); }
+    #hs{
+      --hs-bg:#f4f6fb; --hs-bg-2:#eaeef8;
+      --hs-surface:#ffffff; --hs-surface-2:#f1f4fa; --hs-surface-3:#e4e9f5;
+      --hs-border:rgba(13,30,90,.12); --hs-border-strong:rgba(13,30,90,.22);
+      --hs-text:#0e1638; --hs-text-2:rgba(14,22,56,.70); --hs-text-3:rgba(14,22,56,.46); --hs-text-4:rgba(14,22,56,.28);
+      --hs-accent:#ce1126; --hs-accent-strong:#a80e1f; --hs-accent-dim:rgba(206,17,38,.10); --hs-accent-border:rgba(206,17,38,.4);
+      --hs-blue:#0d2e9c; --hs-blue-strong:#081f6e;
+      --hs-live:#ce1126; --hs-live-dim:rgba(206,17,38,.14);
+      --hs-on-navy-text:#ffffff; --hs-on-navy-text-2:rgba(255,255,255,.76); --hs-on-navy-text-3:rgba(255,255,255,.52);
+      --hs-on-navy-border:rgba(255,255,255,.18); --hs-on-navy-border-strong:rgba(255,255,255,.3);
+      font-family:'Outfit',sans-serif; color:var(--hs-text); background:var(--hs-bg); font-size:15px; line-height:1.55;
+    }
+    html[data-theme="dark"] #hs{
+      --hs-bg:#0a0e1a; --hs-bg-2:#0d1220;
+      --hs-surface:#121a30; --hs-surface-2:#182142; --hs-surface-3:#1f2a52;
+      --hs-border:rgba(255,255,255,.08); --hs-border-strong:rgba(255,255,255,.16);
+      --hs-text:#eef1fb; --hs-text-2:rgba(238,241,251,.72); --hs-text-3:rgba(238,241,251,.48); --hs-text-4:rgba(238,241,251,.28);
+      --hs-accent:#ff5670; --hs-accent-strong:#ff7c90; --hs-accent-dim:rgba(255,86,112,.16); --hs-accent-border:rgba(255,86,112,.4);
+      --hs-live:#ff5670; --hs-live-dim:rgba(255,86,112,.18);
+    }
+    #hs *,#hs *::before,#hs *::after{ box-sizing:border-box; }
+    #hs h1,#hs h2,#hs h3,#hs h4{ font-family:'Barlow Condensed',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.3px; margin:0; }
+    #hs a{ color:inherit; text-decoration:none; }
+    #hs button{ font-family:'Outfit',sans-serif; cursor:pointer; }
+    #hs .num{ font-variant-numeric:tabular-nums; }
+    #hs .wrap{ max-width:1180px; margin:0 auto; padding:0 24px; }
+    @media (max-width:640px){ #hs .wrap{ padding:0 16px; } }
+
+    #hs header.hsite{ position:sticky; top:0; z-index:40; background:linear-gradient(180deg, var(--hs-blue), var(--hs-blue-strong)); border-bottom:1px solid var(--hs-on-navy-border); }
+    #hs .hnav-row{ display:flex; align-items:center; justify-content:space-between; gap:20px; height:64px; }
+    #hs .hbrand{ display:flex; align-items:center; gap:9px; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:21px; color:var(--hs-on-navy-text); white-space:nowrap; }
+    #hs .hbrand-mark{ width:52px; height:52px; flex:none; object-fit:contain; display:block; }
+    #hs nav.hprimary{ display:flex; align-items:center; gap:2px; }
+    #hs nav.hprimary a{ font-size:13px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--hs-on-navy-text-2); padding:9px 13px; border-radius:7px; }
+    #hs nav.hprimary a:hover{ color:var(--hs-on-navy-text); background:rgba(255,255,255,.10); }
+    #hs nav.hprimary a.current{ color:var(--hs-on-navy-text); background:rgba(255,255,255,.14); }
+    #hs .live-dot{ width:6px; height:6px; border-radius:50%; background:var(--hs-live); display:inline-block; margin-right:6px; }
+    #hs .hnav-actions{ display:flex; align-items:center; gap:10px; }
+    #hs .btn{ font-weight:700; font-size:13px; letter-spacing:.4px; text-transform:uppercase; border-radius:7px; padding:10px 18px; border:1px solid transparent; white-space:nowrap; display:inline-block; }
+    #hs .btn-accent{ background:var(--hs-accent); color:#fff; }
+    #hs .btn-accent:hover{ background:#e2263c; }
+    #hs .btn-ghost-inverse{ background:transparent; color:var(--hs-on-navy-text); border-color:var(--hs-on-navy-border-strong); }
+    #hs .btn-ghost-inverse:hover{ background:rgba(255,255,255,.10); }
+    #hs .btn-sm{ padding:7px 14px; font-size:11.5px; }
+    #hs .theme-toggle{ position:relative; width:44px; height:24px; flex:none; border-radius:99px; border:1px solid var(--hs-on-navy-border-strong); background:rgba(255,255,255,.10); padding:0; -webkit-appearance:none; appearance:none; cursor:pointer; }
+    #hs .theme-toggle .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; transition:left .18s ease; color:var(--hs-blue-strong); }
+    #hs .theme-toggle .knob svg{ width:12px; height:12px; }
+    #hs .theme-toggle .i-moon{ display:none; }
+    html[data-theme="dark"] #hs .theme-toggle .knob{ left:22px; }
+    html[data-theme="dark"] #hs .theme-toggle .i-sun{ display:none; }
+    html[data-theme="dark"] #hs .theme-toggle .i-moon{ display:block; }
+    #hs .hhamburger{ display:none; flex-direction:column; gap:4px; background:none; border:0; padding:6px; }
+    #hs .hhamburger span{ width:20px; height:2px; background:var(--hs-on-navy-text); border-radius:2px; }
+    #hs .hmobile-menu{ display:none; background:var(--hs-blue-strong); border-top:1px solid var(--hs-on-navy-border); }
+    #hs .hmobile-menu.open{ display:block; }
+    #hs .hmobile-menu a{ display:block; padding:14px 24px; font-size:13px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--hs-on-navy-text-2); border-top:1px solid rgba(255,255,255,.08); }
+    #hs .hmobile-menu a:first-child{ border-top:none; }
+    #hs .hmobile-menu a.current{ color:var(--hs-on-navy-text); }
+    @media (max-width:1060px){
+      #hs nav.hprimary{ display:none; }
+      #hs .hnav-actions .btn-ghost-inverse{ display:none; }
+      #hs .hhamburger{ display:flex; }
+    }
+    @media (max-width:540px){
+      #hs header.hsite .hbrand{ font-size:0; gap:0; }
+      #hs .hnav-row{ gap:12px; }
+      #hs .hnav-actions{ gap:6px; }
+    }
+
+    #hs .page-head{ padding:40px 0 28px; }
+    #hs .page-head .crumb{ font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--hs-text-3); margin-bottom:10px; display:block; }
+    #hs .page-head .crumb a:hover{ color:var(--hs-accent); }
+    #hs .page-head h1{ font-size:clamp(28px,4.4vw,44px); }
+    #hs .page-head p{ color:var(--hs-text-2); margin-top:8px; font-size:15px; }
+
+    #hs section.hblock{ padding:0 0 56px; }
+    #hs .status-chip{ font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; padding:4px 8px; border-radius:5px; display:inline-flex; align-items:center; gap:5px; flex:none; }
+    #hs .status-chip.live{ background:var(--hs-live-dim); color:var(--hs-live); }
+    #hs .empty{ border:1px dashed var(--hs-border-strong); border-radius:10px; padding:32px 22px; text-align:center; color:var(--hs-text-3); font-size:13.5px; width:100%; }
+    #hs .lgrid{ display:flex; flex-wrap:wrap; gap:14px; }
+    #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; }
+    #hs .lcard:nth-child(even){ background:var(--hs-surface-2); }
+    #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
+    #hs .lcard h3{ font-size:18px; margin-top:10px; }
+    #hs .lcard .loc{ font-size:12px; color:var(--hs-text-3); margin-top:2px; text-transform:none; letter-spacing:0; font-weight:500; font-family:'Outfit',sans-serif; }
+    #hs .lcard-stats{ display:flex; gap:18px; padding-top:12px; border-top:1px solid var(--hs-border); }
+    #hs .lcard-stats div b{ display:block; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:17px; }
+    #hs .lcard-stats div span{ font-size:10.5px; color:var(--hs-text-3); text-transform:uppercase; letter-spacing:.5px; }
+
+    #hs footer.hfoot{ padding:44px 0 24px; background:linear-gradient(180deg, var(--hs-blue), var(--hs-blue-strong)); }
+    #hs .hfoot-top{ display:flex; justify-content:space-between; gap:40px; flex-wrap:wrap; margin-bottom:28px; }
+    #hs .hfoot-brand p{ color:var(--hs-on-navy-text-3); font-size:13px; max-width:260px; margin-top:10px; }
+    #hs .hfoot-cols{ display:flex; gap:44px; flex-wrap:wrap; }
+    #hs .hfoot-col h4{ font-size:11px; letter-spacing:1px; color:var(--hs-on-navy-text-3); margin-bottom:10px; font-weight:700; text-transform:uppercase; }
+    #hs .hfoot-col a{ display:block; font-size:13px; color:var(--hs-on-navy-text-2); margin-bottom:8px; }
+    #hs .hfoot-col a:hover{ color:#ff8f9c; }
+    #hs .hfoot-bottom{ border-top:1px solid var(--hs-on-navy-border); padding-top:18px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--hs-on-navy-text-3); }
+  </style>
+
+  <div id="hs">
+    <header class="hsite">
+      <div class="wrap hnav-row">
+        <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
+        <nav class="hprimary">
+          <a href="/">Home</a>
+          <a href="/#hs-live">Live</a>
+          <a href="/#hs-games">Games</a>
+          <a href="/leagues" class="current">Leagues</a>
+          <a href="/install">Install</a>
+        </nav>
+        <div class="hnav-actions">
+          <button class="theme-toggle" id="hsThemeToggle" type="button" aria-label="Toggle dark mode" aria-pressed="false">
+            <span class="knob">
+              <svg class="i-sun" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="4" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 1.5v2M10 16.5v2M18.5 10h-2M3.5 10h-2M15.6 4.4l-1.4 1.4M5.8 14.2l-1.4 1.4M15.6 15.6l-1.4-1.4M5.8 5.8L4.4 4.4"/></g></svg>
+              <svg class="i-moon" viewBox="0 0 20 20" fill="none"><path d="M16 12.3A7 7 0 1 1 7.7 4a5.6 5.6 0 0 0 8.3 8.3z" fill="currentColor"/></svg>
+            </span>
+          </button>
+          ${user ? `<a class="btn btn-ghost-inverse btn-sm" href="/admin">Commissioner Portal</a>` : `<a class="btn btn-ghost-inverse btn-sm" href="/register">Start a League</a>`}
+          ${user ? `<a class="btn btn-accent btn-sm" href="/admin">My Dashboard</a>` : `<a class="btn btn-accent btn-sm" href="/login">Sign In</a>`}
+          <button class="hhamburger" id="hsHamburger" type="button" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+        </div>
+      </div>
+      <div class="hmobile-menu" id="hsMobileMenu">
+        <a href="/">Home</a>
+        <a href="/#hs-live">Live</a>
+        <a href="/#hs-games">Games</a>
+        <a href="/leagues" class="current">Leagues</a>
+        <a href="/install">Install App</a>
+        ${user ? `<a href="/admin">My Dashboard</a>` : `<a href="/login">Sign In</a><a href="/register">Create Account</a>`}
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <span class="crumb"><a href="/">Home</a> / Leagues</span>
+          <h1>All Public Leagues</h1>
+          <p>${leagues.length} league${leagues.length === 1 ? '' : 's'} tracking stats on HoopStats Pilipinas.</p>
+        </div>
+      </section>
+
+      <section class="hblock">
+        <div class="wrap">
+          <div class="lgrid">${leagueCards}</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="hfoot">
+      <div class="wrap">
+        <div class="hfoot-top">
+          <div class="hfoot-brand">
+            <a class="hbrand" href="/"><img class="hbrand-mark" src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas logo">HOOPSTATS PILIPINAS</a>
+            <p>The digital home of Philippine grassroots basketball. From the barangay court to the big stage.</p>
+          </div>
+          <div class="hfoot-cols">
+            <div class="hfoot-col">
+              <h4>Platform</h4>
+              <a href="/#hs-live">Live</a><a href="/#hs-games">Games</a><a href="/leagues">Leagues</a><a href="/install">Install App</a>
             </div>
             <div class="hfoot-col">
               <h4>Commissioners</h4>
