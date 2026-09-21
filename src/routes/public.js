@@ -333,8 +333,9 @@ function renderLanding({ leagues, totals, liveGames, upcomingGames, recentResult
     #hs .empty b{ display:block; color:var(--hs-text-2); font-size:15px; margin-bottom:6px; font-family:'Outfit',sans-serif; font-weight:700; text-transform:none; letter-spacing:0; }
 
     #hs .lgrid{ display:flex; flex-wrap:wrap; gap:14px; }
-    #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; }
-    #hs .lcard:nth-child(even){ background:var(--hs-surface-2); }
+    #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; position:relative; overflow:hidden; transition:border-color .15s; }
+    #hs .lcard::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--hs-accent); }
+    #hs .lcard:hover{ border-color:var(--hs-accent-border); }
     #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
     #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
     #hs .lcard h3{ font-size:18px; margin-top:10px; }
@@ -631,8 +632,9 @@ function renderAllLeagues(leagues, user) {
     #hs .status-chip.live{ background:var(--hs-live-dim); color:var(--hs-live); }
     #hs .empty{ border:1px dashed var(--hs-border-strong); border-radius:10px; padding:32px 22px; text-align:center; color:var(--hs-text-3); font-size:13.5px; width:100%; }
     #hs .lgrid{ display:flex; flex-wrap:wrap; gap:14px; }
-    #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; }
-    #hs .lcard:nth-child(even){ background:var(--hs-surface-2); }
+    #hs .lcard{ flex:1 1 280px; background:var(--hs-surface); border:1px solid var(--hs-border); border-radius:10px; padding:18px; display:flex; flex-direction:column; gap:14px; position:relative; overflow:hidden; transition:border-color .15s; }
+    #hs .lcard::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--hs-accent); }
+    #hs .lcard:hover{ border-color:var(--hs-accent-border); }
     #hs .lcard-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
     #hs .lmark{ width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:15px; flex:none; background:var(--hs-accent-dim); color:var(--hs-accent); border:1px solid var(--hs-accent-border); }
     #hs .lcard h3{ font-size:18px; margin-top:10px; }

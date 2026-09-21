@@ -534,14 +534,18 @@ textarea.input { resize:vertical; min-height:80px; line-height:1.6; }
 .alc-actions { display:-webkit-flex; display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
 
 /* ─── TEAMS TAB (block cards) ─── */
+/* Scoped under .teams-list — a bare .team-row collided with the public
+   homepage's #hs .team-row (game-card team line), which sits in a column
+   flex context where this rule's flex-basis:260px became a HEIGHT instead
+   of a width, blowing each row up to a 260px-tall square. */
 .teams-list { display:-webkit-flex; display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; }
-.team-row { flex:1 1 260px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:16px 18px 16px 22px; display:-webkit-flex; display:flex; align-items:flex-start; gap:12px; transition:border-color .15s; overflow:hidden; position:relative; }
-.team-row:hover { border-color:var(--border-2); }
-.team-color-bar { position:absolute; top:0; left:0; bottom:0; width:5px; }
-.team-body { flex:1; min-width:0; display:-webkit-flex; display:flex; flex-direction:column; gap:10px; }
-.team-info .sub-text { font-size:12px; color:var(--text-3); margin-top:2px; }
-.team-foot { display:-webkit-flex; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.team-foot .row-actions { width:auto; justify-content:flex-end; }
+.teams-list .team-row { flex:1 1 260px; background:var(--dark-2); border:1px solid var(--border); border-radius:8px; padding:16px 18px 16px 22px; display:-webkit-flex; display:flex; align-items:flex-start; gap:12px; transition:border-color .15s; overflow:hidden; position:relative; }
+.teams-list .team-row:hover { border-color:var(--border-2); }
+.teams-list .team-color-bar { position:absolute; top:0; left:0; bottom:0; width:5px; }
+.teams-list .team-body { flex:1; min-width:0; display:-webkit-flex; display:flex; flex-direction:column; gap:10px; }
+.teams-list .team-info .sub-text { font-size:12px; color:var(--text-3); margin-top:2px; }
+.teams-list .team-foot { display:-webkit-flex; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.teams-list .team-foot .row-actions { width:auto; justify-content:flex-end; }
 .team-record { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; flex-shrink:0; white-space:nowrap; }
 .team-record .green { color:var(--teal); }
 .team-record .red { color:var(--danger); margin-left:4px; }
