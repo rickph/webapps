@@ -261,7 +261,7 @@ router.get('/league/:id', async (req, res) => {
         </div>
         <div style="overflow-x:auto">
           <table class="stats-table">
-            <thead><tr><th>#</th><th>Name</th><th>Team</th><th>POS</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG%</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Name</th><th>Team</th><th>POS</th><th></th></tr></thead>
             <tbody>
               ${players.map((p,i)=>`
                 <tr>
@@ -269,13 +269,11 @@ router.get('/league/:id', async (req, res) => {
                   <td><div style="font-weight:600">${esc(p.name)}</div><div class="sub-text">#${p.jersey}</div></td>
                   <td class="sub-text">${esc(p.team_name||'')}</td>
                   <td><span class="pos-badge">${p.pos}</span></td>
-                  <td class="orange">${p.pts}</td><td>${p.reb}</td><td>${p.ast}</td>
-                  <td>${p.stl}</td><td>${p.blk}</td><td class="teal">${p.fg}%</td>
                   <td>
-                    <a href="/admin/league/${league.id}/edit-player/${p.id}" class="btn-ghost-sm">✏</a>
+                    <a href="/admin/league/${league.id}/edit-player/${p.id}" class="btn-ghost-sm">✏ View / Edit</a>
                     <a href="/admin/league/${league.id}/delete-player/${p.id}" class="btn-danger-sm" data-confirm="Delete this player?">🗑</a>
                   </td>
-                </tr>`).join('') || '<tr><td colspan="11" class="empty">No players yet.</td></tr>'}
+                </tr>`).join('') || '<tr><td colspan="5" class="empty">No players yet.</td></tr>'}
             </tbody>
           </table>
         </div>
@@ -1278,31 +1276,34 @@ router.get('/league/:id/pdf', async (req, res) => {
     const doc = new PDFDocument({ margin:40, size:'A4' });
     res.setHeader('Content-Type','application/pdf');
     res.setHeader('Content-Disposition',`attachment; filename="${league.name.replace(/[^a-z0-9]/gi,'_')}_stats.pdf"`);
+    // pdfkit has no CSS engine — var(--token) is not a valid color and
+    // silently falls back to black, so every color here is a literal hex.
+    const ORANGE='#c2410c', TEAL='#0d9488', DANGER='#dc2626', ZEBRA='#f2f2f2';
     doc.pipe(res);
     doc.rect(0,0,595,80).fill('#0f0f1a');
-    doc.fillColor('var(--orange)').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS Pilipinas',40,18);
+    doc.fillColor('#f97316').fontSize(22).font('Helvetica-Bold').text('HOOPSTATS Pilipinas',40,18);
     doc.fillColor('#ffffff').fontSize(14).text(league.name,40,44);
     doc.fillColor('#888888').fontSize(10).text(`${league.location} · ${league.season} · ${league.level}`,40,62);
     let y=100;
-    doc.fillColor('var(--orange)').fontSize(13).font('Helvetica-Bold').text('TEAM STANDINGS',40,y);
-    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('var(--orange)').lineWidth(1).stroke();
+    doc.fillColor(ORANGE).fontSize(13).font('Helvetica-Bold').text('TEAM STANDINGS',40,y);
+    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor(ORANGE).lineWidth(1).stroke();
     y+=26;
     doc.fillColor('#888').fontSize(9).font('Helvetica-Bold').text('#',40,y).text('TEAM',65,y).text('W',340,y).text('L',380,y).text('WIN%',415,y);
     y+=14;
     for (const [i,t] of teams.entries()) {
-      if(i%2===0)doc.rect(40,y-2,515,17).fill('#0a0a12');
+      if(i%2===0)doc.rect(40,y-2,515,17).fill(ZEBRA);
       const pct=((t.wins/(t.wins+t.losses||1))*100).toFixed(1);
-      doc.fillColor(i<2?'var(--orange)':'#ccc').fontSize(9).font('Helvetica-Bold').text(`${i+1}`,42,y);
-      doc.fillColor('#fff').font('Helvetica').text(t.name,65,y,{width:260});
-      doc.fillColor('var(--teal)').text(`${t.wins}`,340,y);
-      doc.fillColor('var(--danger)').text(`${t.losses}`,380,y);
-      doc.fillColor('#aaa').text(`${pct}%`,415,y);
+      doc.fillColor(i<2?ORANGE:'#666').fontSize(9).font('Helvetica-Bold').text(`${i+1}`,42,y);
+      doc.fillColor('#1a1a1a').font('Helvetica').text(t.name,65,y,{width:260});
+      doc.fillColor(TEAL).text(`${t.wins}`,340,y);
+      doc.fillColor(DANGER).text(`${t.losses}`,380,y);
+      doc.fillColor('#666').text(`${pct}%`,415,y);
       y+=17;
     }
     y+=18;
     if(y>720){doc.addPage();y=40;}
-    doc.fillColor('var(--orange)').fontSize(13).font('Helvetica-Bold').text('PLAYER STATISTICS',40,y);
-    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor('var(--orange)').lineWidth(1).stroke();
+    doc.fillColor(ORANGE).fontSize(13).font('Helvetica-Bold').text('PLAYER STATISTICS',40,y);
+    doc.moveTo(40,y+16).lineTo(555,y+16).strokeColor(ORANGE).lineWidth(1).stroke();
     y+=26;
     doc.fillColor('#888').fontSize(8).font('Helvetica-Bold')
       .text('#',40,y).text('PLAYER',58,y).text('TEAM',195,y).text('POS',295,y)
@@ -1310,13 +1311,13 @@ router.get('/league/:id/pdf', async (req, res) => {
     y+=14;
     for (const [i,p] of players.entries()) {
       if(y>760){doc.addPage();y=40;}
-      if(i%2===0)doc.rect(40,y-2,515,16).fill('#0a0a12');
-      doc.fillColor(i===0?'var(--orange)':'#888').fontSize(8).font('Helvetica-Bold').text(`${i+1}`,42,y);
-      doc.fillColor('#fff').font('Helvetica').text(p.name,58,y,{width:130});
-      doc.fillColor('#aaa').text((p.team_name||'').slice(0,20),195,y).text(p.pos,295,y);
-      doc.fillColor('var(--orange)').text(`${p.pts}`,330,y);
-      doc.fillColor('#fff').text(`${p.reb}`,360,y).text(`${p.ast}`,390,y).text(`${p.stl}`,420,y).text(`${p.blk}`,450,y);
-      doc.fillColor('var(--teal)').text(`${p.fg}%`,480,y);
+      if(i%2===0)doc.rect(40,y-2,515,16).fill(ZEBRA);
+      doc.fillColor(i===0?ORANGE:'#888').fontSize(8).font('Helvetica-Bold').text(`${i+1}`,42,y);
+      doc.fillColor('#1a1a1a').font('Helvetica').text(p.name,58,y,{width:130});
+      doc.fillColor('#777').text((p.team_name||'').slice(0,20),195,y).text(p.pos,295,y);
+      doc.fillColor(ORANGE).text(`${p.pts}`,330,y);
+      doc.fillColor('#333').text(`${p.reb}`,360,y).text(`${p.ast}`,390,y).text(`${p.stl}`,420,y).text(`${p.blk}`,450,y);
+      doc.fillColor(TEAL).text(`${p.fg}%`,480,y);
       y+=16;
     }
     doc.fillColor('#444').fontSize(8).text(`Generated by PH Hoops · ${new Date().toLocaleDateString('en-PH')}`,40,800);
@@ -1391,6 +1392,20 @@ function playerForm(league, teams, player) {
         ${player ? 'Update player information below.' : 'Add player to the roster. Stats will be calculated automatically from game entries.'}
       </p>
     </div></div>
+    ${player ? `
+    <div class="card" style="max-width:480px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:var(--text-3);text-transform:uppercase;margin-bottom:12px">Season Stats</div>
+      <div class="alc-stats" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="acs"><b>${v('gp',0)}</b>GP</div>
+        <div class="acs"><b style="color:var(--orange)">${v('pts',0)}</b>PTS</div>
+        <div class="acs"><b>${v('reb',0)}</b>REB</div>
+        <div class="acs"><b>${v('ast',0)}</b>AST</div>
+        <div class="acs"><b>${v('stl',0)}</b>STL</div>
+        <div class="acs"><b>${v('blk',0)}</b>BLK</div>
+        <div class="acs"><b style="color:var(--teal)">${v('fg',0)}%</b>FG%</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:10px">Stats are calculated automatically from game entries — use Post-Game Stats or Live Score to update them.</div>
+    </div>` : ''}
     <div class="card" style="max-width:480px">
       <form action="/admin/league/${league.id}/${player?`edit-player/${player.id}`:'add-player'}" method="POST" enctype="multipart/form-data">
         <div class="field-group"><label>Full Name</label>
