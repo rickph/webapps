@@ -1,7 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const db      = require('../db/database');
-const { requireAuth } = require('../middleware/auth');
+const jwt     = require('jsonwebtoken');
 const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 const multer      = require('multer');
 const { importGameStats, generateTemplate } = require('../import-stats');
@@ -16,7 +16,36 @@ const uploadSheet = multer({
   },
 }).single('statsFile');
 
-router.use(requireAuth);
+const JWT_SECRET = process.env.JWT_SECRET || 'phhoops-jwt-secret-change-in-production';
+
+// Full commissioner login, OR a league-scoped "Commissioner / Scorer Access"
+// code entered on the public league page (src/routes/public.js POST /league/:id/access,
+// which stores req.session.adminCodes[leagueId]). The plain requireAuth middleware
+// only ever checked the JWT, so the code-entry flow set a session value nothing
+// read and always bounced back to /login — this restores that path.
+function requireAuthOrScorerCode(req, res, next) {
+  const token = req.session?.token;
+  if (token) {
+    try { req.user = jwt.verify(token, JWT_SECRET); return next(); }
+    catch { req.session.destroy(); return res.redirect('/login'); }
+  }
+  const m = req.path.match(/^\/league\/(\d+)/);
+  const leagueId = m && m[1];
+  const code = leagueId && req.session?.adminCodes?.[leagueId];
+  if (leagueId && code) {
+    db.queryOne('SELECT admin_code FROM leagues WHERE id=$1', [leagueId]).then(league => {
+      if (league && code === league.admin_code) {
+        req.user = { id: null, name: 'Scorer', plan: 'free', role: 'scorer' };
+        req.scorerLeagueId = Number(leagueId);
+        return next();
+      }
+      res.redirect('/login');
+    }).catch(() => res.redirect('/login'));
+    return;
+  }
+  res.redirect('/login');
+}
+router.use(requireAuthOrScorerCode);
 
 const LEVEL_OPTIONS = ['Barangay','City/Municipal','Provincial','Regional'];
 const TEAM_COLORS   = ['#e63946','#c1121f','#f4a261','#e9c46a','#f7c948','#8ac926','#2a9d8f','#00d4aa','#457b9d','#1982c4','#264653','#023e8a','#6a4c93','#a78bfa','#e76f51','#ff6b35','#ff4757','#e8e4d9','#cccccc','#111111'];
@@ -47,6 +76,13 @@ const POSITIONS     = ['PG','SG','SF','PF','C'];
 async function ownsLeague(leagueId, userId) {
   const l = await db.queryOne('SELECT user_id FROM leagues WHERE id=$1', [leagueId]);
   return l && Number(l.user_id) === Number(userId);
+}
+
+// True for the commissioner who owns the league, or a scorer-code session
+// scoped to that exact league (see requireAuthOrScorerCode above).
+async function canAccessLeague(req, leagueId) {
+  if (req.scorerLeagueId && Number(req.scorerLeagueId) === Number(leagueId)) return true;
+  return ownsLeague(leagueId, req.user.id);
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -162,7 +198,7 @@ router.post('/new-league', async (req, res) => {
 // ── DELETE LEAGUE ─────────────────────────────────────────────────────────────
 router.get('/league/:id/delete', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await db.run('DELETE FROM leagues WHERE id=$1', [req.params.id]);
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin'); }
@@ -173,7 +209,7 @@ router.get('/league/:id', async (req, res) => {
   try {
     const lid = req.params.id;
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [lid]);
-    if (!league || !await ownsLeague(lid, req.user.id)) return res.redirect('/admin');
+    if (!league || !await canAccessLeague(req, lid)) return res.redirect('/admin');
 
     const [teams, players, games, seasonStats] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC, losses ASC, (pts_for - pts_against) DESC', [lid]),
@@ -337,7 +373,7 @@ router.get('/league/:id', async (req, res) => {
 // ── ADD/EDIT TEAM ─────────────────────────────────────────────────────────────
 router.get('/league/:id/add-team', async (req, res) => {
   const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-  if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+  if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
   res.send(adminPage('Add Team', req.user, `
     <div class="admin-header"><div>
       <a href="/admin/league/${league.id}#teams" class="back-link">← Back</a>
@@ -375,7 +411,7 @@ router.post('/league/:id/add-team', (req, res) => {
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
   upload(req, res, async (err) => {
     try {
-      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
       const { name, color, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-team`);
       let photo_url = null;
@@ -400,7 +436,7 @@ router.post('/league/:id/add-team', (req, res) => {
 router.get('/league/:id/edit-team/:tid', async (req, res) => {
   const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
   const team   = await db.queryOne('SELECT * FROM teams WHERE id=$1', [req.params.tid]);
-  if (!league || !team || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+  if (!league || !team || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
   res.send(adminPage('Edit Team', req.user, `
     <div class="admin-header"><div>
       <a href="/admin/league/${league.id}" class="back-link">← Back</a>
@@ -440,7 +476,7 @@ router.post('/league/:id/edit-team/:tid', (req, res) => {
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
   upload(req, res, async (err) => {
     try {
-      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
       const { name, color, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/edit-team/${req.params.tid}`);
       let photo_url = null;
@@ -467,7 +503,7 @@ router.post('/league/:id/edit-team/:tid', (req, res) => {
 
 router.get('/league/:id/delete-team/:tid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await db.run('DELETE FROM teams WHERE id=$1', [req.params.tid]);
     res.redirect(`/admin/league/${req.params.id}`);
   } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
@@ -476,7 +512,7 @@ router.get('/league/:id/delete-team/:tid', async (req, res) => {
 // ── ADD/EDIT PLAYER ───────────────────────────────────────────────────────────
 router.get('/league/:id/add-player', async (req, res) => {
   const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-  if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+  if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
   const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
   res.send(adminPage('Add Player', req.user, playerForm(league, teams, null)));
 });
@@ -485,7 +521,7 @@ router.post('/league/:id/add-player', (req, res) => {
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
   upload(req, res, async (err) => {
     try {
-      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
       const { team_id, name, pos, jersey, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/add-player`);
       let photo_url = null;
@@ -511,7 +547,7 @@ router.post('/league/:id/add-player', (req, res) => {
 router.get('/league/:id/edit-player/:pid', async (req, res) => {
   const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
   const player = await db.queryOne('SELECT * FROM players WHERE id=$1', [req.params.pid]);
-  if (!league || !player || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+  if (!league || !player || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
   const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
   res.send(adminPage('Edit Player', req.user, playerForm(league, teams, player)));
 });
@@ -520,7 +556,7 @@ router.post('/league/:id/edit-player/:pid', (req, res) => {
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3*1024*1024 } }).single('photo');
   upload(req, res, async (err) => {
     try {
-      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
       const { team_id, name, pos, jersey, bio } = req.body;
       if (!name?.trim()) return res.redirect(`/admin/league/${req.params.id}/edit-player/${req.params.pid}`);
 
@@ -554,7 +590,7 @@ router.post('/league/:id/edit-player/:pid', (req, res) => {
 
 router.get('/league/:id/delete-player/:pid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await db.run('DELETE FROM players WHERE id=$1', [req.params.pid]);
     res.redirect(`/admin/league/${req.params.id}`);
   } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
@@ -563,7 +599,7 @@ router.get('/league/:id/delete-player/:pid', async (req, res) => {
 // ── ADD GAME ──────────────────────────────────────────────────────────────────
 router.get('/league/:id/add-game', async (req, res) => {
   const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-  if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+  if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
   const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
   const topts = `<option value="">Select team</option>` + teams.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
   res.send(adminPage('Add Game', req.user, `
@@ -612,7 +648,7 @@ router.get('/league/:id/add-game', async (req, res) => {
 
 router.post('/league/:id/add-game', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const { home_team_id,away_team_id,date,venue,status,home_score,away_score } = req.body;
     await db.run(
       'INSERT INTO games (league_id,home_team_id,away_team_id,home_score,away_score,date,venue,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
@@ -624,7 +660,7 @@ router.post('/league/:id/add-game', async (req, res) => {
 
 router.get('/league/:id/delete-game/:gid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await db.run('DELETE FROM games WHERE id=$1', [req.params.gid]);
     res.redirect(`/admin/league/${req.params.id}`);
   } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
@@ -641,7 +677,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
       LEFT JOIN teams ht ON g.home_team_id=ht.id
       LEFT JOIN teams at ON g.away_team_id=at.id
       WHERE g.id=$1`, [req.params.gid]);
-    if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !game || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
 
     const homePlayers = game.htid ? await db.query('SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
     const awayPlayers = game.atid ? await db.query('SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.atid]) : [];
@@ -1162,7 +1198,7 @@ router.get('/league/:id/score/:gid', async (req, res) => {
 
 router.post('/league/:id/score/:gid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const { home_score, away_score, status, save_type, player_ids } = req.body;
     const game = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.gid]);
     const { computeGameStats, computeSeasonAverages } = require('../fiba-stats');
@@ -1267,7 +1303,7 @@ router.post('/league/:id/score/:gid', async (req, res) => {
 router.get('/league/:id/pdf', async (req, res) => {
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-    if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const [teams, players] = await Promise.all([
       db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC', [league.id]),
       db.query(`SELECT p.*,t.name as team_name FROM players p LEFT JOIN teams t ON p.team_id=t.id WHERE p.league_id=$1 ORDER BY p.pts DESC`, [league.id]),
@@ -1329,7 +1365,7 @@ router.get('/league/:id/pdf', async (req, res) => {
 router.get('/league/:id/bracket', async (req, res) => {
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-    if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY wins DESC', [league.id]);
     const seeded = teams.slice(0,8);
     const n = Math.pow(2, Math.ceil(Math.log2(Math.max(seeded.length,2))));
@@ -1375,7 +1411,7 @@ router.get('/league/:id/bracket', async (req, res) => {
 // ── DELETE LEAGUE ─────────────────────────────────────────────────────────────
 router.get('/league/:id/delete', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await db.run('DELETE FROM leagues WHERE id=$1', [req.params.id]);
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin'); }
@@ -1610,7 +1646,7 @@ async function recalcStandings(leagueId, dbRef) {
 // ── DOWNLOAD STATS TEMPLATE ───────────────────────────────────────────────────
 router.get('/league/:id/import-stats/template', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const players = await db.query(
       'SELECT name FROM players WHERE league_id=$1 ORDER BY name', [req.params.id]
     );
@@ -1624,7 +1660,7 @@ router.get('/league/:id/import-stats/template', async (req, res) => {
 // ── GET IMPORT STATS PAGE ─────────────────────────────────────────────────────
 router.get('/league/:id/import-stats/:gid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const [league, game, players] = await Promise.all([
       db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]),
       db.queryOne(
@@ -1716,7 +1752,7 @@ router.get('/league/:id/import-stats/:gid', async (req, res) => {
 router.post('/league/:id/import-stats/:gid', (req, res) => {
   uploadSheet(req, res, async (err) => {
     try {
-      if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
 
       if (err) {
         return res.send(adminPage('Import Error', req.user, `
@@ -1853,7 +1889,7 @@ module.exports = router;
 router.get('/league/:id/edit', async (req, res) => {
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
-    if (!league || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const err = req.query.error;
     res.send(adminPage('Edit League', req.user, `
       <div class="admin-header"><div>
@@ -1898,7 +1934,7 @@ router.get('/league/:id/edit', async (req, res) => {
 
 router.post('/league/:id/edit', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const { name, level, location, season, status, admin_code, is_public } = req.body;
     if (!name?.trim() || !admin_code?.trim()) {
       return res.redirect(`/admin/league/${req.params.id}/edit?error=missing`);
@@ -1916,7 +1952,7 @@ router.get('/league/:id/edit-game/:gid', async (req, res) => {
   try {
     const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
     const game   = await db.queryOne('SELECT * FROM games WHERE id=$1', [req.params.gid]);
-    if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !game || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const teams = await db.query('SELECT * FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
     const topts = `<option value="">Select team</option>` +
       teams.map(t => `<option value="${t.id}" ${game.home_team_id == t.id ? 'selected' : ''}>${esc(t.name)}</option>`).join('');
@@ -1980,7 +2016,7 @@ router.get('/league/:id/edit-game/:gid', async (req, res) => {
 
 router.post('/league/:id/edit-game/:gid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const { home_team_id, away_team_id, date, venue, status, home_score, away_score } = req.body;
     await db.run(
       'UPDATE games SET home_team_id=$1,away_team_id=$2,date=$3,venue=$4,status=$5,home_score=$6,away_score=$7 WHERE id=$8',
@@ -2003,7 +2039,7 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
       LEFT JOIN teams ht ON g.home_team_id=ht.id
       LEFT JOIN teams at ON g.away_team_id=at.id
       WHERE g.id=$1`, [req.params.gid]);
-    if (!league || !game || !await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!league || !game || !await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
 
     const homePlayers = game.htid ? await db.query(
       'SELECT * FROM players WHERE team_id=$1 ORDER BY pos,name', [game.htid]) : [];
@@ -2144,7 +2180,7 @@ router.get('/league/:id/game-stats/:gid', async (req, res) => {
 
 router.post('/league/:id/game-stats/:gid', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     const { player_ids } = req.body;
     const { computeSeasonAverages } = require('../fiba-stats');
 
@@ -2233,7 +2269,7 @@ router.post('/league/:id/game-stats/:gid', async (req, res) => {
 // ── RECALCULATE ALL STANDINGS (manual fix route) ──────────────────────────────
 router.get('/league/:id/recalc-standings', async (req, res) => {
   try {
-    if (!await ownsLeague(req.params.id, req.user.id)) return res.redirect('/admin');
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
     await recalcStandings(req.params.id, db);
     res.redirect(`/admin/league/${req.params.id}?recalc=1`);
   } catch (err) { console.error(err); res.redirect(`/admin/league/${req.params.id}`); }
