@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,800;0,900;1,800;1,900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+/* Font stylesheet is loaded via a <link> tag in every page shell (helpers.js,
+   admin.js, superadmin.js, app.js 404) instead of @import here — @import is
+   render-blocking and sequential (fetch this file, THEN discover the import,
+   THEN fetch the font CSS, THEN the font files), which on a slow mobile
+   connection left text sized for Barlow Condensed sitting in the fallback
+   sans-serif — wider, so it overflowed its box — until the real font finally
+   swapped in. A <link> lets the browser start fetching it immediately,
+   in parallel with everything else. */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

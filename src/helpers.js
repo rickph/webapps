@@ -43,6 +43,9 @@ const page = (title, body) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,800;0,900;1,800;1,900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
 <script>try{var _t=localStorage.getItem('hoopstats-theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#e63329">
@@ -56,7 +59,7 @@ const page = (title, body) => `<!DOCTYPE html>
 <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png?v=5">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; script-src-attr 'self' 'unsafe-inline' 'unsafe-hashes'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
 <title>${title} | HoopStats Pilipinas</title>
-<link rel="stylesheet" href="/css/main.css?v45">
+<link rel="stylesheet" href="/css/main.css?v46">
 </head>
 <body class="dark-bg">${body}<script>
 if ('serviceWorker' in navigator) {

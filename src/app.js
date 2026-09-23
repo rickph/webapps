@@ -61,9 +61,12 @@ app.get('/upgrade', (req, res) => res.redirect('/admin'));
 app.use((req, res) => {
   res.status(404).send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,800;0,900;1,800;1,900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
 <script>try{var _t=localStorage.getItem('hoopstats-theme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <title>Not Found | PH Hoops</title>
-<link rel="stylesheet" href="/css/main.css?v45"></head>
+<link rel="stylesheet" href="/css/main.css?v46"></head>
 <body class="dark-bg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;text-align:center">
   <div style="font-size:64px">🏀</div>
   <h1 style="font-family:'Russo One',sans-serif">Page Not Found</h1>
