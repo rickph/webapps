@@ -109,7 +109,7 @@ router.get('/league/:id', async (req, res) => {
     ]);
     const seasonStats = {};
     seasonStatsRows.forEach(s => { seasonStats[s.player_id] = s; });
-    res.send(renderLeaguePage(league, teams, players, games, req.user, seasonStats, { col, dir: sortDir, tab }));
+    res.send(renderLeaguePage(league, teams, players, games, req.user, seasonStats, { col, dir: sortDir, tab }, req));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
 });
 
