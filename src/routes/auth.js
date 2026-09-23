@@ -8,6 +8,9 @@ const { esc, page }     = require('../helpers');
 // ── GET /login ────────────────────────────────────────────────────────────────
 router.get('/login', (req, res) => {
   res.send(page('Login | PH Hoops', authCard(`
+    <a href="/" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted,#888);text-decoration:none;margin-bottom:16px;font-weight:600">
+      ← Back to Home
+    </a>
     <div class="auth-logo" style="text-align:center;margin-bottom:8px">
       <img src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas"
            style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto">
@@ -35,6 +38,9 @@ router.post('/login', async (req, res) => {
     );
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.send(page('Login | PH Hoops', authCard(`
+        <a href="/" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted,#888);text-decoration:none;margin-bottom:16px;font-weight:600">
+          ← Back to Home
+        </a>
         <div class="auth-logo" style="text-align:center;margin-bottom:8px">
       <img src="/icons/logo-watermark.png?v=2" alt="HoopStats Pilipinas"
            style="width:96px;height:96px;object-fit:contain;display:block;margin:0 auto">
