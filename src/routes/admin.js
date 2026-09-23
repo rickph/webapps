@@ -5,6 +5,7 @@ const jwt     = require('jsonwebtoken');
 const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
 const multer      = require('multer');
 const { importGameStats, generateTemplate } = require('../import-stats');
+const { importTeams, generateTeamsTemplate, importPlayers, generatePlayersTemplate } = require('../import-roster');
 
 // Spreadsheet upload (memory storage — no disk write needed)
 const uploadSheet = multer({
@@ -267,6 +268,7 @@ router.get('/league/:id', async (req, res) => {
         <div class="tab-action-bar">
           <h3>Teams (${teams.length})</h3>
           <a href="/admin/league/${league.id}/add-team" class="btn-primary">+ Add Team</a>
+          <a href="/admin/league/${league.id}/import-teams" class="btn-ghost-sm">📤 Import</a>
         </div>
         <div class="teams-list">
           ${teams.map(t=>`
@@ -294,6 +296,7 @@ router.get('/league/:id', async (req, res) => {
         <div class="tab-action-bar">
           <h3>Players (${players.length})</h3>
           <a href="/admin/league/${league.id}/add-player" class="btn-primary">+ Add Player</a>
+          <a href="/admin/league/${league.id}/import-players" class="btn-ghost-sm">📤 Import</a>
         </div>
         <div style="overflow-x:auto">
           <table class="stats-table">
@@ -1878,6 +1881,328 @@ router.post('/league/:id/import-stats/:gid', (req, res) => {
       `));
     } catch (err) {
       console.error('Import error:', err);
+      res.redirect('/admin/league/' + req.params.id);
+    }
+  });
+});
+
+// ── SHARED: IMPORT RESULTS PAGE ───────────────────────────────────────────────
+function renderImportResults(league, result, { backHref, tryAgainHref, skippedLabel }) {
+  return `
+    <div class="admin-header"><div>
+      <a href="/admin/league/${league.id}" class="back-link">← Back to League</a>
+      <h1>📊 Import Results</h1>
+    </div></div>
+    <div class="card" style="max-width:640px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+        <div style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:10px;padding:16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--teal);line-height:1">${result.imported.length}</div>
+          <div style="font-size:10px;color:var(--teal);font-weight:800;letter-spacing:1.5px;margin-top:6px">IMPORTED</div>
+        </div>
+        <div style="background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.18);border-radius:10px;padding:16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--stat-gold);line-height:1">${result.skipped.length}</div>
+          <div style="font-size:10px;color:var(--stat-gold);font-weight:800;letter-spacing:1.5px;margin-top:6px">SKIPPED</div>
+        </div>
+        <div style="background:var(--overlay-1);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--text-3);line-height:1">${result.total}</div>
+          <div style="font-size:10px;color:var(--text-3);font-weight:800;letter-spacing:1.5px;margin-top:6px">TOTAL ROWS</div>
+        </div>
+      </div>
+
+      ${result.imported.length > 0 ? `
+      <div style="margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;color:var(--teal);letter-spacing:1.5px;margin-bottom:10px">✅ SUCCESSFULLY IMPORTED</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${result.imported.map(n => `<span style="background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.18);border-radius:5px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--teal)">${esc(n)}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${result.skipped.length > 0 ? `
+      <div style="margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;color:var(--stat-gold);letter-spacing:1.5px;margin-bottom:10px">⚠️ SKIPPED${skippedLabel ? ' — ' + esc(skippedLabel) : ''}</div>
+        <div style="background:rgba(247,201,72,.04);border:1px solid rgba(247,201,72,.12);border-radius:8px;padding:12px 14px">
+          ${result.skipped.map(n => `<div style="font-size:12px;color:var(--text-2);padding:3px 0">• ${esc(n)}</div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${result.errors.length > 0 ? `
+      <div style="margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;color:#f87171;letter-spacing:1.5px;margin-bottom:10px">❌ ERRORS</div>
+        <div style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:12px 14px">
+          ${result.errors.map(e => `<div style="font-size:12px;color:#f87171;padding:3px 0">• ${esc(e)}</div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <a href="${backHref}" class="btn-primary">← Back to League</a>
+        <a href="${tryAgainHref}" class="btn-ghost">Import Another File</a>
+      </div>
+    </div>`;
+}
+
+// ── DOWNLOAD TEAMS TEMPLATE ────────────────────────────────────────────────────
+router.get('/league/:id/import-teams/template', async (req, res) => {
+  try {
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+    const buf = generateTeamsTemplate();
+    res.setHeader('Content-Disposition', 'attachment; filename="hoopstats-teams-template.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── GET IMPORT TEAMS PAGE ─────────────────────────────────────────────────────
+router.get('/league/:id/import-teams', async (req, res) => {
+  try {
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!league) return res.redirect('/admin');
+    const teams = await db.query('SELECT name FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
+
+    res.send(adminPage('Import Teams | ' + esc(league.name), req.user, `
+      <div class="admin-header"><div>
+        <a href="/admin/league/${league.id}" class="back-link">← Back</a>
+        <h1>📤 Bulk Import Teams</h1>
+      </div></div>
+
+      <div class="card" style="max-width:600px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--teal);font-size:16px;flex-shrink:0">1</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Download the Template</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">A blank spreadsheet with example rows</div>
+          </div>
+        </div>
+        <a href="/admin/league/${league.id}/import-teams/template"
+           class="btn-primary" style="display:inline-flex;align-items:center;gap:8px">
+          📥 Download Template (.xlsx)
+        </a>
+        <div style="margin-top:12px;padding:12px 14px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8">
+          <strong style="color:var(--text)">Template columns:</strong><br>
+          Team Name · Color (optional) · Bio (optional)<br><br>
+          <strong style="color:var(--text)">Tips:</strong><br>
+          • Color can be a name (Red, Teal, Navy...) or a hex code (#e63946) — leave blank to auto-assign<br>
+          • Teams that already exist in this league (by name) are skipped<br>
+          • CSV and Excel (.xlsx/.xls) are both accepted
+        </div>
+      </div>
+
+      <div class="card" style="max-width:600px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(230,51,41,.15);border:1px solid rgba(230,51,41,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--red);font-size:16px;flex-shrink:0">2</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Upload Filled Spreadsheet</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Accepts .xlsx, .xls, or .csv · Max 5MB</div>
+          </div>
+        </div>
+        <form action="/admin/league/${league.id}/import-teams" method="POST" enctype="multipart/form-data">
+          <div class="field-group">
+            <label>Select File</label>
+            <input name="statsFile" type="file" class="input"
+                   accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                   required style="padding:10px" />
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">📤 Import Teams →</button>
+          </div>
+        </form>
+      </div>
+
+      ${teams.length ? `
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <div style="font-weight:700;margin-bottom:10px;font-size:14px">🏀 Teams already in this league (${teams.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${teams.map(t => `<span style="background:var(--overlay-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600">${esc(t.name)}</span>`).join('')}
+        </div>
+      </div>` : ''}
+    `));
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── POST IMPORT TEAMS ──────────────────────────────────────────────────────────
+router.post('/league/:id/import-teams', (req, res) => {
+  uploadSheet(req, res, async (err) => {
+    try {
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+      const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+      if (!league) return res.redirect('/admin');
+
+      if (err) {
+        return res.send(adminPage('Import Error', req.user, `
+          <div class="admin-header"><div>
+            <a href="/admin/league/${league.id}/import-teams" class="back-link">← Back</a>
+            <h1>Import Error</h1>
+          </div></div>
+          <div class="card" style="max-width:600px">
+            <div class="alert-error">❌ ${esc(err.message)}</div>
+            <a href="/admin/league/${league.id}/import-teams" class="btn-primary" style="margin-top:16px;display:inline-block">Try Again</a>
+          </div>
+        `));
+      }
+      if (!req.file) return res.redirect(`/admin/league/${league.id}/import-teams`);
+
+      const result = await importTeams(req.file.buffer, {
+        leagueId: req.params.id, db, teamColors: TEAM_COLORS, colorNames: COLOR_NAMES
+      });
+
+      if (!result.success) {
+        return res.send(adminPage('Import Error', req.user, `
+          <div class="admin-header"><div>
+            <a href="/admin/league/${league.id}/import-teams" class="back-link">← Back</a>
+            <h1>Import Error</h1>
+          </div></div>
+          <div class="card" style="max-width:600px">
+            <div class="alert-error">❌ ${esc(result.error)}</div>
+            ${result.hint ? `<div style="font-size:12px;color:var(--muted);margin-top:10px">${esc(result.hint)}</div>` : ''}
+            <a href="/admin/league/${league.id}/import-teams" class="btn-primary" style="margin-top:16px;display:inline-block">Try Again</a>
+          </div>
+        `));
+      }
+
+      res.send(adminPage('Import Results | ' + esc(league.name), req.user, renderImportResults(league, result, {
+        backHref: `/admin/league/${league.id}`,
+        tryAgainHref: `/admin/league/${league.id}/import-teams`,
+        skippedLabel: 'already in the league'
+      })));
+    } catch (err) {
+      console.error('Team import error:', err);
+      res.redirect('/admin/league/' + req.params.id);
+    }
+  });
+});
+
+// ── DOWNLOAD PLAYERS TEMPLATE ──────────────────────────────────────────────────
+router.get('/league/:id/import-players/template', async (req, res) => {
+  try {
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+    const teams = await db.query('SELECT name FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
+    const buf = generatePlayersTemplate(teams);
+    res.setHeader('Content-Disposition', 'attachment; filename="hoopstats-players-template.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buf);
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── GET IMPORT PLAYERS PAGE ────────────────────────────────────────────────────
+router.get('/league/:id/import-players', async (req, res) => {
+  try {
+    if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!league) return res.redirect('/admin');
+    const teams = await db.query('SELECT name FROM teams WHERE league_id=$1 ORDER BY name', [req.params.id]);
+
+    res.send(adminPage('Import Players | ' + esc(league.name), req.user, `
+      <div class="admin-header"><div>
+        <a href="/admin/league/${league.id}" class="back-link">← Back</a>
+        <h1>📤 Bulk Import Players</h1>
+      </div></div>
+
+      <div class="card" style="max-width:600px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--teal);font-size:16px;flex-shrink:0">1</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Download the Template</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Lists this league's teams for reference</div>
+          </div>
+        </div>
+        <a href="/admin/league/${league.id}/import-players/template"
+           class="btn-primary" style="display:inline-flex;align-items:center;gap:8px">
+          📥 Download Template (.xlsx)
+        </a>
+        <div style="margin-top:12px;padding:12px 14px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8">
+          <strong style="color:var(--text)">Template columns:</strong><br>
+          Player Name · Team Name · Jersey # (optional) · Position (optional)<br><br>
+          <strong style="color:var(--text)">Tips:</strong><br>
+          • Team Name is required and must match an existing team exactly (case-insensitive)<br>
+          • Position must be one of PG, SG, SF, PF, C<br>
+          • Players that already exist in this league (by name) are skipped<br>
+          • CSV and Excel (.xlsx/.xls) are both accepted
+        </div>
+      </div>
+
+      <div class="card" style="max-width:600px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(230,51,41,.15);border:1px solid rgba(230,51,41,.3);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--red);font-size:16px;flex-shrink:0">2</div>
+          <div>
+            <div style="font-weight:700;font-size:15px">Upload Filled Spreadsheet</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Accepts .xlsx, .xls, or .csv · Max 5MB</div>
+          </div>
+        </div>
+        <form action="/admin/league/${league.id}/import-players" method="POST" enctype="multipart/form-data">
+          <div class="field-group">
+            <label>Select File</label>
+            <input name="statsFile" type="file" class="input"
+                   accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                   required style="padding:10px" />
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/admin/league/${league.id}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-primary">📤 Import Players →</button>
+          </div>
+        </form>
+      </div>
+
+      ${teams.length ? `
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <div style="font-weight:700;margin-bottom:10px;font-size:14px">🏀 Teams in this league (${teams.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${teams.map(t => `<span style="background:var(--overlay-2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600">${esc(t.name)}</span>`).join('')}
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">⚠️ Team names in spreadsheet must match exactly (spelling counts, case doesn't)</div>
+      </div>` : `
+      <div class="card" style="max-width:600px;margin-top:16px">
+        <div class="alert-error">⚠️ No teams yet. Every player needs a Team Name that matches an existing team, so <a href="/admin/league/${league.id}/import-teams" style="color:inherit;text-decoration:underline">add or bulk-import teams first</a>.</div>
+      </div>`}
+    `));
+  } catch (err) { console.error(err); res.redirect('/admin'); }
+});
+
+// ── POST IMPORT PLAYERS ────────────────────────────────────────────────────────
+router.post('/league/:id/import-players', (req, res) => {
+  uploadSheet(req, res, async (err) => {
+    try {
+      if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
+      const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+      if (!league) return res.redirect('/admin');
+
+      if (err) {
+        return res.send(adminPage('Import Error', req.user, `
+          <div class="admin-header"><div>
+            <a href="/admin/league/${league.id}/import-players" class="back-link">← Back</a>
+            <h1>Import Error</h1>
+          </div></div>
+          <div class="card" style="max-width:600px">
+            <div class="alert-error">❌ ${esc(err.message)}</div>
+            <a href="/admin/league/${league.id}/import-players" class="btn-primary" style="margin-top:16px;display:inline-block">Try Again</a>
+          </div>
+        `));
+      }
+      if (!req.file) return res.redirect(`/admin/league/${league.id}/import-players`);
+
+      const result = await importPlayers(req.file.buffer, { leagueId: req.params.id, db });
+
+      if (!result.success) {
+        return res.send(adminPage('Import Error', req.user, `
+          <div class="admin-header"><div>
+            <a href="/admin/league/${league.id}/import-players" class="back-link">← Back</a>
+            <h1>Import Error</h1>
+          </div></div>
+          <div class="card" style="max-width:600px">
+            <div class="alert-error">❌ ${esc(result.error)}</div>
+            ${result.hint ? `<div style="font-size:12px;color:var(--muted);margin-top:10px">${esc(result.hint)}</div>` : ''}
+            <a href="/admin/league/${league.id}/import-players" class="btn-primary" style="margin-top:16px;display:inline-block">Try Again</a>
+          </div>
+        `));
+      }
+
+      res.send(adminPage('Import Results | ' + esc(league.name), req.user, renderImportResults(league, result, {
+        backHref: `/admin/league/${league.id}`,
+        tryAgainHref: `/admin/league/${league.id}/import-players`,
+        skippedLabel: 'already in the league'
+      })));
+    } catch (err) {
+      console.error('Player import error:', err);
       res.redirect('/admin/league/' + req.params.id);
     }
   });
