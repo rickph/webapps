@@ -3,7 +3,7 @@ const router  = express.Router();
 const db      = require('../db/database');
 const bcrypt  = require('bcryptjs');
 const { requireAuth, requireSuperAdmin, generateToken } = require('../middleware/auth');
-const { esc, levelBadge, statusBadge } = require('../helpers');
+const { esc, levelBadge, statusBadge, approvalBadge } = require('../helpers');
 
 router.use(requireAuth);
 router.use(requireSuperAdmin);
@@ -47,6 +47,13 @@ router.get('/', async (req, res) => {
       LIMIT 10
     `);
 
+    const pendingLeagues = await db.query(`
+      SELECT l.*, u.name as owner_name, u.email as owner_email
+      FROM leagues l JOIN users u ON l.user_id = u.id
+      WHERE l.approval_status = 'pending'
+      ORDER BY l.created_at ASC
+    `);
+
     res.send(superPage('Dashboard', req.user, `
       <div class="admin-header">
         <div>
@@ -66,6 +73,27 @@ router.get('/', async (req, res) => {
         <div class="ds"><span style="color:var(--teal)">${totals.teams}</span><small>Total Teams</small></div>
         <div class="ds"><span style="color:var(--purple)">${totals.players}</span><small>Total Players</small></div>
       </div>
+
+      <!-- PENDING APPROVALS -->
+      ${pendingLeagues.length > 0 ? `
+      <h3 style="font-family:'Russo One',sans-serif;font-size:16px;margin-bottom:14px;letter-spacing:.5px;color:var(--gold)">
+        ⏳ Pending League Approvals (${pendingLeagues.length})
+      </h3>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">
+        ${pendingLeagues.map(l => `
+          <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <div style="font-weight:700;font-size:14px">${esc(l.name)}</div>
+              <div style="font-size:12px;color:var(--muted)">📍 ${esc(l.location||'—')} · By: ${esc(l.owner_name)} (${esc(l.owner_email)})</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">💳 Reference: <b style="color:var(--text)">${esc(l.payment_ref||'—')}</b></div>
+            </div>
+            <div class="row-actions">
+              <a href="/league/${l.id}" class="btn-ghost-sm" target="_blank">🌐 Preview</a>
+              <a href="/superadmin/league/${l.id}/approve" class="btn-primary-sm" data-confirm="Approve this league? It will become publicly visible.">✅ Approve</a>
+              <a href="/superadmin/league/${l.id}/reject" class="btn-danger-sm">❌ Reject</a>
+            </div>
+          </div>`).join('')}
+      </div>` : ''}
 
       <!-- RECENT COMMISSIONERS -->
       <h3 style="font-family:'Russo One',sans-serif;font-size:16px;margin-bottom:14px;letter-spacing:.5px">
@@ -107,7 +135,7 @@ router.get('/', async (req, res) => {
           <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
             <div style="flex:1">
               <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
-                ${levelBadge(l.level)} ${statusBadge(l.status)}
+                ${levelBadge(l.level)} ${statusBadge(l.status)} ${approvalBadge(l.approval_status)}
               </div>
               <div style="font-weight:700;font-size:14px">${esc(l.name)}</div>
               <div style="font-size:12px;color:var(--muted)">📍 ${esc(l.location)} · By: ${esc(l.owner_name)}</div>
@@ -263,7 +291,7 @@ router.get('/commissioner/:id', async (req, res) => {
         ${leagues.map(l => `
           <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
             <div style="flex:1">
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">${levelBadge(l.level)} ${statusBadge(l.status)}</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">${levelBadge(l.level)} ${statusBadge(l.status)} ${approvalBadge(l.approval_status)}</div>
               <div style="font-weight:700">${esc(l.name)}</div>
               <div style="font-size:12px;color:var(--muted)">Admin Code: <code style="color:var(--text);background:rgba(240,244,255,.07);padding:1px 6px;border-radius:3px">${esc(l.admin_code)}</code></div>
             </div>
@@ -373,12 +401,16 @@ router.get('/league/:id', async (req, res) => {
         <div>
           <a href="/superadmin/commissioner/${league.user_id}" class="back-link">← Commissioner: ${esc(owner?.name||'Unknown')}</a>
           <h1>${esc(league.name)}</h1>
-          <div style="margin-top:4px">${levelBadge(league.level)} ${statusBadge(league.status)}
+          <div style="margin-top:4px">${levelBadge(league.level)} ${statusBadge(league.status)} ${approvalBadge(league.approval_status)}
             <span style="color:var(--muted);font-size:13px;margin-left:8px">📍 ${esc(league.location)} · ${esc(league.season)}</span>
           </div>
+          ${league.payment_ref ? `<div style="font-size:12px;color:var(--muted);margin-top:6px">💳 Payment reference: <b style="color:var(--text)">${esc(league.payment_ref)}</b></div>` : ''}
+          ${league.approval_status === 'rejected' && league.rejection_reason ? `<div style="font-size:12px;color:var(--red);margin-top:4px">Rejected: ${esc(league.rejection_reason)}</div>` : ''}
         </div>
         <div class="ah-right">
           <a href="/league/${league.id}" class="btn-ghost-sm" target="_blank">🌐 Public View</a>
+          ${league.approval_status !== 'approved' ? `<a href="/superadmin/league/${league.id}/approve" class="btn-primary-sm" data-confirm="Approve this league? It will become publicly visible.">✅ Approve</a>` : ''}
+          ${league.approval_status !== 'rejected' ? `<a href="/superadmin/league/${league.id}/reject" class="btn-danger-sm">❌ Reject</a>` : ''}
           <a href="/superadmin/league/${league.id}/delete" class="btn-danger-sm" data-confirm="Delete this league and all its data?">🗑 Delete League</a>
         </div>
       </div>
@@ -434,6 +466,55 @@ router.get('/league/:id/delete', async (req, res) => {
   } catch (err) { console.error(err); res.redirect('/superadmin'); }
 });
 
+// ── APPROVE LEAGUE ────────────────────────────────────────────────────────────
+router.get('/league/:id/approve', async (req, res) => {
+  try {
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!league) return res.redirect('/superadmin');
+    await db.run(
+      "UPDATE leagues SET approval_status='approved', rejection_reason=NULL, approved_at=NOW() WHERE id=$1",
+      [req.params.id]
+    );
+    res.redirect(req.get('referer') || `/superadmin/league/${req.params.id}`);
+  } catch (err) { console.error(err); res.redirect('/superadmin'); }
+});
+
+// ── REJECT LEAGUE ─────────────────────────────────────────────────────────────
+router.get('/league/:id/reject', async (req, res) => {
+  try {
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!league) return res.redirect('/superadmin');
+    res.send(superPage('Reject League', req.user, `
+      <div class="admin-header"><div>
+        <a href="/superadmin/league/${league.id}" class="back-link">← Back</a>
+        <h1>Reject "${esc(league.name)}"</h1>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">The commissioner will see this reason and can resubmit after updating their payment reference.</p>
+      </div></div>
+      <div class="card" style="max-width:540px">
+        <form action="/superadmin/league/${league.id}/reject" method="POST">
+          <div class="field-group"><label>Reason</label>
+            <textarea name="reason" class="input" rows="3" placeholder="e.g. Payment reference not found / invalid amount" required></textarea></div>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <a href="/superadmin/league/${league.id}" class="btn-ghost">Cancel</a>
+            <button type="submit" class="btn-danger-sm" style="padding:11px 22px;font-size:14px">Reject League</button>
+          </div>
+        </form>
+      </div>
+    `));
+  } catch (err) { console.error(err); res.redirect('/superadmin'); }
+});
+
+router.post('/league/:id/reject', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    await db.run(
+      "UPDATE leagues SET approval_status='rejected', rejection_reason=$1, approved_at=NULL WHERE id=$2",
+      [reason?.trim() || 'No reason given', req.params.id]
+    );
+    res.redirect(`/superadmin/league/${req.params.id}`);
+  } catch (err) { console.error(err); res.redirect('/superadmin'); }
+});
+
 // ── ALL LEAGUES ───────────────────────────────────────────────────────────────
 router.get('/leagues', async (req, res) => {
   try {
@@ -456,7 +537,7 @@ router.get('/leagues', async (req, res) => {
         ${leagues.map(l => `
           <div style="background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
             <div style="flex:1">
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">${levelBadge(l.level)} ${statusBadge(l.status)}</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">${levelBadge(l.level)} ${statusBadge(l.status)} ${approvalBadge(l.approval_status)}</div>
               <div style="font-weight:700">${esc(l.name)}</div>
               <div style="font-size:12px;color:var(--muted)">📍 ${esc(l.location)} · Commissioner: <b style="color:var(--text)">${esc(l.owner_name)}</b></div>
             </div>
@@ -467,6 +548,7 @@ router.get('/leagues', async (req, res) => {
             <div class="row-actions">
               <a href="/superadmin/league/${l.id}" class="btn-ghost-sm">View</a>
               <a href="/league/${l.id}" class="btn-ghost-sm" target="_blank">🌐</a>
+              ${l.approval_status === 'pending' ? `<a href="/superadmin/league/${l.id}/approve" class="btn-primary-sm" data-confirm="Approve this league?">✅ Approve</a><a href="/superadmin/league/${l.id}/reject" class="btn-danger-sm">❌ Reject</a>` : ''}
               <a href="/superadmin/league/${l.id}/delete" class="btn-danger-sm" data-confirm="Delete this league?">🗑</a>
             </div>
           </div>`).join('') || '<div class="empty-state">No leagues yet.</div>'}

@@ -2,7 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db/database');
 const jwt     = require('jsonwebtoken');
-const { esc, levelBadge, statusBadge, levelColor } = require('../helpers');
+const { esc, levelBadge, statusBadge, levelColor, approvalBadge } = require('../helpers');
 const multer      = require('multer');
 const { importGameStats, generateTemplate } = require('../import-stats');
 const { importTeams, generateTeamsTemplate, importPlayers, generatePlayersTemplate } = require('../import-roster');
@@ -105,7 +105,7 @@ router.get('/', async (req, res) => {
 
     const leagueCards = leagues.map(l => `
       <div class="admin-league-card">
-        <div class="alc-top">${levelBadge(l.level)} ${statusBadge(l.status)}</div>
+        <div class="alc-top">${levelBadge(l.level)} ${statusBadge(l.status)} ${approvalBadge(l.approval_status)}</div>
         <div class="alc-name">${esc(l.name)}</div>
         <div class="alc-loc">📍 ${esc(l.location)} · ${esc(l.season)}</div>
         <div class="alc-meta">Admin Code: <code>${esc(l.admin_code)}</code></div>
@@ -155,7 +155,10 @@ router.get('/new-league', (req, res) => {
         <h1>Create New League</h1>
       </div>
     </div>
-    ${err ? `<div class="alert-error" style="max-width:540px;margin-bottom:16px">⚠ ${err === 'missing' ? 'League name and admin code are required.' : 'Server error, please try again.'}</div>` : ''}
+    ${err ? `<div class="alert-error" style="max-width:540px;margin-bottom:16px">⚠ ${err === 'missing' ? 'League name, admin code and payment reference number are required.' : 'Server error, please try again.'}</div>` : ''}
+    <div style="max-width:540px;margin-bottom:16px;padding:12px 14px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7">
+      💡 <b style="color:var(--text)">New leagues require approval</b> before they're visible to the public. Submit your payment reference number below — you can still set up teams, players and games while it's pending, but the league won't go live until a super admin approves it.
+    </div>
     <div class="card" style="max-width:540px">
       <form action="/admin/new-league" method="POST">
         <div class="field-group"><label>League Name</label>
@@ -175,6 +178,8 @@ router.get('/new-league', (req, res) => {
           </select></div>
         <div class="field-group"><label>Admin Code <span style="color:#555;font-size:11px">(share with scorers)</span></label>
           <input name="admin_code" class="input" placeholder="e.g. BRGY2025" required /></div>
+        <div class="field-group"><label>Payment Reference Number <span style="color:#555;font-size:11px">(for approval)</span></label>
+          <input name="payment_ref" class="input" placeholder="e.g. GCash / bank transfer reference" required /></div>
         <div style="display:flex;gap:10px;margin-top:20px">
           <a href="/admin" class="btn-ghost">Cancel</a>
           <button type="submit" class="btn-primary">Create League →</button>
@@ -186,11 +191,11 @@ router.get('/new-league', (req, res) => {
 
 router.post('/new-league', async (req, res) => {
   try {
-    const { name, level, location, season, status, admin_code } = req.body;
-    if (!name?.trim() || !admin_code?.trim()) return res.redirect('/admin/new-league?error=missing');
+    const { name, level, location, season, status, admin_code, payment_ref } = req.body;
+    if (!name?.trim() || !admin_code?.trim() || !payment_ref?.trim()) return res.redirect('/admin/new-league?error=missing');
     await db.run(
-      'INSERT INTO leagues (user_id,name,level,location,season,status,admin_code,is_public) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
-      [req.user.id, name.trim(), level||'Barangay', location||'', season||'', status||'upcoming', admin_code.trim(), true]
+      'INSERT INTO leagues (user_id,name,level,location,season,status,admin_code,is_public,approval_status,payment_ref) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
+      [req.user.id, name.trim(), level||'Barangay', location||'', season||'', status||'upcoming', admin_code.trim(), true, 'pending', payment_ref.trim()]
     );
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin/new-league?error=server'); }
@@ -232,7 +237,7 @@ router.get('/league/:id', async (req, res) => {
           <a href="/admin" class="back-link">← My Leagues</a>
           <h1>${esc(league.name)}</h1>
           <div class="lh-meta" style="margin-top:4px">
-            ${levelBadge(league.level)} ${statusBadge(league.status)}
+            ${levelBadge(league.level)} ${statusBadge(league.status)} ${approvalBadge(league.approval_status)}
             <span style="color:#666;font-size:13px;margin-left:8px">📍 ${esc(league.location)} · ${esc(league.season)}</span>
           </div>
         </div>
@@ -243,6 +248,15 @@ router.get('/league/:id', async (req, res) => {
           <a href="/admin/league/${league.id}/bracket" class="btn-ghost-sm">🏆 Bracket</a>
         </div>
       </div>
+
+      ${league.approval_status === 'pending' ? `
+      <div style="max-width:900px;margin-bottom:20px;padding:12px 16px;background:var(--overlay-1);border:1px solid var(--border);border-left:3px solid var(--stat-gold);border-radius:8px;font-size:13px;color:var(--text-2)">
+        ⏳ <b>Pending approval.</b> This league isn't visible to the public yet — a super admin needs to approve it first. You can keep setting up teams, players and games in the meantime.
+      </div>` : league.approval_status === 'rejected' ? `
+      <div class="alert-error" style="max-width:900px;margin-bottom:20px">
+        ❌ <b>Not approved.</b>${league.rejection_reason ? ' ' + esc(league.rejection_reason) : ''}
+        <a href="/admin/league/${league.id}/edit" style="color:inherit;text-decoration:underline;margin-left:6px">Update payment reference to resubmit →</a>
+      </div>` : ''}
 
       <div class="admin-tabs" id="adminTabs">
         <button class="atab active" data-tab="dashboard">📊 Dashboard</button>
@@ -2222,6 +2236,14 @@ router.get('/league/:id/edit', async (req, res) => {
         <h1>Edit League</h1>
       </div></div>
       ${err ? `<div class="alert-error" style="max-width:540px;margin-bottom:16px">⚠ League name and admin code are required.</div>` : ''}
+      ${league.approval_status === 'rejected' ? `
+      <div class="alert-error" style="max-width:540px;margin-bottom:16px">
+        ❌ <b>This league was not approved.</b>${league.rejection_reason ? ' Reason: ' + esc(league.rejection_reason) : ''}<br>
+        Update your payment reference number below and save to resubmit for approval.
+      </div>` : league.approval_status === 'pending' ? `
+      <div style="max-width:540px;margin-bottom:16px;padding:12px 14px;background:var(--overlay-1);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
+        ⏳ This league is pending approval and isn't visible to the public yet.
+      </div>` : ''}
       <div class="card" style="max-width:540px">
         <form action="/admin/league/${league.id}/edit" method="POST">
           <div class="field-group"><label>League Name</label>
@@ -2247,6 +2269,8 @@ router.get('/league/:id/edit', async (req, res) => {
               <option value="1" ${league.is_public ? 'selected' : ''}>Public — anyone can view</option>
               <option value="0" ${!league.is_public ? 'selected' : ''}>Private — hidden from public</option>
             </select></div>
+          <div class="field-group"><label>Payment Reference Number</label>
+            <input name="payment_ref" class="input" value="${esc(league.payment_ref||'')}" placeholder="e.g. GCash / bank transfer reference" required /></div>
           <div style="display:flex;gap:10px;margin-top:20px">
             <a href="/admin" class="btn-ghost">Cancel</a>
             <button type="submit" class="btn-primary">Save Changes →</button>
@@ -2260,14 +2284,26 @@ router.get('/league/:id/edit', async (req, res) => {
 router.post('/league/:id/edit', async (req, res) => {
   try {
     if (!await canAccessLeague(req, req.params.id)) return res.redirect('/admin');
-    const { name, level, location, season, status, admin_code, is_public } = req.body;
-    if (!name?.trim() || !admin_code?.trim()) {
+    const league = await db.queryOne('SELECT approval_status, payment_ref FROM leagues WHERE id=$1', [req.params.id]);
+    const { name, level, location, season, status, admin_code, is_public, payment_ref } = req.body;
+    if (!name?.trim() || !admin_code?.trim() || !payment_ref?.trim()) {
       return res.redirect(`/admin/league/${req.params.id}/edit?error=missing`);
     }
-    await db.run(
-      'UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7 WHERE id=$8',
-      [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1', req.params.id]
-    );
+    // A rejected league resubmits for approval automatically when the payment
+    // reference is updated; other edits (name, location, etc.) don't touch approval.
+    const resubmitting = league?.approval_status === 'rejected' && payment_ref.trim() !== (league.payment_ref||'');
+    if (resubmitting) {
+      await db.run(
+        `UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7,
+           payment_ref=$8,approval_status='pending',rejection_reason=NULL WHERE id=$9`,
+        [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1', payment_ref.trim(), req.params.id]
+      );
+    } else {
+      await db.run(
+        'UPDATE leagues SET name=$1,level=$2,location=$3,season=$4,status=$5,admin_code=$6,is_public=$7,payment_ref=$8 WHERE id=$9',
+        [name.trim(), level, location||'', season||'', status||'upcoming', admin_code.trim(), is_public === '1', payment_ref.trim(), req.params.id]
+      );
+    }
     res.redirect('/admin');
   } catch (err) { console.error(err); res.redirect('/admin'); }
 });

@@ -28,6 +28,17 @@ const statusBadge = (s) => {
   return `<span class="badge" style="color:${c};background:${c}18;border:1px solid ${c}40">${t}</span>`;
 };
 
+// League approval workflow status (pending/approved/rejected) — see src/db/database.js
+const approvalBadge = (s) => {
+  if (s === 'approved' || !s) return '';
+  const map = {
+    pending:  ['#f7c948', '⏳ PENDING APPROVAL'],
+    rejected: ['#e63946', '❌ NOT APPROVED'],
+  };
+  const [c, t] = map[s] || ['#888', s];
+  return `<span class="badge" style="color:${c};background:${c}18;border:1px solid ${c}40">${t}</span>`;
+};
+
 const page = (title, body) => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,4 +66,4 @@ if ('serviceWorker' in navigator) {
 </body>
 </html>`;
 
-module.exports = { esc, levelColor, levelBadge, statusBadge, page };
+module.exports = { esc, levelColor, levelBadge, statusBadge, approvalBadge, page };

@@ -192,6 +192,16 @@ async function initSchema() {
 
   try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS instagram_url TEXT DEFAULT NULL'); } catch(e) {}
 
+  // League approval workflow — a new league must be approved by a super admin
+  // (after the commissioner submits a payment reference) before it becomes
+  // publicly visible. DEFAULT 'approved' here so this ALTER retroactively
+  // grandfathers in every league that already existed before this feature
+  // shipped; new leagues explicitly insert 'pending' (see POST /admin/new-league).
+  try { await run("ALTER TABLE leagues ADD COLUMN IF NOT EXISTS approval_status TEXT NOT NULL DEFAULT 'approved'"); } catch(e) {}
+  try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS payment_ref TEXT'); } catch(e) {}
+  try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS rejection_reason TEXT'); } catch(e) {}
+  try { await run('ALTER TABLE leagues ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ'); } catch(e) {}
+
   // Players table — add FIBA extended columns
   await run(`
     CREATE TABLE IF NOT EXISTS player_season_stats (

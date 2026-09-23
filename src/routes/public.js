@@ -2,9 +2,17 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../db/database');
 const { optionalAuth } = require('../middleware/auth');
-const { esc, levelColor, levelBadge, statusBadge, page } = require('../helpers');
+const { esc, levelColor, levelBadge, statusBadge, approvalBadge, page } = require('../helpers');
 
 router.use(optionalAuth);
+
+// A league is visible to a random visitor only once approved; the owning
+// commissioner can still preview their own pending/rejected league.
+function canViewLeague(league, user) {
+  if (!league || !league.is_public) return false;
+  if (league.approval_status === 'approved') return true;
+  return !!user && Number(user.id) === Number(league.user_id);
+}
 
 // ── LANDING PAGE ──────────────────────────────────────────────────────────────
 
@@ -15,7 +23,7 @@ router.get('/', async (req, res) => {
              at.name as away_name, at.color as away_color,
              l.name as league_name, l.id as league_id
       FROM games g
-      JOIN leagues l ON g.league_id = l.id AND l.is_public = true
+      JOIN leagues l ON g.league_id = l.id AND l.is_public = true AND l.approval_status = 'approved'
       LEFT JOIN teams ht ON g.home_team_id = ht.id
       LEFT JOIN teams at ON g.away_team_id = at.id`;
 
@@ -27,7 +35,7 @@ router.get('/', async (req, res) => {
           (SELECT COUNT(*) FROM teams   WHERE league_id=l.id) as team_count,
           (SELECT COUNT(*) FROM players WHERE league_id=l.id) as player_count,
           (SELECT COUNT(*) FROM games   WHERE league_id=l.id AND status='final') as game_count
-         FROM leagues l WHERE l.is_public=true ORDER BY l.created_at DESC`
+         FROM leagues l WHERE l.is_public=true AND l.approval_status='approved' ORDER BY l.created_at DESC`
       ),
       db.query(`
         SELECT
@@ -55,7 +63,7 @@ router.get('/leagues', async (req, res) => {
         (SELECT COUNT(*) FROM teams   WHERE league_id=l.id) as team_count,
         (SELECT COUNT(*) FROM players WHERE league_id=l.id) as player_count,
         (SELECT COUNT(*) FROM games   WHERE league_id=l.id AND status='final') as game_count
-       FROM leagues l WHERE l.is_public=true ORDER BY l.created_at DESC`
+       FROM leagues l WHERE l.is_public=true AND l.approval_status='approved' ORDER BY l.created_at DESC`
     );
     res.send(renderAllLeagues(leagues, req.user));
   } catch (err) { console.error(err); res.status(500).send('Server error'); }
@@ -64,10 +72,8 @@ router.get('/leagues', async (req, res) => {
 // ── PUBLIC LEAGUE PAGE ────────────────────────────────────────────────────────
 router.get('/league/:id', async (req, res) => {
   try {
-    const league = await db.queryOne(
-      'SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]
-    );
-    if (!league) return res.status(404).send(notFound());
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!canViewLeague(league, req.user)) return res.status(404).send(notFound());
 
     // Server-side sort params
     const sortCol = req.query.sort || 'pts';
@@ -799,9 +805,13 @@ function renderLeaguePage(league, teams, players, games, user, seasonStats = {},
         </div>
       </div>
     </nav>
+    ${league.approval_status !== 'approved' ? `
+    <div style="background:#3a2e0a;border-bottom:1px solid rgba(247,201,72,.3);color:#f7c948;text-align:center;padding:10px 16px;font-size:13px;font-weight:600">
+      👁 Preview only — this league is ${league.approval_status === 'rejected' ? 'not approved' : 'pending approval'} and isn't visible to the public yet.
+    </div>` : ''}
     <div class="league-header">
       <div class="lh-inner">
-        <div class="lh-top">${levelBadge(league.level)} ${statusBadge(league.status)}</div>
+        <div class="lh-top">${levelBadge(league.level)} ${statusBadge(league.status)} ${approvalBadge(league.approval_status)}</div>
         <h1 class="lh-title">${esc(league.name)}</h1>
         <div class="lh-meta">📍 ${esc(league.location)} &nbsp;·&nbsp; ${esc(league.season)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -1391,8 +1401,8 @@ router.get('/install', async (req, res) => {
 router.get('/league/:id/team/:tid', async (req, res) => {
   try {
     const { page } = require('../helpers');
-    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]);
-    if (!league) return res.redirect('/');
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!canViewLeague(league, req.user)) return res.redirect('/');
     const team = await db.queryOne('SELECT * FROM teams WHERE id=$1 AND league_id=$2', [req.params.tid, req.params.id]);
     if (!team) return res.redirect('/league/' + req.params.id);
 
@@ -1570,8 +1580,8 @@ router.get('/league/:id/player/:pid', async (req, res) => {
   try {
     const { page } = require('../helpers');
 
-    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1 AND is_public=true', [req.params.id]);
-    if (!league) return res.redirect('/');
+    const league = await db.queryOne('SELECT * FROM leagues WHERE id=$1', [req.params.id]);
+    if (!canViewLeague(league, req.user)) return res.redirect('/');
 
     const player = await db.queryOne(
       `SELECT p.*, t.name as team_name, t.color as team_color, t.id as tid
